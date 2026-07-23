@@ -2,334 +2,322 @@
 <html lang="he" dir="rtl"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a0f1e">
+<meta name="theme-color" content="#17150f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>Nexus · חדר מצב</title>
 <style>
 :root{
-  --bg:#0a0f1e; --surface:#111b33; --surface2:#0e1730; --raise:#16223e;
-  --line:#233150; --line2:#2e3f64;
-  --ink:#eaf0fb; --ink2:#9fadca; --mut:#7d8cb0;
-  --brand:#f6b73c; --brand-ink:#1c1405; --brand-soft:#3a2c0d;
-  --red:#f26a5b; --red-bg:#331a1a; --red-line:#5a2b28;
-  --amber:#e7ad3e; --amber-bg:#2b2410; --green:#4fcd8c; --green-bg:#123021; --green-line:#1f5138;
-  --blue:#63a2ea; --blue-bg:#152741;
-  --hero1:#16264c; --hero2:#0f1c3a;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.28);
-  --r:16px; --nav-h:62px;
+  /* Quiet Authority — LIGHT (private office / paper) */
+  --bg:#f4f1ea; --surface:#ffffff; --surface2:#efeadd; --raise:#ffffff; --hair:#e4ddcd; --hair2:#d8cfba;
+  --ink:#221f18; --ink2:#5b5446; --mut:#8a8172;
+  --brand:#9a6a34; --brand-2:#7f571f; --brand-soft:#efe3d0; --on-brand:#fff;
+  --good:#2f7d57; --good-bg:#e7f1ea; --warn:#a9761a; --warn-bg:#f6eeda; --serious:#b6501f; --serious-bg:#f8e9df;
+  --crit:#b23838; --crit-bg:#f8e6e4; --info:#365f96; --info-bg:#e9eff8;
+  --hero1:#2a2417; --hero2:#1c1810; --hero-ink:#f3ead6;
+  --shadow:0 1px 2px rgba(60,45,20,.05), 0 6px 22px rgba(60,45,20,.07);
+  --serif:"Frank Ruhl Libre",Georgia,"Times New Roman",serif;
+  --sans:"Assistant",-apple-system,"Segoe UI",system-ui,Arial,sans-serif;
+  --r:15px; --nav-h:60px;
 }
-:root[data-theme=light]{
-  --bg:#eef1f8; --surface:#ffffff; --surface2:#f5f7fc; --raise:#ffffff;
-  --line:#e3e8f1; --line2:#d7deec;
-  --ink:#141d33; --ink2:#4c5872; --mut:#5f6982;
-  --brand:#b9770f; --brand-ink:#fff; --brand-soft:#fbeecd;
-  --red:#c53c2c; --red-bg:#fbece9; --red-line:#f2ccc5;
-  --amber:#9a6a15; --amber-bg:#f9f0dc; --green:#1c7d4e; --green-bg:#e7f5ee; --green-line:#c6e6d5;
-  --blue:#2860ab; --blue-bg:#eaf1fb;
-  --hero1:#14213d; --hero2:#1d2d52;
-  --shadow:0 1px 3px rgba(20,33,61,.08), 0 8px 26px rgba(20,33,61,.06);
+:root[data-theme=dark]{
+  /* Quiet Authority — DARK (warm charcoal / after-hours desk) */
+  --bg:#17150f; --surface:#221e16; --surface2:#1c1910; --raise:#26221a; --hair:#332f22; --hair2:#443f2d;
+  --ink:#efe9db; --ink2:#b1a894; --mut:#7d7461;
+  --brand:#cd9b5f; --brand-2:#e0b57e; --brand-soft:#382c1a; --on-brand:#1c1508;
+  --good:#5ec48c; --good-bg:#16301f; --warn:#e0ab4c; --warn-bg:#2f2610; --serious:#e08a56; --serious-bg:#32200f;
+  --crit:#e57b6f; --crit-bg:#341a17; --info:#7ba6df; --info-bg:#182740;
+  --hero1:#2a2417; --hero2:#181509; --hero-ink:#f3ead6;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
 }
-@media (prefers-color-scheme: light){ :root:not([data-theme=dark]):not([data-theme=light]){
-  --bg:#eef1f8; --surface:#ffffff; --surface2:#f5f7fc; --raise:#ffffff;
-  --line:#e3e8f1; --line2:#d7deec; --ink:#141d33; --ink2:#4c5872; --mut:#5f6982;
-  --brand:#b9770f; --brand-ink:#fff; --brand-soft:#fbeecd;
-  --red:#c53c2c; --red-bg:#fbece9; --red-line:#f2ccc5; --amber:#9a6a15; --amber-bg:#f9f0dc;
-  --green:#1c7d4e; --green-bg:#e7f5ee; --green-line:#c6e6d5; --blue:#2860ab; --blue-bg:#eaf1fb;
-  --hero1:#14213d; --hero2:#1d2d52; --shadow:0 1px 3px rgba(20,33,61,.08), 0 8px 26px rgba(20,33,61,.06);
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]):not([data-theme=dark]){
+  --bg:#17150f; --surface:#221e16; --surface2:#1c1910; --raise:#26221a; --hair:#332f22; --hair2:#443f2d;
+  --ink:#efe9db; --ink2:#b1a894; --mut:#7d7461;
+  --brand:#cd9b5f; --brand-2:#e0b57e; --brand-soft:#382c1a; --on-brand:#1c1508;
+  --good:#5ec48c; --good-bg:#16301f; --warn:#e0ab4c; --warn-bg:#2f2610; --serious:#e08a56; --serious-bg:#32200f;
+  --crit:#e57b6f; --crit-bg:#341a17; --info:#7ba6df; --info-bg:#182740;
+  --hero1:#2a2417; --hero2:#181509; --hero-ink:#f3ead6;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
 }}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);
-  font-family:"Heebo",-apple-system,"Segoe UI",system-ui,Arial,sans-serif;
-  font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%;
-  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));overflow-x:hidden}
-.tnum{font-variant-numeric:tabular-nums}
-button{font-family:inherit}
-::-webkit-scrollbar{width:0;height:0}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;
+  -webkit-text-size-adjust:100%;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));overflow-x:hidden}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+button{font-family:inherit}::-webkit-scrollbar{width:0;height:0}
+.serif{font-family:var(--serif)}
 
-header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
-  padding:calc(env(safe-area-inset-top) + 9px) 15px 9px;display:flex;align-items:center;gap:11px}
-.brand{display:flex;flex-direction:column;line-height:1.15}
-.brand b{font-size:18px;font-weight:800;letter-spacing:.2px}
+header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 85%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--hair);
+  padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:11px}
+.brand{display:flex;flex-direction:column;line-height:1.1}
+.brand b{font-family:var(--serif);font-size:20px;font-weight:900;letter-spacing:.2px}
 .brand b i{font-style:normal;color:var(--brand)}
-.brand small{font-size:11px;color:var(--mut);font-weight:500}
+.brand small{font-size:11px;color:var(--mut);font-weight:500;letter-spacing:.02em}
 .hsp{flex:1}
-.iconbtn{min-width:44px;min-height:44px;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);
-  background:var(--surface);color:var(--ink2);font-size:17px;display:grid;place-items:center;cursor:pointer}
+.iconbtn{min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--hair);background:var(--surface);
+  color:var(--ink2);font-size:17px;display:grid;place-items:center;cursor:pointer}
 .iconbtn:active{transform:scale(.94)}
-.demo-dot{font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand-soft);
-  border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);padding:3px 9px;border-radius:20px}
+.demo-dot{font-size:10.5px;font-weight:700;color:var(--brand);background:var(--brand-soft);border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);padding:3px 10px;border-radius:20px}
 
-main{max-width:660px;margin:0 auto;padding:13px 13px 8px}
+main{max-width:680px;margin:0 auto;padding:14px 14px 8px}
 .page{display:none}.page.on{display:block}
-
-.sec{display:flex;align-items:baseline;gap:8px;margin:20px 4px 9px}
-.sec:first-child{margin-top:6px}
-.sec h2{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--ink2);margin:0}
+.sec{display:flex;align-items:baseline;gap:8px;margin:22px 4px 10px}
+.sec:first-child{margin-top:8px}
+.sec h2{font-size:11.5px;font-weight:800;letter-spacing:.03em;color:var(--ink2);margin:0}
 .sec .n{font-size:11.5px;color:var(--mut);font-weight:600}
 .sec .act{margin-inline-start:auto;font-size:12.5px;color:var(--brand);font-weight:700;cursor:pointer;min-height:32px;display:flex;align-items:center}
-.divider{margin:26px 4px 4px;padding-top:14px;border-top:1px dashed var(--line2);text-align:center}
-.divider span{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
+.divider{margin:28px 4px 2px;padding-top:15px;border-top:1px solid var(--hair);text-align:center}
+.divider span{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--mut)}
 
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.card+.card{margin-top:9px}
-.pad{padding:13px 15px}
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.card+.card{margin-top:9px}.pad{padding:14px 16px}
 
-.hero{background:linear-gradient(150deg,var(--hero1),var(--hero2));border:1px solid var(--line2);
-  border-radius:18px;box-shadow:var(--shadow);padding:16px 17px;color:#eef3fc;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;inset-block:-40% auto;inset-inline-end:-30%;width:60%;height:180%;
-  background:radial-gradient(closest-side,rgba(246,183,60,.16),transparent);pointer-events:none}
-.hero .lbl{display:flex;align-items:center;gap:7px;color:#f6b73c;font-size:11.5px;font-weight:800;
-  letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
-.hero .txt{font-size:19px;font-weight:700;line-height:1.35;letter-spacing:-.01em}
-.hero .sub{font-size:12.5px;opacity:.78;margin-top:6px}
-.hero .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:10px}
-.hero .acts{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
-.hero .override{background:rgba(242,106,91,.16);border:1px solid rgba(242,106,91,.4);border-radius:11px;
-  padding:8px 11px;margin-bottom:11px;font-size:12.5px;color:#ffd7d0;cursor:pointer;display:flex;gap:7px;align-items:center}
+/* KPI vital-signs tiles */
+.vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.vt{background:var(--surface);border:1px solid var(--hair);border-radius:13px;padding:11px 12px;position:relative;overflow:hidden;cursor:default}
+.vt.tap{cursor:pointer}.vt.tap:active{transform:scale(.98)}
+.vt::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px;background:var(--vc,transparent)}
+.vt .k{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.05;letter-spacing:-.01em}
+.vt .k small{font-size:12px;font-weight:600;color:var(--mut);font-family:var(--sans)}
+.vt .l{font-size:11px;color:var(--ink2);margin-top:3px;font-weight:600}
+.vt .sub{font-size:10px;color:var(--mut);margin-top:1px}
+.vt.c-good{--vc:var(--good)}.vt.c-warn{--vc:var(--warn)}.vt.c-crit{--vc:var(--crit)}.vt.c-brand{--vc:var(--brand)}.vt.c-info{--vc:var(--info)}
+.vt.c-good .k{color:var(--good)}.vt.c-crit .k{color:var(--crit)}.vt.c-warn .k{color:var(--warn)}
+.grp-lbl{font-size:10.5px;font-weight:800;letter-spacing:.03em;color:var(--mut);margin:0 4px 7px}
 
-.btn{border:0;border-radius:11px;padding:11px 15px;min-height:44px;font-size:13.5px;font-weight:700;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .08s}
+/* home view switcher (multiple lenses over the cockpit) */
+.hviews{display:flex;gap:5px;background:var(--surface2);border:1px solid var(--hair);border-radius:13px;padding:4px;margin:2px 4px 6px;overflow-x:auto;position:sticky;top:calc(env(safe-area-inset-top) + 65px);z-index:25;box-shadow:var(--shadow)}
+.hviews button{flex:1;min-width:max-content;border:0;background:none;color:var(--ink2);font-weight:700;font-size:12.5px;padding:9px 12px;min-height:44px;border-radius:9px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;transition:color .12s}
+.hviews button.on{background:var(--brand);color:var(--on-brand)}
+.hviews button:active{transform:scale(.97)}
+.hviews button .vbd{width:6px;height:6px;border-radius:50%;background:var(--crit);flex:none}
+.viewhint{font-size:11.5px;color:var(--mut);margin:0 6px 2px;line-height:1.4}
+
+/* hero */
+.hero{background:linear-gradient(155deg,var(--hero1),var(--hero2));border-radius:18px;box-shadow:var(--shadow);
+  padding:17px 18px;color:var(--hero-ink);position:relative;overflow:hidden;border:1px solid rgba(201,155,99,.18)}
+.hero::after{content:"";position:absolute;inset-block:-40% auto;inset-inline-end:-25%;width:55%;height:180%;background:radial-gradient(closest-side,rgba(205,155,99,.16),transparent);pointer-events:none}
+.hero .lbl{display:flex;align-items:center;gap:7px;color:var(--brand-2);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+.hero .txt{font-family:var(--serif);font-size:21px;font-weight:700;line-height:1.32}
+.hero .sub{font-size:12.5px;opacity:.8;margin-top:7px}
+.hero .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 11px;border-radius:20px;margin-top:11px}
+.hero .acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.hero .override{background:rgba(229,123,111,.15);border:1px solid rgba(229,123,111,.4);border-radius:11px;padding:9px 11px;margin-bottom:12px;font-size:12.5px;color:#f6ccc5;cursor:pointer;display:flex;gap:7px;align-items:center}
+
+.btn{border:0;border-radius:11px;padding:11px 15px;min-height:44px;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .08s;font-family:inherit}
 .btn:active{transform:scale(.96)}
-.btn.amber{background:var(--brand);color:var(--brand-ink)}
-.btn.ghost{background:rgba(255,255,255,.14);color:#fff}
-.btn.line{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
-.btn.green{background:var(--green);color:#04140b}
-.btn.red{background:transparent;color:var(--red);border:1px solid var(--red-line)}
-.btn.sm{padding:9px 13px;min-height:40px;font-size:13px;border-radius:10px}
-.btn.block{width:100%}
+.btn.brand{background:var(--brand);color:var(--on-brand)}
+.btn.ghost{background:rgba(243,234,214,.16);color:#f3ead6}
+.btn.line{background:var(--surface2);color:var(--ink);border:1px solid var(--hair)}
+.btn.good{background:var(--good);color:#fff}.btn.crit{background:transparent;color:var(--crit);border:1px solid color-mix(in srgb,var(--crit) 45%,transparent)}
+.btn.sm{padding:10px 14px;min-height:44px;font-size:13px}.btn.block{width:100%}
 
-.row{display:flex;gap:11px;padding:12px 15px;border-top:1px solid var(--line);cursor:pointer;align-items:flex-start;min-height:48px}
-.card .row:first-child{border-top:0}
-.row:active{background:var(--surface2)}
-.row .main{flex:1;min-width:0}
-.row .t{font-size:14.5px;font-weight:600;line-height:1.35}
+.row{display:flex;gap:11px;padding:13px 16px;border-top:1px solid var(--hair);cursor:pointer;align-items:flex-start;min-height:48px}
+.card .row:first-child{border-top:0}.row:active{background:var(--surface2)}
+.row .main{flex:1;min-width:0}.row .t{font-size:14.5px;font-weight:600;line-height:1.35}
 .row .m{font-size:12px;color:var(--ink2);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .row .lead{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:13px;margin-top:1px}
-.stripe{position:relative}
-.stripe::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px}
-.stripe.s-red::before{background:var(--red)}.stripe.s-amber::before{background:var(--amber)}
-.stripe.s-green::before{background:var(--green)}.stripe.s-blue::before{background:var(--blue)}
-
-.chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;white-space:nowrap;letter-spacing:.02em}
-.chip.red{background:var(--red-bg);color:var(--red)}.chip.amber{background:var(--amber-bg);color:var(--amber)}
-.chip.green{background:var(--green-bg);color:var(--green)}.chip.blue{background:var(--blue-bg);color:var(--blue)}
-.chip.mut{background:var(--surface2);color:var(--mut);border:1px solid var(--line)}
-.dim{color:var(--mut)}
-.dot{width:5px;height:5px;border-radius:50%;background:var(--mut);flex:none}
-
-.mini{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
-.mini button{border:1px solid var(--line);background:var(--surface2);color:var(--ink2);
-  border-radius:9px;padding:9px 13px;min-height:40px;font-size:12.5px;font-weight:600;cursor:pointer}
-.mini button:active{transform:scale(.95)}
-.mini button.go{color:var(--green);border-color:var(--green-line)}
-.mini button.warn{color:var(--red);border-color:var(--red-line)}
-
-.arena{padding:14px 15px;cursor:pointer}
-.arena .top{display:flex;align-items:center;gap:8px}
-.arena .nm{font-size:15.5px;font-weight:700}
-.arena .goal{font-size:12.5px;color:var(--ink2);margin-top:8px;line-height:1.45;border-inline-start:2px solid var(--brand);padding-inline-start:9px}
-.arena .meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;font-size:11.5px;color:var(--mut);align-items:center}
-
-.empty{color:var(--mut);font-size:13px;padding:14px 15px;text-align:center}
+.stripe{position:relative}.stripe::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px}
+.stripe.s-crit::before{background:var(--crit)}.stripe.s-warn::before{background:var(--warn)}.stripe.s-good::before{background:var(--good)}.stripe.s-info::before{background:var(--info)}.stripe.s-brand::before{background:var(--brand)}
+.chip{font-size:11px;font-weight:700;padding:3px 8px;border-radius:7px;white-space:nowrap;letter-spacing:.01em}
+.chip.crit{background:var(--crit-bg);color:var(--crit)}.chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.good{background:var(--good-bg);color:var(--good)}.chip.info{background:var(--info-bg);color:var(--info)}.chip.mut{background:var(--surface2);color:var(--mut);border:1px solid var(--hair)}.chip.brand{background:var(--brand-soft);color:var(--brand-2)}
+.dim{color:var(--mut)}.dot{width:5px;height:5px;border-radius:50%;background:var(--mut);flex:none}
+.moreline{color:var(--brand);font-size:12.5px;font-weight:600;padding:12px 16px;border-top:1px solid var(--hair);cursor:pointer;text-align:center}
+.empty{color:var(--mut);font-size:13px;padding:15px 16px;text-align:center}
 .mini-empty{color:var(--mut);font-size:12.5px;padding:10px 15px}
-.moreline{color:var(--brand);font-size:12.5px;font-weight:600;padding:11px 15px;border-top:1px solid var(--line);cursor:pointer;text-align:center}
+.mini{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.mini button{border:1px solid var(--hair);background:var(--surface2);color:var(--ink2);border-radius:9px;padding:11px 14px;min-height:44px;font-size:12.5px;font-weight:600;cursor:pointer}
+.mini button.go{color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,transparent)}
+.mini button.warn{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent)}
 
-nav{position:fixed;bottom:0;inset-inline:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));
-  padding-bottom:env(safe-area-inset-bottom);background:color-mix(in srgb,var(--surface) 92%,transparent);
-  backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;z-index:40}
-nav button{flex:1;background:none;border:0;color:var(--mut);cursor:pointer;font-size:10.5px;font-weight:600;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding-top:8px;position:relative}
-nav button .ic{font-size:20px;line-height:1}
-nav button.on{color:var(--brand)}
-nav .bdg{position:absolute;top:5px;margin-inline-start:22px;background:var(--red);color:#fff;font-size:9px;
-  font-weight:800;border-radius:20px;min-width:15px;height:15px;padding:0 4px;display:grid;place-items:center}
+/* meter (occupancy / completeness) */
+.meter{height:6px;border-radius:6px;background:var(--surface2);overflow:hidden;margin-top:7px}
+.meter i{display:block;height:100%;background:var(--brand);border-radius:6px}
 
-.fab{position:fixed;inset-inline-end:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);
-  width:56px;height:56px;border-radius:18px;border:0;background:var(--brand);color:var(--brand-ink);
-  font-size:27px;box-shadow:0 8px 22px rgba(246,183,60,.34);cursor:pointer;z-index:41;display:grid;place-items:center}
+/* chips filter row */
+.chips-row{display:flex;gap:7px;overflow-x:auto;padding:2px 4px 4px;margin:0 -2px}
+.chips-row .c{border:1px solid var(--hair);background:var(--surface);color:var(--ink2);border-radius:20px;padding:8px 13px;min-height:38px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.chips-row .c.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+.searchbox{width:100%;background:var(--surface);border:1px solid var(--hair);color:var(--ink);border-radius:12px;padding:11px 13px;font-size:14.5px;font-family:inherit;outline:none;margin-bottom:9px}
+.searchbox:focus{border-color:var(--brand)}
+
+/* asset dossier row */
+.asset{border-top:1px solid var(--hair)}.asset:first-child{border-top:0}
+.asset .ah{display:flex;gap:10px;padding:13px 16px;cursor:pointer;align-items:flex-start;position:relative}
+.asset .ah::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:3px;background:var(--ac,var(--mut))}
+.asset.rented .ah::before{background:var(--good)}.asset.vacant .ah::before{background:var(--warn)}.asset.sale .ah::before{background:var(--brand)}
+.asset .an{font-size:14.5px;font-weight:700}.asset .acode{font-size:11px;color:var(--mut);font-weight:500}
+.asset .ameta{font-size:11.5px;color:var(--ink2);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.asset .aright{text-align:left;font-size:12px;color:var(--ink2);white-space:nowrap;font-weight:600}
+.asset .adet{display:none;padding:0 16px 15px;border-top:1px dashed var(--hair);margin-top:0}
+.asset.open .adet{display:block;padding-top:12px}
+.adet h5{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:12px 2px 6px}
+.adet .kv{font-size:13px;line-height:1.5;padding:2px 2px}.adet .kv b{font-weight:700}
+.fact{display:inline-block;background:var(--surface2);border:1px solid var(--hair);border-radius:8px;padding:3px 9px;font-size:11.5px;color:var(--ink2);margin:0 0 4px}
+.doca{display:block;font-size:12.5px;margin:3px 2px;color:var(--brand);text-decoration:none}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:9px 10px;text-align:start;border-bottom:1px solid var(--hair)}
+th{background:var(--surface2);color:var(--ink2);font-size:11px;font-weight:700}tr:last-child td{border-bottom:0}
+
+/* nav */
+nav{position:fixed;bottom:0;inset-inline:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(14px);border-top:1px solid var(--hair);display:flex;z-index:40}
+nav button{flex:1;background:none;border:0;color:var(--mut);cursor:pointer;font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding-top:8px;position:relative}
+nav button .ic{font-size:19px;line-height:1}nav button.on{color:var(--brand)}
+nav .bdg{position:absolute;top:5px;margin-inline-start:20px;background:var(--crit);color:#fff;font-size:9px;font-weight:800;border-radius:20px;min-width:15px;height:15px;padding:0 4px;display:grid;place-items:center}
+.fab{position:fixed;inset-inline-end:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);width:56px;height:56px;border-radius:18px;border:0;background:var(--brand);color:var(--on-brand);font-size:27px;box-shadow:0 8px 22px rgba(154,106,52,.32);cursor:pointer;z-index:41;display:grid;place-items:center}
 .fab:active{transform:scale(.93)}
 
-.ov{position:fixed;inset:0;background:rgba(4,7,15,.55);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.ov{position:fixed;inset:0;background:rgba(30,22,10,.5);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
 .ov.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;inset-inline:0;bottom:0;z-index:51;background:var(--surface);
-  border-radius:22px 22px 0 0;border-top:1px solid var(--line2);
-  transform:translateY(102%);transition:transform .26s cubic-bezier(.3,.9,.3,1);
-  max-height:90vh;overflow-y:auto;padding:0 16px calc(20px + env(safe-area-inset-bottom));max-width:660px;margin:0 auto}
+.sheet{position:fixed;inset-inline:0;bottom:0;z-index:51;background:var(--surface);border-radius:22px 22px 0 0;border-top:1px solid var(--hair2);transform:translateY(102%);transition:transform .26s cubic-bezier(.3,.9,.3,1);max-height:90vh;overflow-y:auto;padding:0 16px calc(20px + env(safe-area-inset-bottom));max-width:680px;margin:0 auto}
 .sheet.on{transform:none}
-.grab{width:38px;height:4px;border-radius:4px;background:var(--line2);margin:9px auto 6px}
-.sheet h3{font-size:16.5px;font-weight:800;margin:6px 2px 4px}
+.grab{width:38px;height:4px;border-radius:4px;background:var(--hair2);margin:9px auto 6px}
+.sheet h3{font-family:var(--serif);font-size:18px;font-weight:700;margin:6px 2px 4px}
 .sheet .sub2{font-size:12.5px;color:var(--ink2);margin:0 2px 12px;line-height:1.5}
-.seg{display:flex;gap:6px;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.blk{margin-top:15px}.blk h4{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--brand);margin:0 2px 7px}
+.kv{font-size:13.5px;line-height:1.5;padding:3px 2px}
+.li{font-size:13.5px;padding:8px 2px;border-top:1px solid var(--hair);display:flex;gap:8px;align-items:flex-start}.li:first-child{border-top:0}
+.seg{display:flex;gap:6px;background:var(--surface2);border:1px solid var(--hair);border-radius:12px;padding:4px;margin-bottom:12px}
 .seg button{flex:1;border:0;background:none;color:var(--ink2);font-weight:700;font-size:13px;padding:10px;min-height:44px;border-radius:9px;cursor:pointer}
-.seg button.on{background:var(--brand);color:var(--brand-ink)}
-textarea,input,select{width:100%;background:var(--surface2);border:1px solid var(--line);color:var(--ink);
-  border-radius:12px;padding:12px 13px;font-size:15px;font-family:inherit;resize:none;outline:none}
+.seg button.on{background:var(--brand);color:var(--on-brand)}
+textarea,input,select{width:100%;background:var(--surface2);border:1px solid var(--hair);color:var(--ink);border-radius:12px;padding:12px 13px;font-size:15px;font-family:inherit;resize:none;outline:none}
 textarea:focus,input:focus,select:focus{border-color:var(--brand)}
-.field{margin-bottom:11px}
-.field label{display:block;font-size:11.5px;font-weight:700;color:var(--ink2);margin:0 2px 5px;letter-spacing:.04em}
+.field{margin-bottom:11px}.field label{display:block;font-size:11.5px;font-weight:700;color:var(--ink2);margin:0 2px 5px}
 .capbox{position:relative}
-.mic{position:absolute;inset-block-start:8px;inset-inline-end:8px;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink2);font-size:17px;cursor:pointer;display:grid;place-items:center}
-.mic.rec{background:var(--red);color:#fff;border-color:var(--red);animation:pulse 1.1s infinite}
+.mic{position:absolute;inset-block-start:8px;inset-inline-end:8px;width:38px;height:38px;border-radius:11px;border:1px solid var(--hair);background:var(--surface);color:var(--ink2);font-size:17px;cursor:pointer;display:grid;place-items:center}
+.mic.rec{background:var(--crit);color:#fff;border-color:var(--crit);animation:pulse 1.1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .chips-in{display:flex;gap:6px;flex-wrap:wrap}
-.chips-in .c{border:1px solid var(--line);background:var(--surface2);color:var(--ink2);border-radius:20px;padding:9px 14px;min-height:40px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center}
-.chips-in .c.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.chips-in .c{border:1px solid var(--hair);background:var(--surface2);color:var(--ink2);border-radius:20px;padding:11px 15px;min-height:44px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center}
+.chips-in .c.on{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
 
-.blk{margin-top:15px}
-.blk h4{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin:0 2px 7px}
-.kv{font-size:13.5px;line-height:1.5;padding:3px 2px}
-.li{font-size:13.5px;padding:8px 2px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-start}
-.li:first-child{border-top:0}
-
-.toast{position:fixed;inset-inline:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
-  background:var(--raise);border:1px solid var(--line2);color:var(--ink);border-radius:13px;padding:13px 15px;
-  z-index:60;box-shadow:var(--shadow);transform:translateY(160%);transition:transform .24s;font-size:14px;
-  display:flex;align-items:center;gap:10px;max-width:630px;margin:0 auto}
-.toast.on{transform:none}
-.toast .u{margin-inline-start:auto;color:var(--brand);font-weight:800;cursor:pointer;font-size:13px;min-height:32px;display:flex;align-items:center}
+.toast{position:fixed;inset-inline:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:var(--raise);border:1px solid var(--hair2);color:var(--ink);border-radius:13px;padding:13px 15px;z-index:60;box-shadow:var(--shadow);transform:translateY(180%);opacity:0;pointer-events:none;transition:transform .24s,opacity .2s;font-size:14px;display:flex;align-items:center;gap:10px;max-width:640px;margin:0 auto}
+.toast.on{transform:none;opacity:1;pointer-events:auto}
+.toast .u{margin-inline-start:auto;color:var(--brand);font-weight:800;cursor:pointer;font-size:13px;min-height:40px;padding:0 6px;display:flex;align-items:center}
 
 .ask-wrap{display:flex;flex-direction:column;min-height:calc(100vh - var(--nav-h) - 130px)}
 .ask-feed{flex:1;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}
-.q-bub{align-self:flex-start;max-width:85%;background:var(--brand);color:var(--brand-ink);border-radius:15px 4px 15px 15px;padding:10px 13px;font-size:14px;font-weight:600}
-.a-bub{align-self:flex-end;max-width:92%;background:var(--surface);border:1px solid var(--line);border-radius:4px 15px 15px 15px;padding:11px 14px;font-size:14px;line-height:1.55}
+.q-bub{align-self:flex-start;max-width:85%;background:var(--brand);color:var(--on-brand);border-radius:15px 4px 15px 15px;padding:10px 13px;font-size:14px;font-weight:600}
+.a-bub{align-self:flex-end;max-width:92%;background:var(--surface);border:1px solid var(--hair);border-radius:4px 15px 15px 15px;padding:11px 14px;font-size:14px;line-height:1.55}
 .a-bub.load{color:var(--mut)}
 .ak-sug{display:flex;gap:7px;flex-wrap:wrap;margin:4px 0 12px}
-.ak-sug .c{border:1px solid var(--line);background:var(--surface);color:var(--ink2);border-radius:20px;padding:9px 13px;min-height:40px;font-size:12.5px;cursor:pointer;display:flex;align-items:center}
+.ak-sug .c{border:1px solid var(--hair);background:var(--surface);color:var(--ink2);border-radius:20px;padding:9px 13px;min-height:40px;font-size:12.5px;cursor:pointer;display:flex;align-items:center}
 .ask-bar{position:sticky;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));display:flex;gap:8px;padding:9px 0;background:linear-gradient(0deg,var(--bg) 72%,transparent)}
-.ask-bar input{flex:1}
-.ask-bar button{flex:none;width:48px;min-height:48px;border-radius:12px;border:0;background:var(--brand);color:var(--brand-ink);font-size:18px;cursor:pointer}
+.ask-bar input{flex:1}.ask-bar button{flex:none;width:48px;min-height:48px;border-radius:12px;border:0;background:var(--brand);color:var(--on-brand);font-size:18px;cursor:pointer}
 .md b{font-weight:800}.md .h{font-weight:800;margin-top:8px}.md ul{margin:6px 0;padding-inline-start:20px}.md li{margin:2px 0}
-.md code{background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:.9em;font-family:ui-monospace,Menlo,Consolas,monospace}
+.md code{background:var(--surface2);border:1px solid var(--hair);border-radius:5px;padding:1px 5px;font-size:.9em;font-family:ui-monospace,Menlo,monospace}
 
-.gate{max-width:400px;margin:11vh auto;padding:26px 22px;text-align:center}
-.gate .logo{font-size:42px;margin-bottom:4px}
-.gate h1{font-size:25px;font-weight:800;margin:0 0 4px}.gate h1 i{font-style:normal;color:var(--brand)}
+.gate{max-width:410px;margin:11vh auto;padding:26px 22px;text-align:center}
+.gate .logo{font-family:var(--serif);font-size:44px;color:var(--brand);margin-bottom:2px}
+.gate h1{font-family:var(--serif);font-size:26px;font-weight:900;margin:0 0 4px}.gate h1 i{font-style:normal;color:var(--brand)}
 .gate p{color:var(--ink2);font-size:14px;margin:0 0 18px;line-height:1.5}
 .gate input{text-align:center;margin-bottom:11px}
-.gate .err{color:var(--red);font-size:12.5px;margin:0 0 10px;min-height:16px;font-weight:600}
-.foot{text-align:center;color:var(--mut);font-size:11px;padding:22px 0 6px}
-.foot b{color:var(--ink2);font-weight:600}
+.gate .err{color:var(--crit);font-size:12.5px;margin:0 0 10px;min-height:16px;font-weight:600}
+.foot{text-align:center;color:var(--mut);font-size:11px;padding:24px 0 6px}.foot b{color:var(--ink2);font-weight:600}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 "use strict";
-/* ===== Nexus HQ · חדר מצב — from-scratch build v2 (23.7.2026) ================
-   Chief-of-Staff cockpit. Reviewed (UX·code·security). Dual mode: live + snapshot.
-   Grounded in 46 lessons: neglected-one-thing (+deadline override), decisions-first,
-   arena goals & HONEST silence radar, follow-up on the deliverable, coverage vs bloat. */
-const REF="eygeouunxwsrdsijkczh";
-const BASE="https://"+REF+".supabase.co/functions/v1";
-const API=BASE+"/nexus-app", ASK=BASE+"/nx-ask", ACT=BASE+"/nx-act";
-const SNAP={"now":"07:12","today":"2026-07-23","focus":{"title":"גרמושקה לרשות הרישוי — נדחתה כבר 9 ימים","approved":false,"done":false,"task_id":"d-1"},"arenas":[{"id":"a1","name":"מרכז מסחרי — צפון","status":"active","summary":"מרכז מניב בהתייצבות; חברת ניהול נכנסה, בוררות גבייה פתוחה.","goal":"[טיוטת AI לאישור] תפוסה 100% וגבייה מלאה, ניהול עצמאי בלי תלות יומיומית"},{"id":"a2","name":"מגורים — פינוי בינוי","status":"active","summary":"תקוע מול העירייה שמתנה היתרים בהסכם פיתוח.","goal":"[טיוטת AI לאישור] שחרור התקיעות: היתר ראשון בהגשה או עתירה מנהלית"},{"id":"a3","name":"אגרו-אנרגיה — מגרש דרום","status":"active","summary":"העברת זכויות בסגירה; סולארי מאחורי המונה בהקמה.","goal":"[טיוטת AI לאישור] המהלך האנרגטי הראשון החתום ב-2026"},{"id":"a4","name":"מגדל משרדים","status":"active","summary":"נכס מניב שקט, מושכר לטווח ארוך.","goal":"[טיוטת AI לאישור] תפעול בלי חיכוך, שכירות רצה"},{"id":"a5","name":"קרקע חקלאית — הזדמנות","status":"pipeline","summary":"הצעה 834 דונם בחכירה; בדיקת זכויות עתידיות מול דמי הסכמה.","goal":"[טיוטת AI לאישור] הכרעת כניסה/יציאה אחרי חיתום מלא"},{"id":"a6","name":"אישי ומשפחה","status":"active","summary":"מעבר לצפון, זמן משפחה מוגן.","goal":"[טיוטת AI לאישור] התקדמות שוטפת למעבר + זמן משפחה לפני הכל"}],"objectives":[{"id":"o1","arena_id":"a1","title":"סגירת בוררות הגבייה","next_step":"מחר בבוקר לשלוח לבורר סיכום חד-עמודי עם דרישת החלטה דחופה","next_step_due":"2026-07-24"},{"id":"o2","arena_id":"a2","title":"היתר ראשון","next_step":"להעביר לעו״ד את טיוטת העתירה לחתימה","next_step_due":null},{"id":"o3","arena_id":"a3","title":"השלמת העברת זכויות","next_step":"לוודא מול הרשות מה נותר אחרי תשלום ההיטל","next_step_due":null}],"tasks":[{"id":"t1","title":"לאשר הסכם חשמל מול חברת הניהול","arena_id":"a1","owner_id":"p2","status":"open","urgency":"today","important":true,"due_date":"2026-07-23","notes":null,"created_at":"2026-07-18"},{"id":"t2","title":"לחתום דיווח מיסוי על מכירת 31%","arena_id":"a3","owner_id":null,"status":"open","urgency":"today","important":true,"due_date":"2026-07-24","notes":"מס שבח מוערך עד תחילת ספטמבר","created_at":"2026-07-20"},{"id":"t3","title":"להעביר גרמושקה להנדסה","arena_id":"a2","owner_id":"p1","status":"open","urgency":"today","important":false,"due_date":null,"notes":null,"created_at":"2026-07-14"},{"id":"t4","title":"מדידה מעודכנת למגרש הדרום","arena_id":"a3","owner_id":"p3","status":"waiting","urgency":"week","important":false,"due_date":null,"notes":null,"created_at":"2026-07-15"},{"id":"t5","title":"תיאום פגישת ועדה","arena_id":"a2","owner_id":null,"status":"open","urgency":"week","important":false,"due_date":"2026-07-27","notes":null,"created_at":"2026-07-19"},{"id":"t6","title":"בדיקת הסכם EPC — לא לחתום לפני תיקונים","arena_id":"a3","owner_id":"p3","status":"open","urgency":"week","important":true,"due_date":null,"notes":"להעביר להערות עו״ד לפני חתימה","created_at":"2026-07-16"},{"id":"t7","title":"סבב חתימות מוכרים","arena_id":"a3","owner_id":null,"status":"open","urgency":"month","important":false,"due_date":null,"notes":null,"created_at":"2026-07-10"},{"id":"t8","title":"עדכון שווי מבוקש מול הצד השני","arena_id":"a5","owner_id":"p4","status":"waiting","urgency":"month","important":false,"due_date":null,"notes":null,"created_at":"2026-07-12"},{"id":"t9","title":"לבדוק מועדי חופש משפחתי בצפון","arena_id":"a6","owner_id":null,"status":"open","urgency":"whenever","important":false,"due_date":null,"notes":null,"created_at":"2026-07-08"}],"decisions":[{"id":"d1","arena_id":"a1","title":"האם לגבות 60% מחשבונות האנרגיה דרך הבוררות?","recommendation":"כן — לדחוף להחלטה דחופה; זה חמצן תזרימי של מאות אלפי ₪.","alternatives":"להמתין לפשרה כוללת (מאריך את התזרים השלילי).","cost_of_delay":"מאות אלפי ₪ תזרים","needed_by":"2026-07-25","status":"pending"},{"id":"d2","arena_id":"a2","title":"עתירה מנהלית או המתנה נוספת מול העירייה?","recommendation":"להכין עתירה כמנוף לחץ, להגיש רק אם אין תזוזה תוך שבועיים.","alternatives":"המשך מו״מ ישיר (סיכון להיגרר).","cost_of_delay":"עיכוב היתרים","needed_by":"2026-07-30","status":"pending"},{"id":"d3","arena_id":"a5","title":"להיכנס לעסקת הקרקע במחיר המבוקש?","recommendation":"לא לפני קבלת מחיר מזומן וחיתום מלא של דמי ההסכמה.","alternatives":"ירידה מסודרת מהעסקה.","cost_of_delay":null,"needed_by":null,"status":"pending"}],"commitments":[{"id":"c1","person_id":"p1","direction":"to_itay","what":"החזרת טיוטת עתירה מתוקנת","arena_id":"a2","due":"2026-07-24"},{"id":"c2","person_id":"p3","direction":"by_itay","what":"להעביר הערות על הסכם ה-EPC","arena_id":"a3","due":"2026-07-26"}],"followups":[{"id":"f1","title":"איפה עומדת טיוטת העתירה?","arena":"מגורים — פינוי בינוי","days_waiting":9,"level":"escalate"},{"id":"f2","title":"מה מצב המדידה של מגרש הדרום?","arena":"אגרו-אנרגיה — מגרש דרום","days_waiting":6,"level":"remind"},{"id":"f3","title":"האם התקבל מחיר מזומן על הקרקע?","arena":"קרקע חקלאית","days_waiting":4,"level":"remind"}],"people":[{"id":"p1","name":"עו״ד א׳","role":"עורך דין","organization":"משרד עריכת דין","phone":null,"email":null,"reliability_notes":"אמין ויסודי","work_notes":null,"tone_notes":null,"arenas_list":"מגורים"},{"id":"p2","name":"מנהל חברת ניהול","role":"ניהול נכס","organization":"חברת ניהול","phone":null,"email":null,"reliability_notes":"מורח — צריך נדנוד יזום","work_notes":null,"tone_notes":null,"arenas_list":"מרכז מסחרי"},{"id":"p3","name":"מהנדס פרויקט","role":"הנדסה","organization":null,"phone":null,"email":null,"reliability_notes":"אמין","work_notes":null,"tone_notes":null,"arenas_list":"אגרו-אנרגיה"},{"id":"p4","name":"צד נגדי — קרקע","role":"יזם","organization":null,"phone":null,"email":null,"reliability_notes":null,"work_notes":null,"tone_notes":null,"arenas_list":"קרקע"}],"captures":[{"id":"cap1","text":"לבדוק אם אפשר אגירת חשמל בחניון — כדאיות ~1M$","created_at":"2026-07-22"},{"id":"cap2","text":"רעיון: לחבר בין עודף הקרקע לבין הזדמנות הדאטה-סנטר","created_at":"2026-07-22"}],"events":[{"id":"e1","arena_id":"a1","description":"חברת הניהול השלימה חפיפה; הסכם חשמל ממתין לעיון","happened_at":"2026-07-22"},{"id":"e2","arena_id":"a3","description":"שובר תשלום שולם; ממתינים לרשות","happened_at":"2026-07-21"},{"id":"e3","arena_id":"a2","description":"מכתב עו״ד לקראת עתירה אושר","happened_at":"2026-07-20"}],"closed_today":[{"id":"x1","title":"אישור טיוטת הסכם ליווי"},{"id":"x2","title":"תיאום מדידה חוזרת"}],"lessons":[{"lesson":"הדבר האחד = הכי מוזנח שנדחה שוב ושוב, לא הכי חשוב"},{"lesson":"פולו-אפ מנוסח על התוצר/הזירה, לא על האדם"},{"lesson":"שקט בזירה = איתות בעיה, לא רגיעה"}]};                 // synthetic demo data (safe) in demo build; null in live build
+/* ===== Nexus HQ v3 — "Quiet Authority" · full situation-cockpit (23.7.2026) ==========
+   Holistic home cockpit (layered vital signs), assets dossier, arenas, decisions, ask,
+   reports, tasks, people. Dual mode (live + synthetic demo). Reviewed build. */
+const REF="eygeouunxwsrdsijkczh", BASE="https://"+REF+".supabase.co/functions/v1";
+const API=BASE+"/nexus-app", DASH=BASE+"/nx-dash", ASK=BASE+"/nx-ask", ACT=BASE+"/nx-act", REPORT=BASE+"/report";
+const SNAP={"now":"07:12","today":"2026-07-23","focus":{"title":"גרמושקה לרשות הרישוי — נדחתה כבר 9 ימים","approved":false,"done":false,"task_id":"d-1"},"arenas":[{"id":"a1","name":"מרכז מסחרי — צפון","status":"active","summary":"מרכז מניב בהתייצבות; חברת ניהול נכנסה, בוררות גבייה פתוחה.","goal":"[טיוטת AI לאישור] תפוסה 100% וגבייה מלאה, ניהול עצמאי בלי תלות יומיומית"},{"id":"a2","name":"מגורים — פינוי בינוי","status":"active","summary":"תקוע מול העירייה שמתנה היתרים בהסכם פיתוח.","goal":"[טיוטת AI לאישור] שחרור התקיעות: היתר ראשון בהגשה או עתירה מנהלית"},{"id":"a3","name":"אגרו-אנרגיה — מגרש דרום","status":"active","summary":"העברת זכויות בסגירה; סולארי מאחורי המונה בהקמה.","goal":"[טיוטת AI לאישור] המהלך האנרגטי הראשון החתום ב-2026"},{"id":"a4","name":"מגדל משרדים","status":"active","summary":"נכס מניב שקט, מושכר לטווח ארוך.","goal":"[טיוטת AI לאישור] תפעול בלי חיכוך, שכירות רצה"},{"id":"a5","name":"קרקע חקלאית — הזדמנות","status":"pipeline","summary":"הצעה 834 דונם בחכירה; בדיקת זכויות עתידיות מול דמי הסכמה.","goal":"[טיוטת AI לאישור] הכרעת כניסה/יציאה אחרי חיתום מלא"},{"id":"a6","name":"אישי ומשפחה","status":"active","summary":"מעבר לצפון, זמן משפחה מוגן.","goal":"[טיוטת AI לאישור] התקדמות שוטפת למעבר + זמן משפחה לפני הכל"}],"objectives":[{"id":"o1","arena_id":"a1","title":"סגירת בוררות הגבייה","next_step":"מחר בבוקר לשלוח לבורר סיכום חד-עמודי עם דרישת החלטה דחופה","next_step_due":"2026-07-24"},{"id":"o2","arena_id":"a2","title":"היתר ראשון","next_step":"להעביר לעו״ד את טיוטת העתירה לחתימה","next_step_due":null},{"id":"o3","arena_id":"a3","title":"השלמת העברת זכויות","next_step":"לוודא מול הרשות מה נותר אחרי תשלום ההיטל","next_step_due":null}],"tasks":[{"id":"t1","title":"לאשר הסכם חשמל מול חברת הניהול","arena_id":"a1","owner_id":"p2","status":"open","urgency":"today","important":true,"due_date":"2026-07-23","notes":null,"created_at":"2026-07-18"},{"id":"t2","title":"לחתום דיווח מיסוי על מכירת 31%","arena_id":"a3","owner_id":null,"status":"open","urgency":"today","important":true,"due_date":"2026-07-24","notes":"מס שבח מוערך עד תחילת ספטמבר","created_at":"2026-07-20"},{"id":"t3","title":"להעביר גרמושקה להנדסה","arena_id":"a2","owner_id":"p1","status":"open","urgency":"today","important":false,"due_date":null,"notes":null,"created_at":"2026-07-14"},{"id":"t4","title":"מדידה מעודכנת למגרש הדרום","arena_id":"a3","owner_id":"p3","status":"waiting","urgency":"week","important":false,"due_date":null,"notes":null,"created_at":"2026-07-15"},{"id":"t5","title":"תיאום פגישת ועדה","arena_id":"a2","owner_id":null,"status":"open","urgency":"week","important":false,"due_date":"2026-07-27","notes":null,"created_at":"2026-07-19"},{"id":"t6","title":"בדיקת הסכם EPC — לא לחתום לפני תיקונים","arena_id":"a3","owner_id":"p3","status":"open","urgency":"week","important":true,"due_date":null,"notes":"להעביר להערות עו״ד לפני חתימה","created_at":"2026-07-16"},{"id":"t7","title":"סבב חתימות מוכרים","arena_id":"a3","owner_id":null,"status":"open","urgency":"month","important":false,"due_date":null,"notes":null,"created_at":"2026-07-10"},{"id":"t8","title":"עדכון שווי מבוקש מול הצד השני","arena_id":"a5","owner_id":"p4","status":"waiting","urgency":"month","important":false,"due_date":null,"notes":null,"created_at":"2026-07-12"},{"id":"t9","title":"לבדוק מועדי חופש משפחתי בצפון","arena_id":"a6","owner_id":null,"status":"open","urgency":"whenever","important":false,"due_date":null,"notes":null,"created_at":"2026-07-08"}],"decisions":[{"id":"d1","arena_id":"a1","title":"האם לגבות 60% מחשבונות האנרגיה דרך הבוררות?","recommendation":"כן — לדחוף להחלטה דחופה; זה חמצן תזרימי של מאות אלפי ₪.","alternatives":"להמתין לפשרה כוללת (מאריך את התזרים השלילי).","cost_of_delay":"מאות אלפי ₪ תזרים","needed_by":"2026-07-25","status":"pending"},{"id":"d2","arena_id":"a2","title":"עתירה מנהלית או המתנה נוספת מול העירייה?","recommendation":"להכין עתירה כמנוף לחץ, להגיש רק אם אין תזוזה תוך שבועיים.","alternatives":"המשך מו״מ ישיר (סיכון להיגרר).","cost_of_delay":"עיכוב היתרים","needed_by":"2026-07-30","status":"pending"},{"id":"d3","arena_id":"a5","title":"להיכנס לעסקת הקרקע במחיר המבוקש?","recommendation":"לא לפני קבלת מחיר מזומן וחיתום מלא של דמי ההסכמה.","alternatives":"ירידה מסודרת מהעסקה.","cost_of_delay":null,"needed_by":null,"status":"pending"}],"commitments":[{"id":"c1","person_id":"p1","direction":"to_itay","what":"החזרת טיוטת עתירה מתוקנת","arena_id":"a2","due":"2026-07-24"},{"id":"c2","person_id":"p3","direction":"by_itay","what":"להעביר הערות על הסכם ה-EPC","arena_id":"a3","due":"2026-07-26"}],"followups":[{"id":"f1","title":"איפה עומדת טיוטת העתירה?","arena":"מגורים — פינוי בינוי","days_waiting":9,"level":"escalate"},{"id":"f2","title":"מה מצב המדידה של מגרש הדרום?","arena":"אגרו-אנרגיה — מגרש דרום","days_waiting":6,"level":"remind"},{"id":"f3","title":"האם התקבל מחיר מזומן על הקרקע?","arena":"קרקע חקלאית","days_waiting":4,"level":"remind"}],"people":[{"id":"p1","name":"עו״ד א׳","role":"עורך דין","organization":"משרד עריכת דין","phone":null,"email":null,"reliability_notes":"אמין ויסודי","work_notes":null,"tone_notes":null,"arenas_list":"מגורים"},{"id":"p2","name":"מנהל חברת ניהול","role":"ניהול נכס","organization":"חברת ניהול","phone":null,"email":null,"reliability_notes":"מורח — צריך נדנוד יזום","work_notes":null,"tone_notes":null,"arenas_list":"מרכז מסחרי"},{"id":"p3","name":"מהנדס פרויקט","role":"הנדסה","organization":null,"phone":null,"email":null,"reliability_notes":"אמין","work_notes":null,"tone_notes":null,"arenas_list":"אגרו-אנרגיה"},{"id":"p4","name":"צד נגדי — קרקע","role":"יזם","organization":null,"phone":null,"email":null,"reliability_notes":null,"work_notes":null,"tone_notes":null,"arenas_list":"קרקע"}],"captures":[{"id":"cap1","text":"לבדוק אם אפשר אגירת חשמל בחניון — כדאיות ~1M$","created_at":"2026-07-22"},{"id":"cap2","text":"רעיון: לחבר בין עודף הקרקע לבין הזדמנות הדאטה-סנטר","created_at":"2026-07-22"}],"events":[{"id":"e1","arena_id":"a1","description":"חברת הניהול השלימה חפיפה; הסכם חשמל ממתין לעיון","happened_at":"2026-07-22"},{"id":"e2","arena_id":"a3","description":"שובר תשלום שולם; ממתינים לרשות","happened_at":"2026-07-21"},{"id":"e3","arena_id":"a2","description":"מכתב עו״ד לקראת עתירה אושר","happened_at":"2026-07-20"}],"closed_today":[{"id":"x1","title":"אישור טיוטת הסכם ליווי"},{"id":"x2","title":"תיאום מדידה חוזרת"}],"lessons":[{"lesson":"הדבר האחד = הכי מוזנח שנדחה שוב ושוב, לא הכי חשוב"},{"lesson":"פולו-אפ מנוסח על התוצר/הזירה, לא על האדם"},{"lesson":"שקט בזירה = איתות בעיה, לא רגיעה"}],"kpis":{"total":9,"rented":4,"vacant":5,"rentKnown":43300,"rentLeases":4,"loans":7700000,"loansCount":3,"forSale":3,"forSaleAsking":8700000,"forSalePriced":2,"valuation":18900000,"valuationCount":6},"dashboard":{"key_dates":[{"title":"תום שכירות — חנות במרכז המסחרי","due":"2026-07-15","overdue":true,"deal":"מרכז מסחרי","sev":"קריטי"},{"title":"מימוש אופציית הארכה — מגדל משרדים","due":"2026-08-20","overdue":false,"deal":"מגדל משרדים","sev":null},{"title":"תשלום היטל השבחה — מגרש דרום","due":"2026-09-10","overdue":false,"deal":"אגרו-אנרגיה","sev":"קריטי"},{"title":"חידוש ערבות בנקאית","due":"2026-10-05","overdue":false,"deal":null,"sev":null}]},"assets":[{"id":"s1","code":"N-01","name":"מרכז מסחרי — אגף חנויות","owner_short":"חברה א׳","owner":"חברה א׳ בע״מ","asset_type":"מסחרי","property":"צפון","floor":"קרקע","area":"420","gush":"12345/7","is_rented":true,"for_sale":false,"valuation":5200000,"notes":"נכס עוגן, תפוסה מלאה","leases":[{"tenant":"רשת קמעונאות","rent":15000,"start":"2023-01","end":"2027-12","opt":"אין","guar":"ערבות בנקאית 3 חודשים"}],"loans":[{"lender":"בנק מסחרי","principal":3200000,"interest":"פריים+1.2%"}],"docs":[{"cat":"חוזה","name":"הסכם שכירות ראשי","loc":"https://example.com/lease-n01"}]},{"id":"s2","code":"N-02","name":"משרד במגדל — קומה 8","owner_short":"חברה א׳","owner":"חברה א׳ בע״מ","asset_type":"משרדים","property":"מרכז","floor":"8","area":"180","gush":null,"is_rented":true,"for_sale":false,"valuation":3400000,"notes":null,"leases":[{"tenant":"חברת הייטק","rent":12000,"start":"2022-06","end":"2026-08","opt":"שנה + שנה","guar":null}],"loans":[],"docs":[]},{"id":"s3","code":"N-03","name":"מחסן לוגיסטי","owner_short":"שותפות ב׳","owner":"שותפות ב׳","asset_type":"תעשייה","property":"דרום","floor":null,"area":"600","gush":"5566/12","is_rented":true,"for_sale":false,"valuation":2800000,"notes":null,"leases":[{"tenant":"מפעל","rent":9500,"start":"2024-03","end":"2029-02","opt":"אין","guar":"שטר חוב"}],"loans":[{"lender":"בנק ב׳","principal":1900000,"interest":"קבועה 4.1%"}],"docs":[]},{"id":"s4","code":"N-04","name":"דירת מגורים להשקעה","owner_short":"אישי","owner":"בעלות אישית","asset_type":"מגורים","property":"צפון","floor":"3","area":"95","gush":null,"is_rented":true,"for_sale":false,"valuation":2100000,"notes":null,"leases":[{"tenant":"שוכר פרטי","rent":6800,"start":"2025-09","end":"2026-09","opt":"אין","guar":null}],"loans":[{"lender":"משכנתא","principal":2600000,"interest":"משתנה"}],"docs":[]},{"id":"s5","code":"N-05","name":"מגרש אגרו-אנרגיה","owner_short":"שותפות ב׳","owner":"שותפות ב׳","asset_type":"קרקע","property":"דרום","floor":null,"area":"12 דונם","gush":"7788/3","is_rented":false,"for_sale":true,"asking_price":4800000,"sale_status":"במו״מ","sale_notes":"קונה פוטנציאלי בבדיקת נאותות","valuation":4500000,"notes":null,"leases":[],"loans":[],"docs":[]},{"id":"s6","code":"N-06","name":"חנות פינתית","owner_short":"חברה א׳","owner":"חברה א׳ בע״מ","asset_type":"מסחרי","property":"צפון","floor":"קרקע","area":"70","gush":null,"is_rented":false,"for_sale":true,"asking_price":3900000,"sale_status":"בפרסום","sale_notes":null,"valuation":null,"notes":null,"leases":[],"loans":[],"docs":[]},{"id":"s7","code":"N-07","name":"מגרש חקלאי","owner_short":"אישי","owner":"בעלות אישית","asset_type":"קרקע","property":"מרכז","floor":null,"area":"8 דונם","gush":null,"is_rented":false,"for_sale":true,"asking_price":null,"sale_status":"בחינת מחיר","sale_notes":"טרם תומחר","valuation":null,"notes":null,"leases":[],"loans":[],"docs":[]},{"id":"s8","code":"N-08","name":"דירה פנויה","owner_short":"אישי","owner":"בעלות אישית","asset_type":"מגורים","property":"צפון","floor":"5","area":"110","gush":null,"is_rented":false,"for_sale":false,"asking_rent":5200,"valuation":null,"notes":"פנויה — בהכנה להשכרה","leases":[],"loans":[],"docs":[]},{"id":"s9","code":"N-09","name":"יחידת אחסון","owner_short":"שותפות ב׳","owner":"שותפות ב׳","asset_type":"תעשייה","property":"דרום","floor":null,"area":"150","gush":null,"is_rented":false,"for_sale":false,"asking_rent":3000,"valuation":900000,"notes":null,"leases":[],"loans":[],"docs":[]}],"loans":[{"lender":"בנק מסחרי","principal":3200000,"interest":"פריים+1.2%","collateral":"מרכז מסחרי — אגף חנויות"},{"lender":"בנק ב׳","principal":1900000,"interest":"קבועה 4.1%","collateral":"מחסן לוגיסטי"},{"lender":"משכנתא","principal":2600000,"interest":"משתנה","collateral":"דירת מגורים להשקעה"}],"shared":[{"cat":"ביטוח","name":"פוליסת מטרייה 2026","loc":"https://example.com/insurance"},{"cat":"שמאות","name":"דוח שמאי — תיק נכסים","loc":"https://example.com/appraisal"},{"cat":"מיסוי","name":"אישורי ניכוי מס במקור","loc":"https://example.com/tax"}]};
 
-let D=null, KEY=localStorage.getItem("nx_hqkey")||"", LIVE=false, DEMO=false;
-let TAB="today", AR={}, PE={}, OB={};
-let capMode="capture", capUrg="week", rec=null;
+let D=null, KEY=localStorage.getItem("nx_k3")||"", LIVE=false, DEMO=false;
+let TAB="home", AR={}, PE={}, OB={};
+let capMode="capture", capUrg="week", rec=null, assetFilter="all", assetOwner="all", assetQ="";
+let homeView=localStorage.getItem("nx_hv")||"all";
+function setHomeView(v){ homeView=v; try{localStorage.setItem("nx_hv",v);}catch(e){} const host=$("#main"); if(host){ host.innerHTML=vHome(); host.scrollTop=0; } }
 
 const $=s=>document.querySelector(s), app=()=>document.getElementById("app");
 const esc=s=>(s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const URG={today:"היום",week:"השבוע",month:"החודש",whenever:"מתישהו"};
-const URGC={today:"red",week:"amber",month:"blue",whenever:"mut"};
-const cleanGoal=g=>(g||"").replace(/^\[.*?\]\s*/,"").trim();
-const nm0=s=>(s||"").split(" — ")[0].split(" / ")[0];
+const httpOk=u=>{ u=String(u==null?"":u); return /^https?:\/\//i.test(u)?u:""; };
+const URG={today:"היום",week:"השבוע",month:"החודש",whenever:"מתישהו"}, URGC={today:"crit",week:"warn",month:"info",whenever:"mut"};
+const cleanGoal=g=>(g||"").replace(/^\[.*?\]\s*/,"").trim(), nm0=s=>(s||"").split(" — ")[0].split(" / ")[0];
 function ts(iso){ if(!iso)return NaN; const t=new Date(iso).getTime(); return isNaN(t)?NaN:t; }
 function daysAgo(iso){ const t=ts(iso); return isNaN(t)?null:Math.floor((Date.now()-t)/864e5); }
 function dueIn(d){ if(!d)return null; const t=new Date(String(d).slice(0,10)+"T00:00:00").getTime(); return isNaN(t)?null:Math.round((t-Date.now())/864e5); }
 function fmtDay(d){ if(!d)return ""; const p=String(d).slice(0,10).split("-"); return p[2]+"."+p[1]; }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
+function shekel(n){ n=Number(n)||0; if(n>=1e6)return "₪"+(n/1e6).toFixed(n>=1e7?0:1)+"M"; if(n>=1e3)return "₪"+Math.round(n/1e3)+"K"; return "₪"+Math.round(n); }
 
-(function(){const t=localStorage.getItem("nx_theme"); if(t)document.documentElement.setAttribute("data-theme",t); setThemeColor();})();
-function setThemeColor(){ const d=(document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark"; const m=document.querySelector('meta[name=theme-color]'); if(m)m.setAttribute("content",d?"#0a0f1e":"#eef1f8"); }
-function toggleTheme(){ const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"); const nx=cur==="dark"?"light":"dark"; document.documentElement.setAttribute("data-theme",nx); localStorage.setItem("nx_theme",nx); setThemeColor(); }
+/* theme */
+(function(){const t=localStorage.getItem("nx_t3"); if(t)document.documentElement.setAttribute("data-theme",t); tc();})();
+function tc(){ const d=(document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark"; const m=document.querySelector('meta[name=theme-color]'); if(m)m.setAttribute("content",d?"#17150f":"#f4f1ea"); }
+function toggleTheme(){ const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"); const nx=cur==="dark"?"light":"dark"; document.documentElement.setAttribute("data-theme",nx); localStorage.setItem("nx_t3",nx); tc(); }
 
-/* ---------- data ---------- */
+/* data — fetch board + dash in parallel, merge */
 async function load(force){
   if(KEY){
     try{
-      const r=await fetch(API,{headers:{"x-nexus-key":KEY},cache:"no-store"});
-      if(r.status===403){ localStorage.removeItem("nx_hqkey"); KEY=""; }
-      else if(r.ok){ D=await r.json(); LIVE=true; DEMO=false; try{localStorage.setItem("nx_cache",JSON.stringify(D));}catch(e){} }
+      const [rb,rd]=await Promise.all([ fetch(API,{headers:{"x-nexus-key":KEY},cache:"no-store"}), fetch(DASH,{headers:{"x-nexus-key":KEY},cache:"no-store"}) ]);
+      if(rb.status===403){ localStorage.removeItem("nx_k3"); localStorage.removeItem("nx_c3"); KEY=""; LIVE=false; D=null; gate("המפתח אינו תקף — התחבר מחדש"); return; }
+      else if(rb.ok){ const board=await rb.json(); let dash={}; try{ if(rd.ok)dash=await rd.json(); }catch(e){}
+        D=Object.assign({},board,{dashboard:dash.dashboard||null,kpis:dash.kpis||null,assets:dash.assets||[],loans:dash.loans||[],shared:dash.shared||[]});
+        LIVE=true; DEMO=false; try{localStorage.setItem("nx_c3",JSON.stringify(D));}catch(e){} }
     }catch(e){}
-    if(!D && !force){ const c=localStorage.getItem("nx_cache"); if(c){ try{ D=JSON.parse(c); DEMO=!LIVE; }catch(e){} } }
-    if(!D && SNAP){ D=SNAP; DEMO=true; }   /* had a key but fully offline → demo rather than blank */
+    if(!D && !force){ const c=localStorage.getItem("nx_c3"); if(c){ try{ D=JSON.parse(c); DEMO=!LIVE; }catch(e){} } }
+    if(!D && SNAP){ D=SNAP; DEMO=true; }
   }
-  if(!D){ gate(); return; }                /* no key → key gate (which also offers the demo button) */
+  if(!D){ gate(); return; }
   if(SNAP && !LIVE) DEMO=true;
   index(); render();
 }
 function index(){ AR={};PE={};OB={};
-  (D.arenas||[]).forEach(a=>AR[a.id]=a);
-  (D.people||[]).forEach(p=>PE[p.id]=p);
+  (D.arenas||[]).forEach(a=>AR[a.id]=a); (D.people||[]).forEach(p=>PE[p.id]=p);
   (D.objectives||[]).forEach(o=>{(OB[o.arena_id]=OB[o.arena_id]||[]).push(o);});
 }
-const arenaName=id=>id&&AR[id]?AR[id].name:"";
-const personName=id=>id&&PE[id]?PE[id].name:"";
-
-/* HONEST arena activity: last corroborated touch + whether a real expectation broke.
-   Never conflates "never logged" with "dying". Red only when an expectation is broken. */
-function arenaActivity(id){
-  let last=null;
+const arenaName=id=>id&&AR[id]?AR[id].name:"", personName=id=>id&&PE[id]?PE[id].name:"";
+function arenaActivity(id){ let last=null;
   (D.events||[]).forEach(e=>{ if(e.arena_id===id){ const t=ts(e.happened_at); if(!isNaN(t)&&(last==null||t>last))last=t; } });
-  const today=todayISO();
-  let broken=null;
+  const today=todayISO(); let broken=null;
   (D.commitments||[]).forEach(c=>{ if(c.arena_id===id&&c.direction==="to_itay"&&c.due&&c.due<today) broken=broken||("התחייבות באיחור: "+c.what); });
   (OB[id]||[]).forEach(o=>{ if(o.next_step_due&&o.next_step_due<today) broken=broken||("צעד באיחור: "+(o.next_step||o.title)); });
   const days=last==null?null:Math.floor((Date.now()-last)/864e5);
   return {last,days,broken};
 }
-
-async function api(url,payload){
-  if(!LIVE) return {ok:true,demo:true};
+async function apiPost(url,payload){ if(!LIVE) return {ok:true,demo:true};
   const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json","x-nexus-key":KEY},body:JSON.stringify(payload)});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||j.error) throw new Error(j.error||("HTTP "+r.status));
-  return j;
-}
+  const j=await r.json().catch(()=>({})); if(!r.ok||j.error) throw new Error(j.error||("HTTP "+r.status)); return j; }
 let toastT;
-function toast(msg,undo){ const el=$("#toast"); if(!el)return;
-  el.querySelector(".m").textContent=msg;
-  const u=el.querySelector(".u"); u.style.display=undo?"":"none";
-  if(undo)u.onclick=()=>{ undo(); el.classList.remove("on"); };
-  el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),undo?5000:2600);
-}
+function toast(msg,undo){ const el=$("#toast"); if(!el)return; el.querySelector(".m").textContent=msg;
+  const u=el.querySelector(".u"); u.style.display=undo?"":"none"; if(undo)u.onclick=()=>{ undo(); el.classList.remove("on"); };
+  el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),undo?5000:2600); }
 function afterAct(){ if(LIVE) load(true); else render(); }
 
-/* ---------- render ---------- */
 function render(){ const el=app();
   if(!el.querySelector("header")) shell();
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===TAB));
   const host=$("#main");
-  if(TAB==="today")host.innerHTML=vToday();
+  if(TAB==="home")host.innerHTML=vHome();
   else if(TAB==="arenas")host.innerHTML=vArenas();
   else if(TAB==="decisions")host.innerHTML=vDecisions();
+  else if(TAB==="assets")host.innerHTML=vAssets();
   else if(TAB==="ask"){ host.innerHTML=vAsk(); renderAsk(); }
-  host.scrollTop=0; updateBadges();
+  host.scrollTop=0; badges();
   const dd=$("#demoDot"); if(dd)dd.style.display=DEMO?"":"none";
+  const fb=$("#fab"); if(fb)fb.style.display=TAB==="ask"?"none":"";
 }
-function updateBadges(){ const dec=(D.decisions||[]).filter(d=>d.status==="pending").length;
-  const b=document.querySelector('nav button[data-tab=decisions] .bdg'); if(b){ b.textContent=dec; b.style.display=dec?"":"none"; } }
+function badges(){ const dec=(D.decisions||[]).filter(d=>d.status==="pending").length; const b=document.querySelector('nav button[data-tab=decisions] .bdg'); if(b){ b.textContent=dec; b.style.display=dec?"":"none"; } }
 function shell(){
-  app().innerHTML=`
-  <header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div>
-    <span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span>
-    <button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
+  app().innerHTML=`<header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div><span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span><button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
   <main id="main"></main>
   <nav>
-    <button data-tab="today"><span class="ic">◎</span>היום</button>
-    <button data-tab="arenas"><span class="ic">▦</span>זירות</button>
-    <button data-tab="decisions"><span class="ic">⚖</span>החלטות<span class="bdg"></span></button>
-    <button data-tab="ask"><span class="ic">✦</span>שאל</button>
+    <button data-tab="home"><span class="ic">◈</span>בית</button>
+    <button data-tab="arenas"><span class="ic">▤</span>זירות</button>
+    <button data-tab="decisions"><span class="ic">✦</span>החלטות<span class="bdg"></span></button>
+    <button data-tab="assets"><span class="ic">▦</span>נכסים</button>
+    <button data-tab="ask"><span class="ic">✱</span>שאל</button>
   </nav>
   <button class="fab" id="fab" aria-label="לכידה">+</button>
   <div class="ov" id="ov"></div><div class="sheet" id="sheet"></div>
@@ -337,244 +325,254 @@ function shell(){
   document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});
   $("#fab").onclick=()=>captureSheet(); $("#moreBtn").onclick=()=>moreSheet(); $("#ov").onclick=closeSheet;
 }
+function secH(title,sub,n,act){ return `<div class="sec"><h2>${title}</h2>${n!=null?`<span class="n num">${n}</span>`:""}${sub?`<span class="n dim">· ${sub}</span>`:""}${act?`<span class="act" onclick="${act.fn}">${act.txt} ‹</span>`:""}</div>`; }
+function vt(cls,k,ksub,l,sub,tap){ return `<div class="vt ${cls}${tap?" tap":""}"${tap?` onclick="${tap}"`:""}><div class="k num">${k}${ksub?`<small> ${ksub}</small>`:""}</div><div class="l">${l}</div>${sub?`<div class="sub">${sub}</div>`:""}</div>`; }
 
-/* ================= TODAY ================= */
-function vToday(){
+/* ================= HOME — layered situation cockpit ================= */
+function vHome(){
   const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
-  const focus=D.focus;
+  const kp=D.kpis, dash=D.dashboard, focus=D.focus;
   const decPend=(D.decisions||[]).filter(d=>d.status==="pending");
-  const soon=[];
-  open.forEach(t=>{ const di=dueIn(t.due_date); if(di!=null&&di<=3)soon.push({t:t.title,due:t.due_date,di,kind:"משימה"}); });
-  (D.commitments||[]).forEach(c=>{ const di=dueIn(c.due); if(di!=null&&di<=3)soon.push({t:c.what,due:c.due,di,kind:"התחייבות"}); });
-  soon.sort((a,b)=>a.di-b.di);
-  const risk0=soon.find(s=>s.di<=0);
+  const soon=[]; open.forEach(t=>{ const di=dueIn(t.due_date); if(di!=null&&di<=3)soon.push({t:t.title,di,due:t.due_date,kind:"משימה"}); });
+  (D.commitments||[]).forEach(c=>{ const di=dueIn(c.due); if(di!=null&&di<=3)soon.push({t:c.what,di,due:c.due,kind:"התחייבות"}); });
+  soon.sort((a,b)=>a.di-b.di); const risk0=soon.find(s=>s.di<=0);
+  const escal=(D.followups||[]).filter(f=>f.level==="escalate"), remind=(D.followups||[]).filter(f=>f.level==="remind");
+  const activeAr=(D.arenas||[]).filter(a=>a.status==="active");
+  const radar=activeAr.map(a=>{ const act=arenaActivity(a.id); const cnt=open.filter(t=>t.arena_id===a.id).length; return {a,act,cnt}; })
+    .filter(x=>x.cnt>0&&(x.act.broken||(x.act.days!=null&&x.act.days>=6))).sort((a,b)=>(b.act.broken?1:0)-(a.act.broken?1:0)||(b.act.days||0)-(a.act.days||0)).slice(0,4);
+  const kd=(dash&&dash.key_dates)||[]; const kdSoon=kd.filter(k=>{ const di=dueIn(k.due); return k.overdue||(di!=null&&di<=90); });
   const todayT=open.filter(t=>t.urgency==="today");
-  const escal=(D.followups||[]).filter(f=>f.level==="escalate");
-  const remind=(D.followups||[]).filter(f=>f.level==="remind");
-  const radar=(D.arenas||[]).filter(a=>a.status==="active").map(a=>{
-    const act=arenaActivity(a.id); const cnt=open.filter(t=>t.arena_id===a.id).length;
-    return {a,act,cnt};
-  }).filter(x=>x.cnt>0 && (x.act.broken || (x.act.days!=null && x.act.days>=6)))
-    .sort((a,b)=>(b.act.broken?1:0)-(a.act.broken?1:0) || (b.act.days||0)-(a.act.days||0)).slice(0,4);
+  const redAr=radar.filter(x=>x.act.broken).length;
+  const kdOver=kdSoon.filter(k=>k.overdue).length;
   const caps=(D.captures||[]), closed=(D.closed_today||[]);
-  let h="";
 
-  /* hero */
-  h+=`<div class="hero">`;
-  if(risk0) h+=`<div class="override" onclick="go('today')">⚠ <span>דדליין היום שמסכן עסקה — <b>${esc(nm0(risk0.t))}</b> — גובר על הדבר האחד</span></div>`;
-  if(focus){
-    const st=focus.done?`<span class="badge" style="background:rgba(79,205,140,.22);color:#8ff0c0">✓ בוצע</span>`
-      :focus.approved?`<span class="badge" style="background:rgba(246,183,60,.9);color:#1c1405">מאושר</span>`
-      :`<span class="badge" style="background:rgba(255,255,255,.16);color:#fff">מוצע — ממתין לאישורך</span>`;
-    const carries=/נדחה|מוזנח/.test(focus.title||"");
-    h+=`<div class="lbl">⭐ הדבר האחד של היום</div><div class="txt">${esc(focus.title)}</div>${st}
-      ${!focus.done?`<div class="sub">${carries?"היום מטפלים בו בלי תירוצים.":"הכי מוזנח שנדחה שוב ושוב — היום סוגרים אותו."}</div>`:""}
-      <div class="acts">${!focus.approved?`<button class="btn amber sm" onclick="focusApprove()">אשר ✓</button>`:""}${!focus.done?`<button class="btn green sm" onclick="focusDone()">בוצע 🎯</button>`:""}<button class="btn ghost sm" onclick="focusPick()">החלף</button></div>`;
-  }else{
-    h+=`<div class="lbl">⭐ הדבר האחד של היום</div><div class="txt">עוד לא נקבע</div>
-      <div class="sub">הכי מוזנח שנדחה שוב ושוב — לא בהכרח הכי חשוב.</div>
-      <div class="acts"><button class="btn amber sm" onclick="focusPick()">קבע עכשיו</button></div>`;
+  /* ---- block builders (shared by the view lenses) ---- */
+  function bVitalsOp(){ let h=`<div class="grp-lbl">מצב תפעולי</div><div class="vitals">`;
+    h+=redAr?vt("c-crit",redAr,"","זירות דורשות טיפול",activeAr.length+" פעילות בסך הכל",`go('arenas')`):vt(activeAr.length?"c-good":"",activeAr.length,"","זירות פעילות","",`go('arenas')`);
+    h+=vt(decPend.length?"c-warn":"",decPend.length,"","החלטות ממתינות","",`go('decisions')`);
+    h+=vt(escal.length?"c-crit":"",escal.length,"","תקוע 8+ ימים","",null);
+    h+=vt("",open.length,"","משימות פתוחות",todayT.length?todayT.length+" להיום":"",null);
+    return h+`</div>`; }
+  function bVitalsFin(mt){ if(!kp)return ""; let h=`<div class="grp-lbl"${mt?' style="margin-top:13px"':""}>מצב פיננסי · הקש לנכסים</div><div class="vitals">`;
+    h+=vt("c-good tap",shekel(kp.rentKnown),"/חו׳","הכנסה חודשית",kp.rentLeases+" שכירויות",`go('assets')`);
+    h+=vt("c-brand tap",shekel(kp.loans),"","חוב פעיל",kp.loansCount+" הלוואות",`go('assets')`);
+    h+=vt("tap",Math.round(kp.rented/(kp.total||1)*100)+"%","","תפוסה",kp.rented+"/"+kp.total+" נכסים",`go('assets')`);
+    h+=vt(kdOver?"c-crit tap":kdSoon.length?"c-warn tap":"tap",kdSoon.length,"","תפוגות ≤90 יום",kdOver?kdOver+" באיחור":"",`go('assets')`);
+    return h+`</div>`; }
+  function bHero(){ let h=`<div class="hero">`;
+    if(risk0)h+=`<div class="override" onclick="setHomeView('focus')">⚠ <span>${risk0.di<0?"דדליין באיחור":"דדליין להיום"} — <b>${esc(nm0(risk0.t))}</b> — גובר על הדבר האחד</span></div>`;
+    if(focus){ const st=focus.done?`<span class="badge" style="background:rgba(94,196,140,.22);color:#a6efc9">✓ בוצע</span>`:focus.approved?`<span class="badge" style="background:rgba(205,155,99,.9);color:#1c1508">מאושר</span>`:`<span class="badge" style="background:rgba(243,234,214,.16);color:#f3ead6">מוצע — ממתין לאישורך</span>`;
+      const carries=/נדחה|מוזנח/.test(focus.title||"");
+      h+=`<div class="lbl">⭐ הדבר האחד של היום</div><div class="txt">${esc(focus.title)}</div>${st}${!focus.done?`<div class="sub">${carries?"היום מטפלים בו בלי תירוצים.":"הכי מוזנח שנדחה שוב ושוב — היום סוגרים אותו."}</div>`:""}<div class="acts">${!focus.approved?`<button class="btn brand sm" onclick="focusApprove()">אשר ✓</button>`:""}${!focus.done?`<button class="btn good sm" onclick="focusDone()">בוצע 🎯</button>`:""}<button class="btn ghost sm" onclick="focusPick()">החלף</button></div>`;
+    }else h+=`<div class="lbl">⭐ הדבר האחד של היום</div><div class="txt">עוד לא נקבע</div><div class="sub">הכי מוזנח שנדחה שוב ושוב — לא בהכרח הכי חשוב.</div><div class="acts"><button class="btn brand sm" onclick="focusPick()">קבע עכשיו</button></div>`;
+    return h+`</div>`; }
+  function bDecisions(){ if(!decPend.length)return ""; return secH("⚖️ החלטות","רק אתה מחליט",decPend.length,decPend.length>3?{txt:"הכל",fn:"go('decisions')"}:null)+`<div class="card">`+decPend.slice(0,3).map(decRow).join("")+`</div>`; }
+  function bSoon(){ if(!soon.length)return ""; return secH("⚠️ דדליינים קרובים","עד 3 ימים",soon.length)+`<div class="card">`+soon.slice(0,4).map(s=>`<div class="row stripe ${s.di<=1?"s-crit":"s-warn"}"><div class="main"><div class="t">${esc(s.t)}</div><div class="m"><span class="chip ${s.di<=1?"crit":"warn"}">${s.di<=0?"היום":s.di===1?"מחר":"בעוד "+s.di+" ימים"}</span><span class="dim">${s.kind} · ${fmtDay(s.due)}</span></div></div></div>`).join("")+`</div>`; }
+  function bRadar(){ if(!radar.length)return ""; return secH("📡 רדאר זירות","שקט = איתות בעיה",radar.length,{txt:"זירות",fn:"go('arenas')"})+`<div class="card">`+radar.map(x=>{ const red=!!x.act.broken; return `<div class="row stripe ${red?"s-crit":"s-warn"}" onclick="openArena('${x.a.id}')"><div class="main"><div class="t">${esc(nm0(x.a.name))}</div><div class="m"><span class="chip ${red?"crit":"warn"}">${red?esc(x.act.broken.slice(0,40)):(x.act.days!=null?x.act.days+" ימי שקט":"ללא תנועה מתועדת")}</span><span class="dim">${x.cnt} פתוחות</span></div></div><div class="lead dim">‹</div></div>`; }).join("")+`</div>`; }
+  function bExpire(){ if(!kdSoon.length)return ""; return secH("📅 תפוגות ודדליינים","חוזי · אבני דרך",kdSoon.length,{txt:"נכסים",fn:"go('assets')"})+`<div class="card">`+kdSoon.slice(0,6).map(k=>{ const di=dueIn(k.due); return `<div class="row stripe ${k.overdue?"s-crit":di!=null&&di<=30?"s-warn":"s-info"}"><div class="main"><div class="t">${esc(k.title)}</div><div class="m"><span class="chip ${k.overdue?"crit":di!=null&&di<=30?"warn":"info"}">${k.overdue?"באיחור":"עד "+fmtDay(k.due)}</span>${k.deal?`<span class="dim">${esc(k.deal)}</span>`:""}${k.sev==="קריטי"?`<span class="chip crit">קריטי</span>`:""}</div></div></div>`; }).join("")+`</div>`; }
+  function bWaiting(){ if(!(escal.length||remind.length))return ""; return secH("⏳ ממתין לאחרים","על התוצר, לא על האדם",escal.length+remind.length)+`<div class="card">`+[...escal,...remind].slice(0,5).map(f=>`<div class="row stripe ${f.level==="escalate"?"s-crit":"s-warn"}"><div class="lead" style="background:${f.level==="escalate"?"var(--crit-bg)":"var(--warn-bg)"};color:${f.level==="escalate"?"var(--crit)":"var(--warn)"}">${f.level==="escalate"?"❗":"⏰"}</div><div class="main"><div class="t">${esc(f.title)}</div><div class="m">${f.arena?`<span class="dim">${esc(nm0(f.arena))}</span><span class="dot"></span>`:""}<span class="dim">ממתין ${esc(f.days_waiting)} ימים</span></div></div></div>`).join("")+`</div>`; }
+  function bCaptures(){ if(!caps.length)return ""; return secH("📥 קליטות","הקש לניקוז",caps.length)+`<div class="card">`+caps.slice(0,5).map(c=>`<div class="row" onclick="triage('${c.id}')"><div class="lead dim">·</div><div class="main"><div class="t" style="font-weight:500">${esc((c.text||"").slice(0,130))}</div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
+  function bClosed(){ if(!closed.length)return ""; return secH("✅ נסגר היום","מומנטום",closed.length)+`<div class="card"><div class="pad" style="display:flex;flex-wrap:wrap;gap:6px">`+closed.map(c=>`<span class="chip good" style="font-weight:600">${esc((c.title||"").slice(0,38))}</span>`).join("")+`</div></div>`; }
+
+  /* ---- header + view switcher ---- */
+  let h=`<div class="sec"><h2>◈ תמונת מצב</h2><span class="n dim">· ${LIVE?"חי":DEMO?"הדגמה":"מטמון"}</span></div>`;
+  const VIEWS=[["all","הכל"],["focus","דורש אותי"],["money","פיננסי"],["move","תנועה"]];
+  if(!VIEWS.some(v=>v[0]===homeView))homeView="all";
+  // cross-lens urgency signal: a lens carries a dot when it holds items that need attention and is not currently shown
+  const vAlert={all:false, focus:!!(decPend.length||soon.length||escal.length), money:!!kdOver, move:!!redAr};
+  h+=`<div class="hviews">`+VIEWS.map(v=>`<button class="${homeView===v[0]?"on":""}" onclick="setHomeView('${v[0]}')">${esc(v[1])}${vAlert[v[0]]&&homeView!==v[0]?'<span class="vbd"></span>':""}</button>`).join("")+`</div>`;
+
+  /* ---- assemble by lens ---- */
+  if(homeView==="all"){
+    h+=bVitalsOp()+bVitalsFin(true);
+    h+=`<div class="sec" style="margin-top:24px"><h2>דורש אותך</h2></div>`+bHero()+bDecisions()+bSoon();
+    h+=`<div class="divider"><span>תנועה · תמונה, לא פעולה</span></div>`+bRadar()+bExpire()+bWaiting()+bCaptures()+bClosed();
+  } else if(homeView==="focus"){
+    h+=`<div class="viewhint">מה שרק אתה יכול להזיז — הדבר האחד, החלטות, דדליינים קרובים ומשימות שממתינות לאחרים.</div>`;
+    h+=bHero()+bDecisions()+bSoon()+bWaiting();
+    if(!decPend.length&&!soon.length&&!escal.length&&!remind.length&&focus&&focus.done)h+=`<div class="card"><div class="empty">אין עוד מה שדורש הכרעה כרגע ✓</div></div>`;
+  } else if(homeView==="money"){
+    if(kp){ h+=bVitalsFin(false)+bExpire();
+      h+=`<div style="margin:16px 4px 0"><button class="btn brand block" onclick="go('assets')">▦ פירוט מלא — נכסים, שכירויות והלוואות ‹</button></div>`;
+    } else h+=`<div class="card"><div class="empty">נתונים פיננסיים זמינים במצב מחובר.</div></div>`;
+  } else { /* move */
+    h+=`<div class="viewhint">תמונה, לא פעולה — מה זז, מה שקט מדי, ומה נסגר.</div>`;
+    const mv=bRadar()+bExpire()+bWaiting()+bCaptures()+bClosed();
+    h+= mv || `<div class="card"><div class="empty">שקט תפעולי — אין תנועה חריגה לתשומת לבך ✓</div></div>`;
   }
-  h+=`</div>`;
-
-  /* ACTION ZONE */
-  if(decPend.length){ h+=secH("⚖️ דורש הכרעה","רק אתה מחליט",decPend.length, decPend.length>3?{txt:"כל ההחלטות",fn:"go('decisions')"}:null);
-    h+=`<div class="card">`+decPend.slice(0,3).map(decRow).join("")+(decPend.length>3?`<div class="moreline" onclick="go('decisions')">+ ${decPend.length-3} החלטות נוספות ›</div>`:"")+`</div>`; }
-  if(soon.length){ h+=secH("⚠️ מסכן עסקה / דדליין","עד 3 ימים",soon.length);
-    h+=`<div class="card">`+soon.slice(0,4).map(s=>`<div class="row stripe ${s.di<=1?"s-red":"s-amber"}"><div class="main"><div class="t">${esc(s.t)}</div><div class="m"><span class="chip ${s.di<=1?"red":"amber"}">${s.di<=0?"היום":s.di===1?"מחר":"בעוד "+s.di+" ימים"}</span><span class="dim">${s.kind} · ${fmtDay(s.due)}</span></div></div></div>`).join("")+`</div>`; }
-  if(radar.length){ h+=secH("📡 רדאר זירות","שקט = איתות בעיה",radar.length,{txt:"כל הזירות",fn:"go('arenas')"});
-    h+=`<div class="card">`+radar.map(x=>{ const red=!!x.act.broken;
-      const label=x.act.broken?esc(x.act.broken.slice(0,42)):(x.act.days!=null?x.act.days+" ימי שקט":"ללא תנועה מתועדת");
-      return `<div class="row stripe ${red?"s-red":"s-amber"}" onclick="openArena('${x.a.id}')"><div class="main"><div class="t">${esc(nm0(x.a.name))}</div><div class="m"><span class="chip ${red?"red":"amber"}">${label}</span><span class="dim">${x.cnt} משימות פתוחות</span></div></div><div class="lead" style="background:transparent;color:var(--mut)">›</div></div>`;}).join("")+`</div>`; }
-  h+=secH("🎯 הכדור אצלך היום","",todayT.length);
-  if(todayT.length){ h+=`<div class="card">`+todayT.slice(0,4).map(taskRow).join("")+(todayT.length>4?`<div class="moreline" onclick="go('arenas')">+ ${todayT.length-4} משימות נוספות להיום ›</div>`:"")+`</div>`; }
-  else h+=`<div class="card"><div class="empty">נקי להיום ✓</div></div>`;
-
-  /* VIEW ZONE — coverage, not action */
-  h+=`<div class="divider"><span>— מכאן: לתמונה, לא לפעולה —</span></div>`;
-  if(escal.length||remind.length){ h+=secH("⏳ ממתין לאחרים","נדנוד על התוצר, לא על האדם",escal.length+remind.length);
-    h+=`<div class="card">`+[...escal,...remind].slice(0,6).map(f=>`<div class="row stripe ${f.level==="escalate"?"s-red":"s-amber"}"><div class="lead" style="background:${f.level==="escalate"?"var(--red-bg)":"var(--amber-bg)"};color:${f.level==="escalate"?"var(--red)":"var(--amber)"}">${f.level==="escalate"?"❗":"⏰"}</div><div class="main"><div class="t">${esc(f.title)}</div><div class="m">${f.arena?`<span class="dim">${esc(nm0(f.arena))}</span><span class="dot"></span>`:""}<span class="dim">ממתין ${f.days_waiting} ימים</span></div></div></div>`).join("")+`</div>`; }
-  if(caps.length){ h+=secH("📥 קליטות","הקש כדי לנקז → משימה/רעיון",caps.length);
-    h+=`<div class="card">`+caps.slice(0,6).map(c=>`<div class="row" onclick="triage('${c.id}')"><div class="lead" style="background:var(--surface2);color:var(--mut)">·</div><div class="main"><div class="t" style="font-weight:500">${esc((c.text||"").slice(0,140))}</div></div><div class="lead" style="background:transparent;color:var(--mut)">›</div></div>`).join("")+`</div>`; }
-  if(closed.length){ h+=secH("✅ נסגר היום","מומנטום",closed.length);
-    h+=`<div class="card"><div class="pad" style="display:flex;flex-wrap:wrap;gap:6px">`+closed.map(c=>`<span class="chip green" style="font-weight:600">${esc((c.title||"").slice(0,40))}</span>`).join("")+`</div></div>`; }
-  h+=`<div class="foot">Nexus HQ · ${LIVE?"מחובר חי":DEMO?"מצב הדגמה (נתונים סינתטיים)":"מטמון"} · ${esc(D.now||"")}</div>`;
+  h+=`<div class="foot">Nexus HQ · ${LIVE?"מחובר חי":DEMO?"הדגמה (נתונים סינתטיים)":"מטמון"} · ${esc(D.now||"")}</div>`;
   return h;
 }
-function secH(title,sub,n,act){ return `<div class="sec"><h2>${title}</h2>${n!=null?`<span class="n">${n}</span>`:""}${sub?`<span class="n dim">· ${sub}</span>`:""}${act?`<span class="act" onclick="${act.fn}">${act.txt} ›</span>`:""}</div>`; }
-function decRow(d){ const di=dueIn(d.needed_by);
-  return `<div class="row stripe s-amber" onclick="openDecision('${d.id}')"><div class="lead" style="background:var(--amber-bg);color:var(--amber)">⚖</div><div class="main"><div class="t">${esc(d.title)}</div><div class="m">${d.arena_id?`<span class="dim">${esc(nm0(arenaName(d.arena_id)))}</span>`:""}${d.needed_by?`<span class="dot"></span><span class="chip ${di!=null&&di<=2?"red":"mut"}">עד ${fmtDay(d.needed_by)}</span>`:""}</div></div><div class="lead" style="background:transparent;color:var(--mut)">›</div></div>`; }
-function taskRow(t){ const owner=personName(t.owner_id);
-  return `<div class="row" onclick="openTask('${t.id}')"><div class="lead" style="background:var(--surface2);color:var(--${URGC[t.urgency]||"mut"})">${t.important?"★":"○"}</div><div class="main"><div class="t">${esc(t.title)}</div><div class="m"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span>${t.arena_id?`<span class="dim">${esc(nm0(arenaName(t.arena_id)))}</span>`:""}${owner?`<span class="dot"></span><span class="dim">${esc(owner)}</span>`:""}${t.due_date?`<span class="dot"></span><span class="dim">${fmtDay(t.due_date)}</span>`:""}</div></div></div>`; }
+function decRow(d){ const di=dueIn(d.needed_by); return `<div class="row stripe s-brand" onclick="openDecision('${d.id}')"><div class="lead" style="background:var(--brand-soft);color:var(--brand-2)">✦</div><div class="main"><div class="t">${esc(d.title)}</div><div class="m">${d.arena_id?`<span class="dim">${esc(nm0(arenaName(d.arena_id)))}</span>`:""}${d.needed_by?`<span class="dot"></span><span class="chip ${di!=null&&di<=2?"crit":"mut"}">עד ${fmtDay(d.needed_by)}</span>`:""}</div></div><div class="lead dim">‹</div></div>`; }
+function taskRow(t){ const owner=personName(t.owner_id); return `<div class="row" onclick="openTask('${t.id}')"><div class="lead" style="background:var(--surface2);color:var(--${URGC[t.urgency]||"mut"})">${t.important?"★":"○"}</div><div class="main"><div class="t">${esc(t.title)}</div><div class="m"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span>${t.arena_id?`<span class="dim">${esc(nm0(arenaName(t.arena_id)))}</span>`:""}${owner?`<span class="dot"></span><span class="dim">${esc(owner)}</span>`:""}${t.due_date?`<span class="dot"></span><span class="dim">${fmtDay(t.due_date)}</span>`:""}</div></div></div>`; }
+
+/* ================= ASSETS — dossier cockpit ================= */
+function vAssets(){
+  const kp=D.kpis||{}, assets=D.assets||[], loans=D.loans||[], shared=D.shared||[];
+  let h=`<div class="sec"><h2>▦ נכסים</h2><span class="n dim">· ${assets.length} נכסים · תמונת הון</span></div>`;
+  if(D.kpis){
+    const total=kp.total||0, rented=kp.rented||0, occ=total?Math.round(rented/total*100):0, valC=kp.valuationCount||0;
+    h+=`<div class="vitals">`;
+    h+=vt("c-good",shekel(kp.rentKnown||0),"/חו׳","הכנסה חודשית",(kp.rentLeases||0)+" שכירויות");
+    h+=vt("c-brand",shekel(kp.loans||0),"","חוב פעיל",(kp.loansCount||0)+" הלוואות");
+    h+=vt("",rented+"/"+total,"","מושכר/סה״כ",occ+"% תפוסה");
+    h+=vt("c-warn",kp.vacant||0,"","פנויים","להשכרה/מכירה");
+    h+=vt("c-brand",kp.forSale||0,"","למכירה",shekel(kp.forSaleAsking||0)+" · "+(kp.forSalePriced||0)+"/"+(kp.forSale||0)+" מתומחרים");
+    h+=vt("",shekel(kp.valuation||0),"","שווי מוערך",valC+"/"+total+" מוערכים");
+    h+=`</div>`;
+    if(total&&valC<total)h+=`<div class="card pad" style="margin-top:9px;font-size:12px;color:var(--ink2)">שווי התיק חלקי — ${valC} מתוך ${total} נכסים מוערכים.<div class="meter"><i style="width:${Math.round(valC/total*100)}%"></i></div></div>`;
+  } else h+=`<div class="card pad" style="margin-top:2px;font-size:12.5px;color:var(--ink2)">נתוני התיק הפיננסי לא נטענו כרגע — זמין במצב מחובר.</div>`;
+  // filters
+  const owners=[...new Set(assets.map(a=>a.owner_short).filter(Boolean))];
+  h+=`<div class="sec"><h2>הנכסים</h2></div><input class="searchbox" id="assetSearch" placeholder="חפש נכס / שוכר / גוש…" value="${esc(assetQ)}" oninput="assetSearch(this.value)">`;
+  h+=`<div class="chips-row">`+[["all","הכל"],["rented","מושכר"],["vacant","פנוי"],["sale","למכירה"]].map(f=>`<span class="c ${assetFilter===f[0]?"on":""}" onclick="setAssetF('${f[0]}')">${f[1]}</span>`).join("")+`</div>`;
+  if(owners.length>1)h+=`<div class="chips-row">`+[["all","כל הבעלים"],...owners.map(o=>[o,o])].map(o=>`<span class="c ${assetOwner===o[0]?"on":""}" data-o="${esc(o[0])}" onclick="setAssetOEl(this)">${esc(o[1])}</span>`).join("")+`</div>`;
+  h+=`<div class="card" id="assetList">`+assetRows(assets)+`</div>`;
+  if(loans.length){ h+=secH("🏦 הלוואות ומשכנתאות","",loans.length); h+=`<div class="card" style="overflow-x:auto"><table><thead><tr><th>מלווה</th><th>יתרת קרן</th><th>ריבית</th><th>בטוחה</th></tr></thead><tbody>`+loans.map(l=>`<tr><td>${esc(l.lender||"")}</td><td class="num" style="font-weight:700">${l.principal?shekel(l.principal):"—"}</td><td>${esc(l.interest||"—")}</td><td class="dim" style="font-size:11.5px">${esc((l.collateral||"—").slice(0,40))}</td></tr>`).join("")+`</tbody></table></div>`; }
+  if(shared.length){ h+=secH("📁 ספריית מסמכים","",shared.length); h+=`<div class="card pad">`+shared.slice(0,20).map(d=>{ const u=httpOk(d.loc); return u?`<a class="doca" href="${esc(u)}" target="_blank" rel="noopener">• [${esc(d.cat||"אחר")}] ${esc(d.name)} ↗</a>`:`<div class="kv dim">• [${esc(d.cat||"אחר")}] ${esc(d.name)}</div>`; }).join("")+`</div>`; }
+  return h;
+}
+function assetMatch(a){ if(assetFilter==="rented"&&!a.is_rented)return false; if(assetFilter==="vacant"&&a.is_rented)return false; if(assetFilter==="sale"&&!a.for_sale)return false; if(assetOwner!=="all"&&a.owner_short!==assetOwner)return false;
+  if(assetQ){ const s=((a.code||"")+" "+(a.name||"")+" "+(a.owner||"")+" "+(a.gush||"")+" "+((a.leases||[])[0]?(a.leases[0].tenant||""):"")).toLowerCase(); if(s.indexOf(assetQ.toLowerCase())<0)return false; } return true; }
+function assetRows(assets){ const rows=assets.filter(assetMatch); if(!rows.length)return `<div class="empty">אין נכסים בסינון הזה</div>`;
+  return rows.map(a=>{ const cls=a.is_rented?"rented":a.for_sale?"sale":"vacant"; const l0=(a.leases||[])[0];
+    const right=a.is_rented?(l0&&l0.rent?shekel(l0.rent)+"/חו׳":""):a.for_sale?(a.asking_price?shekel(a.asking_price):"למכירה"):(a.asking_rent?shekel(a.asking_rent)+"/חו׳":"פנוי");
+    return `<div class="asset ${cls}" id="as_${a.id}"><div class="ah" onclick="toggleAsset('${a.id}')"><div class="main" style="flex:1;min-width:0"><div class="an">${esc(a.name||a.code||"נכס")} <span class="acode">${esc(a.owner_short||"")}</span></div><div class="ameta">${esc(a.asset_type||"")}${a.property?`<span class="dot"></span>${esc(a.property)}`:""}${a.for_sale?`<span class="chip brand">למכירה</span>`:""}</div></div><div class="aright">${right}</div></div><div class="adet">${assetDetail(a)}</div></div>`;
+  }).join("");
+}
+function assetDetail(a){ let h=`<div style="margin-top:2px">`;
+  const facts=[]; if(a.floor)facts.push("קומה "+esc(a.floor)); if(a.area)facts.push(esc(a.area)+" מ״ר"); if(a.gush)facts.push(esc(a.gush)); if(a.owner)facts.push("בעלים: "+esc(a.owner));
+  h+=facts.map(f=>`<span class="fact">${f}</span> `).join("");
+  if(a.notes)h+=`<div class="kv dim" style="margin-top:6px">${esc(a.notes)}</div>`;
+  if((a.leases||[]).length){ h+=`<h5>שכירות</h5>`; a.leases.forEach(l=>{ h+=`<div class="kv"><b>${esc(l.tenant||"—")}</b>${l.rent?` · ${shekel(l.rent)}/חו׳`:""}</div><div class="kv dim">${esc(l.start||"")}${l.end?` ← ${esc(l.end)}`:""}${l.opt&&l.opt!=="אין"?` · אופציה: ${esc(l.opt)}`:""}</div>${l.guar?`<div class="kv dim">בטוחות: ${esc(l.guar)}</div>`:""}`; }); }
+  if((a.loans||[]).length){ h+=`<h5>מימון</h5>`; a.loans.forEach(l=>{ h+=`<div class="kv"><b>${esc(l.lender||"")}</b> · ${l.principal?shekel(l.principal):"—"}${l.interest?` · ${esc(l.interest)}`:""}</div>`; }); }
+  if(a.for_sale){ h+=`<h5>מכירה</h5><div class="kv">${esc(a.sale_status||"מיועד למכירה")} · מבוקש: <b>${a.asking_price?shekel(a.asking_price):"—"}</b></div>${a.sale_notes?`<div class="kv dim">${esc(a.sale_notes)}</div>`:""}`; }
+  h+=`<h5>מסמכים</h5>`;
+  if((a.docs||[]).length)h+=(a.docs||[]).map(d=>{ const u=httpOk(d.loc); return u?`<a class="doca" href="${esc(u)}" target="_blank" rel="noopener">• [${esc(d.cat||"אחר")}] ${esc(d.name)} ↗</a>`:`<div class="kv dim">• [${esc(d.cat||"אחר")}] ${esc(d.name)}</div>`; }).join("");
+  else if(httpOk(a.folder_url))h+=`<a class="doca" href="${esc(httpOk(a.folder_url))}" target="_blank" rel="noopener">📁 תיקיית הנכס ↗</a>`;
+  else h+=`<div class="mini-empty">אין מסמכים משויכים</div>`;
+  h+=`</div>`; return h;
+}
+function toggleAsset(id){ const el=$("#as_"+id); if(el)el.classList.toggle("open"); }
+function setAssetF(f){ assetFilter=f; render(); } function setAssetO(o){ assetOwner=o; render(); }
+function setAssetOEl(el){ setAssetO(el.getAttribute("data-o")); }
+function assetSearch(v){ assetQ=v; const el=$("#assetList"); if(el)el.innerHTML=assetRows(D.assets||[]); }
 
 /* ================= ARENAS ================= */
-function vArenas(){
-  const arenas=(D.arenas||[]), open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
+function vArenas(){ const arenas=(D.arenas||[]), open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
   const order={active:0,pipeline:1,on_hold:2,archived:3};
-  const active=arenas.filter(a=>a.status==="active"||a.status==="pipeline"||a.status==="on_hold").sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||(a.name||"").localeCompare(b.name||"","he"));
+  const active=arenas.filter(a=>a.status!=="archived").sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||(a.name||"").localeCompare(b.name||"","he"));
   const inactive=arenas.filter(a=>a.status==="archived");
-  let h=secH("🏗️ זירות","כל זירה מול מטרת-העל שלה",arenas.length);
+  let h=secH("▤ זירות","כל זירה מול מטרת-העל",arenas.length);
   h+=active.map(a=>arenaCard(a,open)).join("");
-  if(inactive.length) h+=`<div class="sec" style="margin-top:16px"><span class="act" onclick="toggleArchived(this)">הצג לא-פעילות (${inactive.length}) ›</span></div><div id="archived" style="display:none">${inactive.map(a=>arenaCard(a,open)).join("")}</div>`;
+  if(inactive.length)h+=`<div class="sec" style="margin-top:16px"><span class="act" onclick="toggleArchived(this)">הצג לא-פעילות (${inactive.length}) ‹</span></div><div id="archived" style="display:none">${inactive.map(a=>arenaCard(a,open)).join("")}</div>`;
   return h;
 }
-function toggleArchived(el){ const d=$("#archived"); if(d){ const on=d.style.display==="none"; d.style.display=on?"block":"none"; el.textContent=(on?"הסתר לא-פעילות ‹":"הצג לא-פעילות ("+d.children.length+") ›"); } }
-function arenaCard(a,open){
-  const cnt=open.filter(t=>t.arena_id===a.id).length;
-  const act=arenaActivity(a.id); const obj=(OB[a.id]||[])[0]; const goal=cleanGoal(a.goal);
+function toggleArchived(el){ const d=$("#archived"); if(d){ const on=d.style.display==="none"; d.style.display=on?"block":"none"; el.textContent=on?"הסתר לא-פעילות ⌄":"הצג לא-פעילות ("+d.children.length+") ‹"; } }
+function arenaCard(a,open){ const cnt=open.filter(t=>t.arena_id===a.id).length; const act=arenaActivity(a.id); const obj=(OB[a.id]||[])[0]; const goal=cleanGoal(a.goal);
   const silent=a.status==="active"&&cnt>0&&(act.broken||(act.days!=null&&act.days>=6));
-  const stc={active:"green",pipeline:"blue",archived:"mut",on_hold:"amber"}[a.status]||"mut";
-  const stt={active:"פעילה",pipeline:"pipeline",archived:"ארכיון",on_hold:"בהמתנה"}[a.status]||a.status;
-  const recency=act.days!=null?(act.days<=0?"היום":act.days===1?"אתמול":"לפני "+act.days+" ימים"):"ללא תנועה מתועדת";
-  const recRed=act.days!=null&&act.days>=6;
-  return `<div class="card arena" onclick="openArena('${a.id}')" style="margin-top:9px">
-    <div class="top"><div class="nm">${esc(nm0(a.name))}</div><span style="flex:1"></span><span class="chip ${stc}">${stt}</span>${silent?`<span class="chip ${act.broken?"red":"amber"}">${act.broken?"דורש טיפול":"שקט"}</span>`:""}</div>
-    ${goal?`<div class="goal">🎯 ${esc(goal.length>150?goal.slice(0,150)+"…":goal)}</div>`:""}
-    <div class="meta"><span class="chip mut">${cnt} משימות</span>${obj&&obj.next_step?`<span class="dim">→ ${esc(obj.next_step.slice(0,52))}</span><span class="dot"></span>`:""}<span class="dim" style="${recRed?"color:var(--red)":""}">עודכן ${recency}</span></div></div>`;
+  const stc={active:"good",pipeline:"info",archived:"mut",on_hold:"warn"}[a.status]||"mut"; const stt={active:"פעילה",pipeline:"pipeline",archived:"ארכיון",on_hold:"בהמתנה"}[a.status]||a.status;
+  const rec=act.days!=null?(act.days<=0?"היום":act.days===1?"אתמול":"לפני "+act.days+" ימים"):"ללא תנועה מתועדת"; const recRed=act.days!=null&&act.days>=6;
+  return `<div class="card pad" onclick="openArena('${a.id}')" style="cursor:pointer;margin-top:9px"><div style="display:flex;align-items:center;gap:8px"><div class="an serif" style="font-size:16px;font-weight:700">${esc(nm0(a.name))}</div><span style="flex:1"></span><span class="chip ${stc}">${stt}</span>${silent?`<span class="chip ${act.broken?"crit":"warn"}">${act.broken?"דורש טיפול":"שקט"}</span>`:""}</div>${goal?`<div style="font-size:12.5px;color:var(--ink2);margin-top:8px;line-height:1.45;border-inline-start:2px solid var(--brand);padding-inline-start:9px">🎯 ${esc(goal.length>150?goal.slice(0,150)+"…":goal)}</div>`:""}<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;font-size:11.5px;color:var(--mut);align-items:center"><span class="chip mut">${cnt} משימות</span>${obj&&obj.next_step?`<span class="dim">→ ${esc(obj.next_step.slice(0,50))}</span><span class="dot"></span>`:""}<span class="dim" style="${recRed?"color:var(--crit)":""}">עודכן ${rec}</span></div></div>`;
 }
-function openArena(id){
-  const a=AR[id]; if(!a)return;
+function openArena(id){ const a=AR[id]; if(!a)return;
   const open=(D.tasks||[]).filter(t=>(t.status==="open"||t.status==="waiting")&&t.arena_id===id);
-  const decs=(D.decisions||[]).filter(d=>d.status==="pending"&&d.arena_id===id);
-  const objs=OB[id]||[], toMe=(D.commitments||[]).filter(c=>c.arena_id===id&&c.direction==="to_itay"), byMe=(D.commitments||[]).filter(c=>c.arena_id===id&&c.direction==="by_itay");
+  const decs=(D.decisions||[]).filter(d=>d.status==="pending"&&d.arena_id===id), objs=OB[id]||[];
+  const toMe=(D.commitments||[]).filter(c=>c.arena_id===id&&c.direction==="to_itay"), byMe=(D.commitments||[]).filter(c=>c.arena_id===id&&c.direction==="by_itay");
   const evs=(D.events||[]).filter(e=>e.arena_id===id).slice(0,5), goal=cleanGoal(a.goal);
   const list=(arr,f,e)=>arr.length?arr.map(f).join(""):`<div class="mini-empty">${e}</div>`;
   let h=`<div class="grab"></div><h3>${esc(a.name)}</h3><div class="sub2">${esc((a.summary||"").slice(0,240))}</div>`;
-  if(goal)h+=`<div class="card" style="padding:12px 14px;background:var(--surface2)"><div style="font-size:11.5px;font-weight:800;color:var(--brand);letter-spacing:.1em;margin-bottom:5px">🎯 מטרת-על</div><div style="font-size:14px;line-height:1.5">${esc(goal)}</div></div>`;
+  if(goal)h+=`<div class="card pad" style="background:var(--surface2)"><div style="font-size:11px;font-weight:800;color:var(--brand);letter-spacing:.09em;margin-bottom:5px">🎯 מטרת-על</div><div style="font-size:14px;line-height:1.5">${esc(goal)}</div></div>`;
   if(objs.length)h+=`<div class="blk"><h4>יעדים והצעד הבא</h4>${objs.map(o=>`<div class="kv">• <b>${esc(o.title)}</b>${o.next_step?`<br><span class="dim" style="padding-inline-start:12px">→ ${esc(o.next_step)}${o.next_step_due?" ("+fmtDay(o.next_step_due)+")":""}</span>`:""}</div>`).join("")}</div>`;
   h+=`<div class="blk"><h4>משימות פתוחות · ${open.length}</h4>${list(open,t=>`<div class="li"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span><span>${esc(t.title)}${t.due_date?` <span class="dim">(${fmtDay(t.due_date)})</span>`:""}</span></div>`,"אין משימות פתוחות ✓")}</div>`;
-  if(decs.length)h+=`<div class="blk"><h4>החלטות ממתינות · ${decs.length}</h4>${decs.map(d=>`<div class="li">⚖ <span>${esc(d.title)}</span></div>`).join("")}</div>`;
+  if(decs.length)h+=`<div class="blk"><h4>החלטות ממתינות · ${decs.length}</h4>${decs.map(d=>`<div class="li">✦ <span>${esc(d.title)}</span></div>`).join("")}</div>`;
   h+=`<div class="blk"><h4>↪ חייבים לך · ${toMe.length}</h4>${list(toMe,c=>`<div class="li"><span>${esc(c.what)}${c.person_id?` <span class="dim">— ${esc(personName(c.person_id))}</span>`:""}${c.due?` <span class="dim">(${fmtDay(c.due)})</span>`:""}</span></div>`,"—")}</div>`;
   h+=`<div class="blk"><h4>↩ אתה חייב · ${byMe.length}</h4>${list(byMe,c=>`<div class="li"><span>${esc(c.what)}</span></div>`,"—")}</div>`;
-  if(evs.length)h+=`<div class="blk"><h4>אירועים אחרונים</h4>${evs.map(e=>`<div class="li"><span class="dim tnum">${fmtDay(e.happened_at)}</span><span>${esc((e.description||"").slice(0,110))}</span></div>`).join("")}</div>`;
-  h+=`<div style="margin-top:16px"><button class="btn amber block" id="draftBtn">✍️ נסח עדכון לצוות</button></div><div id="draftBox" style="margin-top:10px"></div>`;
-  openSheet(h);
-  const db=$("#draftBtn"); if(db)db.onclick=()=>draftArena(id,db);
+  if(evs.length)h+=`<div class="blk"><h4>אירועים אחרונים</h4>${evs.map(e=>`<div class="li"><span class="dim num">${fmtDay(e.happened_at)}</span><span>${esc((e.description||"").slice(0,110))}</span></div>`).join("")}</div>`;
+  h+=`<div style="margin-top:16px"><button class="btn brand block" id="draftBtn">✍️ נסח עדכון לצוות</button></div><div id="draftBox" style="margin-top:10px"></div>`;
+  openSheet(h); const db=$("#draftBtn"); if(db)db.onclick=()=>draftArena(id,db);
 }
-async function draftArena(id,btn){
-  if(!LIVE){ toast("ניסוח עדכון זמין במצב מחובר"); return; }
-  btn.textContent="✍️ מנסח…"; btn.disabled=true;
-  try{ const r=await api(API,{action:"arena_draft",arena_id:id});
-    const box=$("#draftBox");
+async function draftArena(id,btn){ if(!LIVE){ toast("ניסוח זמין במצב מחובר"); return; } btn.textContent="✍️ מנסח…"; btn.disabled=true;
+  try{ const r=await apiPost(API,{action:"arena_draft",arena_id:id}); const box=$("#draftBox");
     box.innerHTML=`<div class="card pad" style="white-space:pre-wrap;font-size:13.5px">${esc(r.body||"")}</div><div class="mini" style="padding:0 2px"><button class="go" id="cpBtn">📋 העתק</button><button id="sentBtn">✅ סמן כנשלח</button></div>`;
-    const raw=r.body||""; $("#cpBtn").onclick=e=>copyTxt(raw,e.currentTarget); $("#sentBtn").onclick=e=>markSent(r.id,e.currentTarget);
-    btn.textContent="✍️ נסח שוב"; btn.disabled=false;
+    const raw=r.body||""; $("#cpBtn").onclick=e=>copyTxt(raw,e.currentTarget); $("#sentBtn").onclick=e=>markSent(r.id,e.currentTarget); btn.textContent="✍️ נסח שוב"; btn.disabled=false;
   }catch(e){ btn.textContent="✍️ נסח עדכון לצוות"; btn.disabled=false; toast("הניסוח נכשל"); }
 }
 function copyTxt(raw,btn){ navigator.clipboard.writeText(raw).then(()=>{btn.textContent="✅ הועתק";}).catch(()=>toast("ההעתקה נכשלה")); }
-async function markSent(id,btn){ try{await api(API,{action:"draft_sent",id});}catch(e){} btn.textContent="✅ סומן"; btn.disabled=true; }
+async function markSent(id,btn){ try{await apiPost(API,{action:"draft_sent",id});}catch(e){} btn.textContent="✅ סומן"; btn.disabled=true; }
 
 /* ================= DECISIONS ================= */
-function vDecisions(){
-  const pend=(D.decisions||[]).filter(d=>d.status==="pending");
-  if(!pend.length) return secH("⚖️ החלטות","",0)+`<div class="card"><div class="empty">אין החלטות פתוחות להכרעה ✓<br><span style="font-size:12px">כאן מרוכז המקום שבו רק אתה מכריע.</span></div></div>`;
-  const groups={}; pend.forEach(d=>{ const k=d.arena_id||"—"; (groups[k]=groups[k]||[]).push(d); });
-  let h=secH("⚖️ החלטות להכרעה","הזירה שבה אתה מוסיף הכי הרבה ערך",pend.length);
+function vDecisions(){ const pend=(D.decisions||[]).filter(d=>d.status==="pending");
+  if(!pend.length)return secH("✦ החלטות","",0)+`<div class="card"><div class="empty">אין החלטות פתוחות ✓<br><span style="font-size:12px">כאן מרוכז המקום שבו רק אתה מכריע.</span></div></div>`;
+  const groups={}; pend.forEach(d=>{const k=d.arena_id||"—";(groups[k]=groups[k]||[]).push(d);});
+  let h=secH("✦ החלטות להכרעה","הזירה שבה אתה מוסיף הכי הרבה ערך",pend.length);
   Object.keys(groups).forEach(k=>{ const nm=k==="—"?"כללי":nm0(arenaName(k));
-    h+=`<div class="sec" style="margin-top:15px"><h2 style="font-size:12.5px;text-transform:none;letter-spacing:0;color:var(--ink)">${esc(nm)}</h2></div><div class="card">`+groups[k].map(d=>{ const di=dueIn(d.needed_by);
-      return `<div class="row stripe s-amber" style="flex-direction:column;align-items:stretch;cursor:default"><div style="display:flex;gap:9px"><div class="main"><div class="t">${esc(d.title)}</div><div class="m">${d.needed_by?`<span class="chip ${di!=null&&di<=2?"red":"mut"}">עד ${fmtDay(d.needed_by)}</span>`:""}${d.cost_of_delay?`<span class="dim">עלות עיכוב: ${esc(String(d.cost_of_delay).slice(0,46))}</span>`:""}</div></div></div>${d.recommendation?`<div class="kv" style="margin-top:8px;background:var(--surface2);border-radius:9px;padding:8px 10px"><b style="color:var(--brand)">המלצה:</b> ${esc(d.recommendation)}</div>`:""}<div class="mini"><button class="go" onclick="decide('${d.id}','decided')">✅ קבל המלצה</button><button onclick="openDecision('${d.id}')">בחר חלופה</button><button class="warn" onclick="decide('${d.id}','dropped')">✖️ ירד מהפרק</button></div></div>`;
+    h+=`<div class="sec" style="margin-top:15px"><h2 style="font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink);font-family:var(--serif);font-weight:700">${esc(nm)}</h2></div><div class="card">`+groups[k].map(d=>{ const di=dueIn(d.needed_by);
+      return `<div class="row stripe s-brand" style="flex-direction:column;align-items:stretch;cursor:default"><div style="display:flex;gap:9px"><div class="main"><div class="t">${esc(d.title)}</div><div class="m">${d.needed_by?`<span class="chip ${di!=null&&di<=2?"crit":"mut"}">עד ${fmtDay(d.needed_by)}</span>`:""}${d.cost_of_delay?`<span class="dim">עלות עיכוב: ${esc(String(d.cost_of_delay).slice(0,44))}</span>`:""}</div></div></div>${d.recommendation?`<div class="kv" style="margin-top:8px;background:var(--surface2);border-radius:9px;padding:8px 10px"><b style="color:var(--brand)">המלצה:</b> ${esc(d.recommendation)}</div>`:""}<div class="mini"><button class="go" onclick="decide('${d.id}','decided')">✅ קבל המלצה</button><button onclick="openDecision('${d.id}')">בחר חלופה</button><button class="warn" onclick="decide('${d.id}','dropped')">✖️ ירד מהפרק</button></div></div>`;
     }).join("")+`</div>`; });
   return h;
 }
-function openDecision(id){
-  const d=(D.decisions||[]).find(x=>x.id===id); if(!d)return;
-  let h=`<div class="grab"></div><h3>${esc(d.title)}</h3>`;
-  if(d.arena_id)h+=`<div class="sub2">${esc(arenaName(d.arena_id))}</div>`;
+function openDecision(id){ const d=(D.decisions||[]).find(x=>x.id===id); if(!d)return;
+  let h=`<div class="grab"></div><h3>${esc(d.title)}</h3>`; if(d.arena_id)h+=`<div class="sub2">${esc(arenaName(d.arena_id))}</div>`;
   if(d.recommendation)h+=`<div class="blk"><h4>המלצת המערכת</h4><div class="kv">${esc(d.recommendation)}</div></div>`;
   if(d.alternatives)h+=`<div class="blk"><h4>חלופות</h4><div class="kv">${esc(d.alternatives)}</div></div>`;
   if(d.cost_of_delay)h+=`<div class="blk"><h4>עלות העיכוב</h4><div class="kv">${esc(d.cost_of_delay)}</div></div>`;
   if(d.needed_by)h+=`<div class="kv dim" style="margin-top:10px">נדרש עד: ${fmtDay(d.needed_by)}</div>`;
-  h+=`<div class="field" style="margin-top:14px"><label>מה הוכרע (יישמר כאסמכתא)</label><input id="decNote" placeholder="${d.recommendation?"ריק = התקבלה ההמלצה":"נסח את ההכרעה"}"></div>
-    <div style="display:flex;gap:8px;margin-top:6px"><button class="btn green block" onclick="decide('${id}','decided',1)">✅ הוכרע</button><button class="btn red block" onclick="decide('${id}','dropped',1)">✖️ ירד מהפרק</button></div>`;
+  h+=`<div class="field" style="margin-top:14px"><label>מה הוכרע (יישמר כאסמכתא)</label><input id="decNote" placeholder="${d.recommendation?"ריק = התקבלה ההמלצה":"נסח את ההכרעה"}"></div><div style="display:flex;gap:8px"><button class="btn good block" onclick="decide('${id}','decided',1)">✅ הוכרע</button><button class="btn crit block" onclick="decide('${id}','dropped',1)">✖️ ירד מהפרק</button></div>`;
   openSheet(h);
 }
-async function decide(id,verdict,fromSheet){
-  const note=fromSheet?(($("#decNote")||{}).value||"").trim():"";
-  const d=(D.decisions||[]).find(x=>x.id===id); if(d)d.status=verdict;
-  if(fromSheet)closeSheet();
-  render(); toast(verdict==="decided"?"הוכרע ✓":"ירד מהפרק");
-  try{ await api(ACT,{action:"decision_decide",id,verdict,note}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); }
-  afterAct();
-}
+async function decide(id,verdict,fromSheet){ const note=fromSheet?(($("#decNote")||{}).value||"").trim():""; const d=(D.decisions||[]).find(x=>x.id===id); if(d)d.status=verdict; if(fromSheet)closeSheet(); render(); toast(verdict==="decided"?"הוכרע ✓":"ירד מהפרק"); try{ await apiPost(ACT,{action:"decision_decide",id,verdict,note}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } afterAct(); }
 
 /* ================= ASK ================= */
-let askHist=[];
-const AK_SUG=["מה הכי דחוף להכרעה היום?","אילו זירות שקטות מדי?","מה מצב האנרגיה בחמד?","מי מהצוות תקוע הכי הרבה?","סכם לי את השדרה"];
-function vAsk(){ return `<div class="sec"><h2>✦ שאל את המוח</h2><span class="n dim">· ${LIVE?"מחובר":"הדגמה"}</span></div>
-  <div class="ask-wrap"><div class="ask-feed" id="askFeed"></div><div class="ask-bar"><input id="askIn" placeholder="שאל על עסקה, אדם, החלטה…" onkeydown="if(event.key==='Enter')askSend()"><button onclick="askSend()" aria-label="שלח">↑</button></div></div>`; }
+let askHist=[]; const AK_SUG=["מה הכי דחוף להכרעה?","אילו זירות שקטות מדי?","כמה חוב על כל נכס?","מי מהצוות תקוע?","סכם לי את השדרה"];
+function vAsk(){ return `<div class="sec"><h2>✱ שאל את המוח</h2><span class="n dim">· ${LIVE?"מחובר":"הדגמה"}</span></div><div class="ask-wrap"><div class="ask-feed" id="askFeed"></div><div class="ask-bar"><input id="askIn" placeholder="שאל על עסקה, נכס, אדם, החלטה…" onkeydown="if(event.key==='Enter')askSend()"><button onclick="askSend()" aria-label="שלח">↑</button></div></div>`; }
 function renderAsk(){ const feed=$("#askFeed"); if(!feed)return;
-  if(!askHist.length){ feed.innerHTML=`<div class="a-bub">שלום איתי. אני ראש המטה של נקסוס — שאל אותי על העסקאות, האנשים, ההחלטות והמצב.${LIVE?"":"<br><br><b>מצב הדגמה:</b> המוח מגיב רק כשמחוברים עם מפתח."}</div><div class="ak-sug">${AK_SUG.map(s=>`<span class="c" onclick="askChip(this)">${esc(s)}</span>`).join("")}</div>`; return; }
-  feed.innerHTML=askHist.map(m=>m.q!=null?`<div class="q-bub">${esc(m.q)}</div>`:`<div class="a-bub ${m.load?"load":""} md">${m.load?"חושב… (עד ~30 שנ׳)":fmtMd(m.a)}</div>`).join("");
-  feed.scrollTop=feed.scrollHeight;
+  if(!askHist.length){ feed.innerHTML=`<div class="a-bub">שלום איתי. אני ראש המטה של נקסוס — שאל על העסקאות, הנכסים, האנשים וההחלטות.${LIVE?"":"<br><br><b>הדגמה:</b> המוח מגיב רק במצב מחובר."}</div><div class="ak-sug">${AK_SUG.map(s=>`<span class="c" onclick="askChip(this)">${esc(s)}</span>`).join("")}</div>`; return; }
+  feed.innerHTML=askHist.map(m=>m.q!=null?`<div class="q-bub">${esc(m.q)}</div>`:`<div class="a-bub ${m.load?"load":""} md">${m.load?"חושב… (עד ~30 שנ׳)":fmtMd(m.a)}</div>`).join(""); feed.scrollTop=feed.scrollHeight;
 }
 function askChip(el){ $("#askIn").value=el.textContent; askSend(); }
-async function askSend(){ const inp=$("#askIn"); const q=(inp.value||"").trim(); if(!q)return; inp.value="";
-  askHist.push({q}); askHist.push({load:true}); renderAsk();
-  if(!LIVE){ askHist[askHist.length-1]={a:"במצב הדגמה אין גישה למוח החי. במכשיר שלך, עם המפתח — כאן תקבל תשובה מלאה עם נתוני אמת, כולל שרשור שאלות."}; renderAsk(); return; }
+async function askSend(){ const inp=$("#askIn"); const q=(inp.value||"").trim(); if(!q)return; inp.value=""; askHist.push({q}); askHist.push({load:true}); renderAsk();
+  if(!LIVE){ askHist[askHist.length-1]={a:"במצב הדגמה אין גישה למוח החי. במכשיר שלך, עם המפתח — תשובה מלאה עם נתוני אמת."}; renderAsk(); return; }
   const history=[]; for(let i=0;i<askHist.length-1;i++){ const m=askHist[i]; if(m.q!=null)history.push({q:m.q}); else if(m.a!=null&&!m.load&&history.length)history[history.length-1].a=m.a; }
-  try{ const r=await fetch(ASK,{method:"POST",headers:{"content-type":"application/json","x-nexus-key":KEY},body:JSON.stringify({q,history:history.slice(-6)})});
-    const j=await r.json(); askHist[askHist.length-1]={a:j.reply||"לא הצלחתי לענות על זה כרגע."};
-  }catch(e){ askHist[askHist.length-1]={a:"שגיאה בגישה למוח. נסה שוב עוד רגע."}; }
-  renderAsk();
+  try{ const r=await fetch(ASK,{method:"POST",headers:{"content-type":"application/json","x-nexus-key":KEY},body:JSON.stringify({q,history:history.slice(-6)})}); const j=await r.json(); askHist[askHist.length-1]={a:j.reply||"לא הצלחתי לענות על זה כרגע."}; }catch(e){ askHist[askHist.length-1]={a:"שגיאה בגישה למוח. נסה שוב."}; } renderAsk();
 }
 function fmtMd(t){ t=esc(t); const lines=t.split("\n"); let out="",inUl=false; const flush=()=>{if(inUl){out+="</ul>";inUl=false;}};
-  for(let ln of lines){ if(/^\s*[-•]\s+/.test(ln)){ if(!inUl){out+="<ul>";inUl=true;} out+="<li>"+ln.replace(/^\s*[-•]\s+/,"")+"</li>"; continue; } flush();
-    if(/^#{1,4}\s/.test(ln))out+='<div class="h">'+ln.replace(/^#+\s/,"")+"</div>"; else if(ln.trim()==="")out+="<br>"; else out+="<div>"+ln+"</div>"; }
+  for(let ln of lines){ if(/^\s*[-•]\s+/.test(ln)){ if(!inUl){out+="<ul>";inUl=true;} out+="<li>"+ln.replace(/^\s*[-•]\s+/,"")+"</li>"; continue; } flush(); if(/^#{1,4}\s/.test(ln))out+='<div class="h">'+ln.replace(/^#+\s/,"")+"</div>"; else if(ln.trim()==="")out+="<br>"; else out+="<div>"+ln+"</div>"; }
   flush(); return out.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,"<code>$1</code>");
 }
 
 /* ================= focus / tasks / capture / triage ================= */
-async function focusApprove(){ if(D.focus)D.focus.approved=true; render(); toast("אושר ⭐"); try{await api(API,{action:"focus_approve"});}catch(e){} afterAct(); }
-async function focusDone(){ if(D.focus)D.focus.done=true; render(); toast("בוצע 🎯"); try{await api(API,{action:"focus_done"});}catch(e){} afterAct(); }
-function focusPick(){
-  const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
-  let h=`<div class="grab"></div><h3>קבע את הדבר האחד</h3><div class="sub2">הכי מוזנח שנדחה שוב ושוב — לא בהכרח הכי חשוב. דדליין שמסכן עסקה גובר.</div><div class="field"><input id="focusTxt" placeholder="נסח בעצמך…" onkeydown="if(event.key==='Enter')focusSetText()"></div><button class="btn amber block" onclick="focusSetText()">קבע כדבר האחד</button><div class="blk"><h4>או בחר מהוותיקות ביותר</h4>`;
+async function focusApprove(){ if(D.focus)D.focus.approved=true; render(); toast("אושר ⭐"); try{await apiPost(API,{action:"focus_approve"});}catch(e){} afterAct(); }
+async function focusDone(){ if(D.focus)D.focus.done=true; render(); toast("בוצע 🎯"); try{await apiPost(API,{action:"focus_done"});}catch(e){} afterAct(); }
+function focusPick(){ const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
+  let h=`<div class="grab"></div><h3>קבע את הדבר האחד</h3><div class="sub2">הכי מוזנח שנדחה שוב ושוב — לא בהכרח הכי חשוב. דדליין שמסכן עסקה גובר.</div><div class="field"><input id="focusTxt" placeholder="נסח בעצמך…" onkeydown="if(event.key==='Enter')focusSetText()"></div><button class="btn brand block" onclick="focusSetText()">קבע כדבר האחד</button><div class="blk"><h4>או בחר מהוותיקות ביותר</h4>`;
   const old=[...open].sort((a,b)=>(ts(a.created_at)||0)-(ts(b.created_at)||0)).slice(0,8);
-  h+=old.map(t=>{ const dq=daysAgo(t.created_at); return `<div class="li" style="cursor:pointer" onclick="focusFromTask('${t.id}')"><span class="chip ${dq!=null&&dq>=8?"red":"mut"}">${dq!=null?dq+"ד":"—"}</span><span>${esc(t.title)}</span></div>`; }).join("")+`</div>`;
+  h+=old.map(t=>{ const dq=daysAgo(t.created_at); return `<div class="li" style="cursor:pointer" onclick="focusFromTask('${t.id}')"><span class="chip ${dq!=null&&dq>=8?"crit":"mut"}">${dq!=null?dq+"ד":"—"}</span><span>${esc(t.title)}</span></div>`; }).join("")+`</div>`;
   openSheet(h);
 }
-async function focusSetText(){ const v=($("#focusTxt").value||"").trim(); if(!v)return; D.focus={title:v,approved:true,done:false}; closeSheet(); render(); toast("נקבע ⭐"); try{await api(API,{action:"focus_set",title:v});}catch(e){} afterAct(); }
-async function focusFromTask(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; D.focus={title:t.title,task_id:id,approved:true,done:false}; closeSheet(); render(); toast("נקבע ⭐"); try{await api(API,{action:"focus_set",title:t.title,task_id:id});}catch(e){} afterAct(); }
-
-function openTask(id){
-  const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; const owner=personName(t.owner_id);
+async function focusSetText(){ const v=($("#focusTxt").value||"").trim(); if(!v)return; D.focus={title:v,approved:true,done:false}; closeSheet(); render(); toast("נקבע ⭐"); try{await apiPost(API,{action:"focus_set",title:v});}catch(e){} afterAct(); }
+async function focusFromTask(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; D.focus={title:t.title,task_id:id,approved:true,done:false}; closeSheet(); render(); toast("נקבע ⭐"); try{await apiPost(API,{action:"focus_set",title:t.title,task_id:id});}catch(e){} afterAct(); }
+function openTask(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; const owner=personName(t.owner_id);
   let h=`<div class="grab"></div><h3>${esc(t.title)}</h3><div class="m" style="margin:0 2px 4px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span>${t.arena_id?`<span class="chip mut">${esc(nm0(arenaName(t.arena_id)))}</span>`:""}${owner?`<span class="chip mut">${esc(owner)}</span>`:""}${t.due_date?`<span class="chip mut">${fmtDay(t.due_date)}</span>`:""}</div>`;
   if(t.notes)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;margin-top:10px">${esc(t.notes)}</div>`;
-  h+=`<div style="display:flex;gap:8px;margin-top:16px"><button class="btn green block" onclick="taskDone('${id}')">✅ בוצע</button><button class="btn amber block" onclick="focusFromTask('${id}')">⭐ הדבר האחד</button></div><div class="blk"><h4>דחיפות</h4><div class="chips-in">${["today","week","month","whenever"].map(u=>`<span class="c ${t.urgency===u?"on":""}" onclick="setUrg('${id}','${u}',this)">${URG[u]}</span>`).join("")}</div></div>`;
+  h+=`<div style="display:flex;gap:8px;margin-top:16px"><button class="btn good block" onclick="taskDone('${id}')">✅ בוצע</button><button class="btn brand block" onclick="focusFromTask('${id}')">⭐ הדבר האחד</button></div><div class="blk"><h4>דחיפות</h4><div class="chips-in">${["today","week","month","whenever"].map(u=>`<span class="c ${t.urgency===u?"on":""}" onclick="setUrg('${id}','${u}',this)">${URG[u]}</span>`).join("")}</div></div>`;
   openSheet(h);
 }
-async function taskDone(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.status="done"; closeSheet(); render();
-  toast("בוצע ✓",()=>{ const tt=(D.tasks||[]).find(x=>x.id===id); if(tt)tt.status="open"; render(); if(LIVE)api(API,{action:"task_reopen",id}).catch(()=>{}); });
-  try{ await api(API,{action:"task_done",id}); }catch(e){}
-}
-async function setUrg(id,u,el){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.urgency=u; el.parentNode.querySelectorAll(".c").forEach(c=>c.classList.remove("on")); el.classList.add("on"); try{await api(API,{action:"task_urgency",id,urgency:u});}catch(e){} }
-
-function triage(id){ const c=(D.captures||[]).find(x=>x.id===id); if(!c)return;
-  const arenas=(D.arenas||[]).filter(a=>a.status!=="archived");
-  let h=`<div class="grab"></div><h3>נקז קליטה</h3><div class="card pad" style="background:var(--surface2);font-size:14px;margin-bottom:12px">${esc(c.text||"")}</div>
-    <div class="field"><label>זירה (לא חובה)</label><select id="trArena"><option value="">— ללא —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div>
-    <div style="display:flex;gap:8px"><button class="btn green block" onclick="triageDo('${id}','task')">→ משימה</button><button class="btn line block" onclick="triageDo('${id}','idea')">→ רעיון</button></div>`;
+async function taskDone(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.status="done"; closeSheet(); render(); toast("בוצע ✓",()=>{ const tt=(D.tasks||[]).find(x=>x.id===id); if(tt)tt.status="open"; render(); if(LIVE)apiPost(API,{action:"task_reopen",id}).catch(()=>{}); }); try{ await apiPost(API,{action:"task_done",id}); }catch(e){} }
+async function setUrg(id,u,el){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.urgency=u; el.parentNode.querySelectorAll(".c").forEach(c=>c.classList.remove("on")); el.classList.add("on"); try{await apiPost(API,{action:"task_urgency",id,urgency:u});}catch(e){} }
+function triage(id){ const c=(D.captures||[]).find(x=>x.id===id); if(!c)return; const arenas=(D.arenas||[]).filter(a=>a.status!=="archived");
+  let h=`<div class="grab"></div><h3>נקז קליטה</h3><div class="card pad" style="background:var(--surface2);font-size:14px;margin-bottom:12px">${esc(c.text||"")}</div><div class="field"><label>זירה (לא חובה)</label><select id="trArena"><option value="">— ללא —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div><div style="display:flex;gap:8px"><button class="btn good block" onclick="triageDo('${id}','task')">→ משימה</button><button class="btn line block" onclick="triageDo('${id}','idea')">→ רעיון</button></div>`;
   openSheet(h);
 }
-async function triageDo(id,kind){ const c=(D.captures||[]).find(x=>x.id===id); if(!c)return; const arena_id=($("#trArena")||{}).value||null;
-  D.captures=(D.captures||[]).filter(x=>x.id!==id);
+async function triageDo(id,kind){ const c=(D.captures||[]).find(x=>x.id===id); if(!c)return; const arena_id=($("#trArena")||{}).value||null; D.captures=(D.captures||[]).filter(x=>x.id!==id);
   if(kind==="task")(D.tasks=D.tasks||[]).unshift({id:"tmp"+Date.now(),title:c.text,arena_id,urgency:"week",status:"open",created_at:todayISO()});
   closeSheet(); render(); toast(kind==="task"?"הפך למשימה ☑️":"נשמר כרעיון 💡");
-  try{ if(kind==="task")await api(API,{action:"task_create",title:c.text,arena_id,urgency:"week"}); else await api(API,{action:"idea_add",title:c.text,arena_id}); }catch(e){}
-  afterAct();
+  try{ if(kind==="task")await apiPost(API,{action:"task_create",title:c.text,arena_id,urgency:"week"}); else await apiPost(API,{action:"idea_add",title:c.text,arena_id}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } afterAct();
 }
-
-function captureSheet(){ capMode="capture";
-  const arenas=(D.arenas||[]).filter(a=>a.status!=="archived");
-  const canVoice=("webkitSpeechRecognition" in window)||("SpeechRecognition" in window);
-  let h=`<div class="grab"></div><h3>לכידה מהירה</h3>
-    <div class="seg" id="capSeg"><button data-m="capture" class="on">📥 קליטה</button><button data-m="task">☑️ משימה</button><button data-m="idea">💡 רעיון</button></div>
-    <div class="field capbox"><textarea id="capTxt" rows="3" placeholder="מה על הראש?"></textarea>${canVoice?`<button class="mic" id="micBtn" aria-label="הקלטה">🎙</button>`:""}</div>
-    <div id="capExtra"></div><button class="btn amber block" onclick="capSubmit()">שמור</button>`;
-  openSheet(h);
-  const seg=$("#capSeg"), extra=$("#capExtra");
-  function drawExtra(){ if(capMode==="capture"){extra.innerHTML="";return;}
-    extra.innerHTML=`<div class="field"><label>זירה</label><select id="capArena"><option value="">— ללא —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div>${capMode==="task"?`<div class="field"><label>דחיפות</label><div class="chips-in">${["today","week","month","whenever"].map((u,i)=>`<span class="c ${i===1?"on":""}" data-u="${u}" onclick="pickUrg(this)">${URG[u]}</span>`).join("")}</div></div>`:""}`; capUrg="week"; }
+function captureSheet(){ capMode="capture"; const arenas=(D.arenas||[]).filter(a=>a.status!=="archived"); const canVoice=("webkitSpeechRecognition" in window)||("SpeechRecognition" in window);
+  let h=`<div class="grab"></div><h3>לכידה מהירה</h3><div class="seg" id="capSeg"><button data-m="capture" class="on">📥 קליטה</button><button data-m="task">☑️ משימה</button><button data-m="idea">💡 רעיון</button></div><div class="field capbox"><textarea id="capTxt" rows="3" placeholder="מה על הראש?"></textarea>${canVoice?`<button class="mic" id="micBtn" aria-label="הקלטה">🎙</button>`:""}</div><div id="capExtra"></div><button class="btn brand block" onclick="capSubmit()">שמור</button>`;
+  openSheet(h); const seg=$("#capSeg"), extra=$("#capExtra");
+  function drawExtra(){ if(capMode==="capture"){extra.innerHTML="";return;} extra.innerHTML=`<div class="field"><label>זירה</label><select id="capArena"><option value="">— ללא —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div>${capMode==="task"?`<div class="field"><label>דחיפות</label><div class="chips-in">${["today","week","month","whenever"].map((u,i)=>`<span class="c ${i===1?"on":""}" data-u="${u}" onclick="pickUrg(this)">${URG[u]}</span>`).join("")}</div></div>`:""}`; capUrg="week"; }
   seg.querySelectorAll("button").forEach(b=>b.onclick=()=>{ capMode=b.dataset.m; seg.querySelectorAll("button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); drawExtra(); });
   if(canVoice)$("#micBtn").onclick=voiceToggle;
 }
@@ -583,59 +581,59 @@ function voiceToggle(){ const btn=$("#micBtn"), ta=$("#capTxt"); const SR=window
   if(rec){ rec.stop(); rec=null; btn.classList.remove("rec"); return; }
   try{ rec=new SR(); rec.lang="he-IL"; rec.interimResults=true; rec.continuous=true; const base=ta.value?ta.value+" ":"";
     rec.onresult=e=>{ let s=""; for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript; ta.value=base+s; };
-    rec.onend=()=>{ btn.classList.remove("rec"); rec=null; }; rec.onerror=()=>{ btn.classList.remove("rec"); rec=null; };
-    rec.start(); btn.classList.add("rec");
-  }catch(e){ toast("הקלטה לא נתמכת בדפדפן"); rec=null; }
+    rec.onend=()=>{ btn.classList.remove("rec"); rec=null; }; rec.onerror=()=>{ btn.classList.remove("rec"); rec=null; }; rec.start(); btn.classList.add("rec");
+  }catch(e){ toast("הקלטה לא נתמכת"); rec=null; }
 }
 async function capSubmit(){ const txt=($("#capTxt").value||"").trim(); if(!txt)return; if(rec){try{rec.stop();}catch(e){}rec=null;}
-  const arenaEl=$("#capArena"), arena_id=arenaEl?arenaEl.value||null:null, mode=capMode;
-  closeSheet();
+  const arenaEl=$("#capArena"), arena_id=arenaEl?arenaEl.value||null:null, mode=capMode; closeSheet();
   if(mode==="capture")(D.captures=D.captures||[]).unshift({id:"tmp"+Date.now(),text:txt,created_at:todayISO()});
   else if(mode==="task")(D.tasks=D.tasks||[]).unshift({id:"tmp"+Date.now(),title:txt,arena_id,urgency:capUrg,status:"open",created_at:todayISO()});
-  else (D.ideas=D.ideas||[]).unshift({id:"tmp"+Date.now(),title:txt,arena_id});
-  render();
-  try{ if(mode==="capture"){await api(API,{action:"capture_add",text:txt}); toast("נקלט 📥");}
-    else if(mode==="task"){await api(API,{action:"task_create",title:txt,arena_id,urgency:capUrg}); toast("משימה נוצרה ☑️");}
-    else{await api(API,{action:"idea_add",title:txt,arena_id}); toast("רעיון נשמר 💡");}
-  }catch(e){ toast("שמירה נכשלה"); }
-  afterAct();
+  else (D.ideas=D.ideas||[]).unshift({id:"tmp"+Date.now(),title:txt,arena_id}); render();
+  try{ if(mode==="capture"){await apiPost(API,{action:"capture_add",text:txt}); toast("נקלט 📥");} else if(mode==="task"){await apiPost(API,{action:"task_create",title:txt,arena_id,urgency:capUrg}); toast("משימה נוצרה ☑️");} else{await apiPost(API,{action:"idea_add",title:txt,arena_id}); toast("רעיון נשמר 💡");} }catch(e){ toast("שמירה נכשלה"); } afterAct();
 }
 
-/* ================= more / people ================= */
-function moreSheet(){ const people=(D.people||[]);
-  const morchim=people.filter(p=>/מורח|מתמהמה|לא אמין|איטי/.test((p.reliability_notes||"")+(p.work_notes||"")));
-  let h=`<div class="grab"></div><h3>עוד</h3><div class="mini" style="margin:2px 0 6px"><button onclick="toggleTheme()">🌓 מצב תצוגה</button><button onclick="load(true);closeSheet();toast('מרענן…')">🔄 רענון</button>${LIVE?`<button class="warn" onclick="logout()">התנתקות</button>`:""}</div>`;
-  h+=`<div class="blk"><h4>👥 אנשים · ${people.length}</h4><div class="sub2" style="margin:0 2px 8px">כיול פולו-אפ: "מורח" = נדנוד יזום; אמין = מרחב.</div>`;
-  if(morchim.length)h+=`<div style="font-size:12px;color:var(--red);font-weight:700;margin:0 2px 6px">⚠ דורשים נדנוד יזום:</div>`+morchim.slice(0,6).map(p=>`<div class="li"><span>${esc(p.name)}${p.organization?` <span class="dim">· ${esc(p.organization)}</span>`:""}</span></div>`).join("");
-  h+=`<div style="margin-top:8px"><input id="peopleSearch" placeholder="חפש אדם…" oninput="filterPeople(this.value)"></div><div id="peopleList" style="margin-top:8px">`+peopleRows(people.slice(0,12))+`</div></div>`;
-  h+=`<div class="blk"><h4>🧠 מה המערכת למדה עליי</h4><div class="sub2" style="margin:0 2px">${(D.lessons||[]).length||46} לקחים מכוונים את המערכת:</div>${(D.lessons||[]).slice(0,5).map(l=>`<div class="li">• ${esc((l.lesson||"").slice(0,150))}</div>`).join("")||`<div class="mini-empty">הלקחים חיים בשרת</div>`}</div>`;
+/* ================= more: reports / tasks / people ================= */
+function moreSheet(){
+  let h=`<div class="grab"></div><h3>עוד</h3><div class="mini" style="margin:2px 0 10px"><button onclick="toggleTheme()">🌓 ערכה</button><button onclick="load(true);closeSheet();toast('מרענן…')">🔄 רענון</button>${LIVE?`<button class="warn" onclick="logout()">התנתקות</button>`:""}</div>`;
+  h+=`<div class="mini" style="margin-bottom:6px"><button onclick="openReports()">📋 דיווחים</button><button onclick="openTasks()">☑️ כל המשימות</button><button onclick="openPeople()">👥 אנשים</button><button onclick="openLessons()">🧠 לקחים</button></div>`;
+  h+=`<div class="foot" style="text-align:start;padding:14px 2px 2px">Nexus HQ v3 · ${esc(D.now||"")}</div>`;
   openSheet(h);
 }
-function peopleRows(arr){ return arr.map(p=>{ const rel=/מורח|לא אמין|מתמהמה/.test((p.reliability_notes||"")+(p.work_notes||""))?"red":/אמין|מהיר|יסודי/.test((p.reliability_notes||""))?"green":"mut";
-  return `<div class="li"><div style="flex:1"><b>${esc(p.name)}</b>${p.role||p.organization?`<br><span class="dim" style="font-size:12px">${esc([p.role,p.organization].filter(Boolean).join(" · "))}</span>`:""}</div>${p.phone?`<a href="tel:${esc(p.phone)}" class="chip mut" style="text-decoration:none">☎</a>`:""}${p.reliability_notes?`<span class="chip ${rel}">${rel==="red"?"מורח":rel==="green"?"אמין":"—"}</span>`:""}</div>`; }).join(""); }
+function openTasks(){ const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting").sort((a,b)=>["today","week","month","whenever"].indexOf(a.urgency)-["today","week","month","whenever"].indexOf(b.urgency));
+  let h=`<div class="grab"></div><h3>כל המשימות · ${open.length}</h3>`; ["today","week","month","whenever"].forEach(u=>{ const g=open.filter(t=>t.urgency===u); if(g.length){ h+=`<div class="blk"><h4>${URG[u]} · ${g.length}</h4>${g.map(t=>`<div class="li"><span class="chip ${URGC[u]}">${t.status==="waiting"?"ממתין":URG[u]}</span><span>${esc(t.title)}${t.arena_id?` <span class="dim">· ${esc(nm0(arenaName(t.arena_id)))}</span>`:""}</span></div>`).join("")}</div>`; } }); openSheet(h);
+}
+function openPeople(){ const people=(D.people||[]); const morchim=people.filter(p=>/מורח|מתמהמה|לא אמין|איטי/.test((p.reliability_notes||"")+(p.work_notes||"")));
+  let h=`<div class="grab"></div><h3>אנשים · ${people.length}</h3><div class="sub2">כיול פולו-אפ: "מורח" = נדנוד יזום; אמין = מרחב.</div>`;
+  if(morchim.length)h+=`<div style="font-size:12px;color:var(--crit);font-weight:700;margin:0 2px 6px">⚠ דורשים נדנוד יזום:</div>`+morchim.slice(0,6).map(p=>`<div class="li"><span>${esc(p.name)}${p.organization?` <span class="dim">· ${esc(p.organization)}</span>`:""}</span></div>`).join("");
+  h+=`<input class="searchbox" id="peopleSearch" placeholder="חפש אדם…" oninput="filterPeople(this.value)" style="margin-top:8px"><div id="peopleList">`+peopleRows(people.slice(0,14))+`</div>`; openSheet(h);
+}
+function peopleRows(arr){ return arr.map(p=>{ const rel=/מורח|לא אמין|מתמהמה/.test((p.reliability_notes||"")+(p.work_notes||""))?"crit":/אמין|מהיר|יסודי/.test((p.reliability_notes||""))?"good":"mut";
+  return `<div class="li"><div style="flex:1"><b>${esc(p.name)}</b>${p.role||p.organization?`<br><span class="dim" style="font-size:12px">${esc([p.role,p.organization].filter(Boolean).join(" · "))}</span>`:""}</div>${p.phone?`<a href="tel:${esc(p.phone)}" class="chip mut" style="text-decoration:none">☎</a>`:""}${p.reliability_notes?`<span class="chip ${rel}">${rel==="crit"?"מורח":rel==="good"?"אמין":"—"}</span>`:""}</div>`; }).join(""); }
 function filterPeople(q){ q=(q||"").trim(); const arr=(D.people||[]).filter(p=>!q||((p.name||"")+(p.role||"")+(p.organization||"")).includes(q)).slice(0,20); $("#peopleList").innerHTML=peopleRows(arr); }
+function openLessons(){ const nL=(D.lessons||[]).length; let h=`<div class="grab"></div><h3>מה המערכת למדה עליי</h3><div class="sub2">${nL?nL+" לקחים מכוונים את המערכת.":"הלקחים חיים בשרת ומכוונים את המערכת."}</div>`+((D.lessons||[]).slice(0,12).map(l=>`<div class="li">• ${esc((l.lesson||"").slice(0,180))}</div>`).join("")||`<div class="mini-empty">אין לקחים זמינים להצגה כרגע</div>`); openSheet(h); }
+async function openReports(){ let h=`<div class="grab"></div><h3>📋 דיווחים</h3><div class="sub2">מערכת הדיווח הדו-צדדית — ממתינים לאישורך, שקטים, נדנוד לצוות.</div><div id="repBody"><div class="mini-empty">טוען…</div></div>`; openSheet(h);
+  if(!LIVE){ $("#repBody").innerHTML=`<div class="mini-empty">זמין במצב מחובר בלבד.</div>`; return; }
+  try{ const r=await fetch(REPORT+"?k="+encodeURIComponent(KEY),{cache:"no-store"}); const d=await r.json();
+    if(d.mode!=="owner"){ $("#repBody").innerHTML=`<div class="mini-empty">אין נתוני דיווחים.</div>`; return; }
+    const p=d.pulse||{}; let b=`<div class="vitals" style="margin-bottom:12px">`+vt(p.pending?"c-warn":"",p.pending||0,"","ממתינים לאישורך")+vt(p.stuck?"c-crit":"",p.stuck||0,"","נתקעו")+vt(p.silent?"c-crit":"",p.silent||0,"","שקטים")+`</div>`;
+    if((d.silent||[]).length){ b+=`<div class="blk"><h4>נשמע מזמן (מעל 5 ימים)</h4>`+(d.silent||[]).slice(0,8).map(s=>`<div class="li"><span>${esc(s.title||"")}${s.person?` <span class="dim">— ${esc(s.person)}</span>`:""}</span></div>`).join("")+`</div>`; }
+    if((d.reports||[]).length){ b+=`<div class="blk"><h4>דיווחים אחרונים</h4>`+(d.reports||[]).slice(0,10).map(rp=>`<div class="li"><span class="chip ${rp.status==="done"?"good":rp.status==="stuck"?"crit":"info"}">${rp.status==="done"?"בוצע":rp.status==="stuck"?"תקוע":"בתהליך"}</span><span>${esc(rp.title||"")}${rp.note?`<br><span class="dim">${esc((rp.note||"").slice(0,90))}</span>`:""}</span></div>`).join("")+`</div>`; }
+    if((d.team||[]).length){ b+=`<div class="blk"><h4>צוות</h4>`+(d.team||[]).map(t=>`<div class="li"><span style="flex:1">${esc(t.name||"")} <span class="dim">· ${t.open_count||0} פתוחות</span></span>${t.token?`<a class="chip brand" style="text-decoration:none" href="mailto:${esc(t.email||"")}?subject=עדכון%20משימות&body=${encodeURIComponent(location.origin+"/report.html?t="+t.token)}">נדנד ✉︎</a>`:""}</div>`).join("")+`</div>`; }
+    $("#repBody").innerHTML=b;
+  }catch(e){ $("#repBody").innerHTML=`<div class="mini-empty">שגיאה בטעינת דיווחים.</div>`; }
+}
 
-/* ================= sheets / nav ================= */
+/* ================= sheets / nav / gate ================= */
 let sheetOpen=false;
 function openSheet(html){ $("#sheet").innerHTML=html; $("#sheet").classList.add("on"); $("#ov").classList.add("on"); if(!sheetOpen){ sheetOpen=true; history.pushState({sheet:1},""); } }
 function closeSheet(){ if(!sheetOpen)return; sheetOpen=false; $("#sheet").classList.remove("on"); $("#ov").classList.remove("on"); if(history.state&&history.state.sheet)history.back(); }
 window.addEventListener("popstate",()=>{ if(sheetOpen){ sheetOpen=false; $("#sheet").classList.remove("on"); $("#ov").classList.remove("on"); } });
 function go(t){ TAB=t; closeSheet(); render(); }
-function logout(){ localStorage.removeItem("nx_hqkey"); localStorage.removeItem("nx_cache"); location.reload(); }
+function logout(){ localStorage.removeItem("nx_k3"); localStorage.removeItem("nx_c3"); location.reload(); }
+function gate(err){ app().innerHTML=`<div class="gate"><div class="logo">◈</div><h1>Nexus<i> HQ</i></h1><p>חדר המצב האישי שלך — תמונת-מצב על כל הפעילות. הזן מפתח גישה.</p><div class="err">${err?esc(err):""}</div><input id="gateKey" type="password" placeholder="מפתח גישה" onkeydown="if(event.key==='Enter')gateGo()"><button class="btn brand block" onclick="gateGo()">התחבר</button>${SNAP?`<button class="btn line block" style="margin-top:9px" onclick="D=SNAP;DEMO=true;index();render()">צפה בהדגמה (נתונים סינתטיים)</button>`:""}<div class="foot">נטול-סודות · המפתח נשמר רק במכשיר שלך</div></div>`; const gk=$("#gateKey"); if(gk)gk.focus(); }
+async function gateGo(){ const v=($("#gateKey").value||"").trim(); if(!v)return; KEY=v; localStorage.setItem("nx_k3",v); D=null; LIVE=false; await load(true); }
 
-/* ================= gate ================= */
-function gate(err){ app().innerHTML=`<div class="gate"><div class="logo">◎</div><h1>Nexus<i> HQ</i></h1><p>חדר המצב האישי שלך. הזן מפתח גישה כדי להתחבר לנתונים החיים.</p><div class="err">${err?esc(err):""}</div><input id="gateKey" type="password" placeholder="מפתח גישה" onkeydown="if(event.key==='Enter')gateGo()"><button class="btn amber block" onclick="gateGo()">התחבר</button>${SNAP?`<button class="btn line block" style="margin-top:9px" onclick="D=SNAP;DEMO=true;index();render()">צפה בהדגמה (נתונים סינתטיים)</button>`:""}<div class="foot">נטול-סודות · המפתח נשמר רק במכשיר שלך</div></div>`;
-  const gk=$("#gateKey"); if(gk)gk.focus();
-}
-async function gateGo(){ const v=($("#gateKey").value||"").trim(); if(!v)return;
-  try{ const r=await fetch(API,{headers:{"x-nexus-key":v},cache:"no-store"});
-    if(r.status===403){ gate("מפתח שגוי — נסה שוב"); return; }
-    if(r.ok){ KEY=v; localStorage.setItem("nx_hqkey",v); D=await r.json(); LIVE=true; DEMO=false; try{localStorage.setItem("nx_cache",JSON.stringify(D));}catch(e){} index(); render(); return; }
-    gate("שגיאת חיבור ("+r.status+")");
-  }catch(e){ gate("אין חיבור לרשת — נסה שוב"); }
-}
-
-/* ================= boot ================= */
+/* boot */
 load();
 setInterval(()=>{ if(LIVE&&document.visibilityState==="visible")load(true); },300000);
 document.addEventListener("visibilitychange",()=>{ if(LIVE&&document.visibilityState==="visible")load(true); });
