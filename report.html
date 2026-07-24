@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101c36">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>לוח דיווחים · Nexus</title>
+<style>
+  :root{
+    --bg:#0f1830; --card:#16203a; --card2:#1c2842; --chip:#20304f;
+    --ink:#eef2fa; --ink2:#93a1bd; --line:#243252;
+    --amber:#f5b841; --amber-ink:#ffd47e; --good:#4fc98a; --bad:#e2604f; --blue:#7aa7e8;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,"Segoe UI",Rubik,Arial,sans-serif;
+    background:linear-gradient(180deg,#101c36 0%,#0c1428 100%); background-attachment:fixed;
+    color:var(--ink); font-size:16px; line-height:1.5;
+    padding:14px 12px calc(28px + env(safe-area-inset-bottom)); max-width:640px; margin:0 auto;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1{font-size:19px; margin:2px 0 2px; font-weight:800}
+  .sub{color:var(--ink2); font-size:13.5px; margin-bottom:16px}
+  .sectitle{font-size:13px; color:var(--amber-ink); font-weight:700; margin:20px 4px 8px; letter-spacing:.2px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 4px 16px rgba(0,0,0,.22)}
+  .title{font-weight:700; font-size:15px; margin-bottom:7px}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:9px}
+  .chip{display:inline-block; background:var(--chip); color:var(--ink2); border-radius:20px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap}
+  .chip.arena{color:#cdd8ef}
+  .chip.week{background:rgba(226,96,79,.16); color:#f0a79b}
+  .chip.month{background:rgba(245,184,65,.14); color:var(--amber)}
+  .btnrow{display:flex; gap:8px; margin-top:4px}
+  .b{flex:1; border:0; border-radius:11px; padding:11px 0; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#0c1428}
+  .b.done{background:var(--good)} .b.prog{background:var(--blue)} .b.stuck{background:var(--amber)}
+  .b:active{transform:scale(.97)}
+  .note{width:100%; margin-top:9px; background:var(--card2); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-family:inherit; font-size:14px; padding:9px 11px; resize:vertical; min-height:38px}
+  .note::placeholder{color:#6b7b9c}
+  .status{font-size:12.5px; font-weight:700; margin-bottom:7px}
+  .s-done{color:var(--good)} .s-prog{color:var(--blue)} .s-stuck{color:var(--bad)}
+  .ack{display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700; color:var(--good); background:rgba(79,201,138,.12); border-radius:9px; padding:5px 9px; margin-top:4px}
+  .reply{margin-top:8px; background:rgba(122,167,232,.10); border-right:3px solid var(--blue); border-radius:8px; padding:8px 11px; font-size:13.5px}
+  .reply b{color:var(--blue)}
+  .owner-actions{display:flex; gap:8px; margin-top:6px; align-items:center}
+  .oa{border:0; border-radius:10px; padding:9px 14px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit}
+  .oa.ack{background:var(--good); color:#0c1428}
+  .oa.reply{background:var(--chip); color:var(--ink)}
+  .seen{color:var(--ink2); font-size:12.5px; font-weight:600}
+  .time{color:#6b7b9c; font-size:11.5px; float:left}
+  .who{color:var(--amber-ink); font-weight:700; font-size:13px}
+  .team{background:var(--card2); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:14px}
+  .team h3{margin:0 0 10px; font-size:13px; color:var(--amber-ink)}
+  .trow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid var(--line)}
+  .trow:first-of-type{border-top:0}
+  .tname{font-weight:700; font-size:14.5px}
+  .tmeta{color:var(--ink2); font-size:12px}
+  .nudge{border:0; border-radius:10px; padding:9px 15px; background:var(--amber); color:#3a2600; font-weight:800; font-size:13.5px; cursor:pointer; font-family:inherit; text-decoration:none; white-space:nowrap}
+  .empty{text-align:center; color:var(--ink2); padding:40px 20px; font-size:14.5px}
+  .empty .big{font-size:34px; margin-bottom:8px}
+  .toast{position:fixed; bottom:22px; right:50%; transform:translateX(50%); background:#0c1428; border:1px solid var(--amber); color:var(--amber-ink); padding:10px 18px; border-radius:12px; font-weight:700; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:9}
+  .toast.show{opacity:1}
+  .err{background:rgba(226,96,79,.12); border:1px solid var(--bad); color:#f0a79b; border-radius:12px; padding:14px; font-size:14px; margin-top:10px}
+  .fade{opacity:.45}
+  .pulse{display:flex; gap:8px; margin:2px 0 16px}
+  .pstat{flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 6px; text-align:center}
+  .pstat .n{font-size:21px; font-weight:800; line-height:1.05}
+  .pstat .l{font-size:11px; color:var(--ink2); margin-top:3px}
+  .pstat.warn .n{color:var(--amber)} .pstat.bad .n{color:var(--bad)} .pstat.ok .n{color:var(--good)}
+  .silentrow{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line)}
+  .silentrow:first-of-type{border-top:0}
+  .silentrow .sn{font-weight:700; font-size:14px}
+  .silentrow .sm{color:var(--bad); font-size:12px; white-space:nowrap}
+  .histbtn{background:none; border:0; color:var(--blue); font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; padding:4px 0 2px}
+  .histbox{margin-top:6px; border-top:1px solid var(--line); padding-top:6px; display:none}
+  .histbox.open{display:block}
+  .histitem{font-size:12.5px; color:#cdd8ef; padding:3px 0; border-bottom:1px dashed rgba(255,255,255,.06)}
+  .histitem .ht{color:#6b7b9c; font-size:11px; margin-inline-start:6px}
+</style>
+</head>
+<body>
+<div id="app"><div class="sub" style="padding:30px 4px">טוען…</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const FN = "https://eygeouunxwsrdsijkczh.supabase.co/functions/v1/report";
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Z2VvdXVueHdzcmRzaWprY3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMjMxNTAsImV4cCI6MjA5OTY5OTE1MH0.m5gTz6326a6yzLZ9vbOsCFPvSJEFAcQUB-o8CFEiZdc";
+const params = new URLSearchParams(location.search);
+const TOKEN = params.get("t") || "";
+const KEY = params.get("k") || "";
+const AUTH = TOKEN ? ("t="+encodeURIComponent(TOKEN)) : ("k="+encodeURIComponent(KEY));
+const app = document.getElementById("app");
+const HEADERS = {"content-type":"application/json","apikey":ANON,"authorization":"Bearer "+ANON};
+if(KEY) HEADERS["x-nexus-key"]=KEY;
+
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800);}
+function timeAgo(iso){
+  if(!iso) return "";
+  const d=new Date(iso), now=new Date(), s=Math.floor((now-d)/1000);
+  if(s<60) return "עכשיו";
+  if(s<3600) return "לפני "+Math.floor(s/60)+" ד׳";
+  if(s<86400) return "לפני "+Math.floor(s/3600)+" ש׳";
+  return d.toLocaleDateString("he-IL",{day:"numeric",month:"numeric"});
+}
+async function api(method, body, extra){
+  const r = await fetch(FN+"?"+AUTH+(extra||""), {
+    method, headers:HEADERS, body: body?JSON.stringify(body):undefined
+  });
+  let j=null; try{ j=await r.json(); }catch(e){}
+  if(!r.ok) throw new Error((j&&j.error)||("HTTP "+r.status));
+  return j;
+}
+
+function urgencyRank(u){return u==="week"?0:u==="month"?1:u==="quarter"?2:3;}
+
+function statusMeta(st){
+  if(st==="done") return {cls:"s-done",txt:"בוצע"};
+  if(st==="waiting") return {cls:"s-stuck",txt:"נתקע / ממתין"};
+  return {cls:"s-prog",txt:"בתהליך"};
+}
+
+/* ---------- EMPLOYEE ---------- */
+function renderEmployee(d){
+  const tasks = d.tasks||[];
+  const pending = tasks.filter(t=>!t.last_report_at);
+  const reported = tasks.filter(t=>t.last_report_at);
+  pending.sort((a,b)=>urgencyRank(a.urgency)-urgencyRank(b.urgency));
+  reported.sort((a,b)=> new Date(b.last_report_at)-new Date(a.last_report_at));
+  let h = `<h1>היי ${esc(d.name.split(" ")[0]||d.name)} 👋</h1>
+    <div class="sub">${tasks.length} משימות פתוחות · ${pending.length} מחכות לעדכון</div>`;
+  if(!tasks.length){
+    h += `<div class="empty"><div class="big">✅</div>אין משימות פתוחות כרגע. כל הכבוד.</div>`;
+    app.innerHTML=h; return;
+  }
+  if(pending.length){
+    h += `<div class="sectitle">מחכה לעדכון</div>`;
+    pending.forEach(t=> h += taskCard(t,false));
+  }
+  if(reported.length){
+    h += `<div class="sectitle">כבר עדכנת</div>`;
+    reported.forEach(t=> h += taskCard(t,true));
+  }
+  app.innerHTML=h;
+}
+function taskCard(t, reported){
+  let chips = "";
+  if(t.arena) chips += `<span class="chip arena">${esc(t.arena)}</span>`;
+  if(t.front) chips += `<span class="chip">${esc(t.front)}</span>`;
+  if(t.urgency) chips += `<span class="chip ${t.urgency==="week"?"week":t.urgency==="month"?"month":""}">${t.urgency==="week"?"השבוע":t.urgency==="month"?"החודש":esc(t.urgency)}</span>`;
+  let body = `<div class="title">${esc(t.title)}</div><div class="chips">${chips}</div>`;
+  if(reported){
+    const sm = statusMeta(t.status);
+    body += `<div class="status ${sm.cls}">הדיווח האחרון: ${sm.txt} · ${timeAgo(t.last_report_at)}</div>`;
+    if(t.reply) body += `<div class="reply"><b>איתי:</b> ${esc(t.reply)}</div>`;
+    else if(t.acked) body += `<div class="ack">✓ איתי ראה</div>`;
+  }
+  body += `<textarea class="note" id="n_${t.id}" placeholder="הערה (לא חובה)…"></textarea>
+    <div class="btnrow">
+      <button class="b done" onclick="sendReport('${t.id}','done')">בוצע</button>
+      <button class="b prog" onclick="sendReport('${t.id}','progress')">בתהליך</button>
+      <button class="b stuck" onclick="sendReport('${t.id}','stuck')">נתקע</button>
+    </div>`;
+  return `<div class="card" id="c_${t.id}">${body}</div>`;
+}
+async function sendReport(id, btn){
+  const el=document.getElementById("n_"+id);
+  const note = el?el.value:"";
+  const card=document.getElementById("c_"+id);
+  if(card) card.classList.add("fade");
+  try{
+    await api("POST",{action:"report", task_id:id, btn, note});
+    toast("נשלח ✓");
+    setTimeout(load, 500);
+  }catch(e){
+    if(card) card.classList.remove("fade");
+    toast("שגיאה: "+e.message);
+  }
+}
+
+/* ---------- OWNER ---------- */
+function renderOwner(d){
+  const reports = d.reports||[];
+  const team = d.team||[];
+  const silent = d.silent||[];
+  const pulse = d.pulse||{pending:reports.filter(r=>!r.acked).length, stuck:0, silent:silent.length};
+  let h = `<h1>לוח דיווחים</h1>
+    <div class="sub">${reports.length} דיווחים · עדכון אחרון ${reports.length?timeAgo(reports[0].at):"—"}</div>`;
+  // pulse bar
+  h += `<div class="pulse">
+    <div class="pstat ${pulse.pending?"warn":"ok"}"><div class="n">${pulse.pending}</div><div class="l">ממתינים ל-✓ שלך</div></div>
+    <div class="pstat ${pulse.stuck?"bad":"ok"}"><div class="n">${pulse.stuck}</div><div class="l">נתקעו</div></div>
+    <div class="pstat ${pulse.silent?"bad":"ok"}"><div class="n">${pulse.silent}</div><div class="l">שקטים</div></div>
+  </div>`;
+  if(team.length){
+    h += `<div class="team"><h3>צוות</h3>`;
+    team.forEach(m=>{
+      const link = location.origin+location.pathname+"?t="+encodeURIComponent(m.token||"");
+      const subj = `עדכון משימות — יש ${m.unreported_count} לדווח`;
+      const bd = `שלום ${m.name},\n\nיש לך ${m.unreported_count} משימות שממתינות לעדכון (מתוך ${m.open_count} פתוחות).\nאפשר לדווח כאן בלחיצה:\n${link}\n\nתודה,\nאיתי`;
+      const mailto = m.email ? `mailto:${m.email}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(bd)}` : null;
+      h += `<div class="trow">
+        <div><div class="tname">${esc(m.name)}</div>
+        <div class="tmeta">${m.open_count} פתוחות · ${m.unreported_count} לא דוּוחו</div></div>
+        ${mailto?`<a class="nudge" href="${mailto}">נדנד ✉︎</a>`:`<span class="tmeta">אין מייל</span>`}
+      </div>`;
+    });
+    h += `</div>`;
+  }
+  if(silent.length){
+    h += `<div class="team"><h3>נשמע מזה מזמן (מעל 5 ימים)</h3>`;
+    silent.forEach(s=>{
+      h += `<div class="silentrow">
+        <div><div class="sn">${esc(s.title)}</div>
+        <div class="tmeta">${esc(s.person)}</div></div>
+        <span class="sm">${timeAgo(s.last_report_at)}</span>
+      </div>`;
+    });
+    h += `</div>`;
+  }
+  if(!reports.length){
+    h += `<div class="empty"><div class="big">🗒️</div>אין דיווחים עדיין.<br>ברגע שמישהו מהצוות ידווח — זה יופיע כאן.</div>`;
+    app.innerHTML=h; return;
+  }
+  h += `<div class="sectitle">דיווחים</div>`;
+  reports.forEach(r=> h += reportCard(r));
+  app.innerHTML=h;
+}
+function reportCard(r){
+  const sm = statusMeta(r.status);
+  let body = `<div class="title">${esc(r.title)} <span class="time">${timeAgo(r.at)}</span></div>
+    <div class="status ${sm.cls}">${sm.txt}</div>
+    <div style="font-size:13.5px;color:#cdd8ef;margin-bottom:8px">${esc(r.note)}</div>`;
+  if(r.reply){
+    body += `<div class="reply"><b>הגבת:</b> ${esc(r.reply)}</div>`;
+  } else if(r.acked){
+    body += `<div class="owner-actions"><span class="seen">✓ ראית</span></div>`;
+  } else {
+    body += `<textarea class="note" id="rp_${r.task_id}" placeholder="תגובה לאהרון (לא חובה)…"></textarea>
+      <div class="owner-actions">
+        <button class="oa ack" onclick="ackReport('${r.task_id}')">ראיתי ✓</button>
+        <button class="oa reply" onclick="replyReport('${r.task_id}')">שלח תגובה</button>
+      </div>`;
+  }
+  body += `<div><button class="histbtn" onclick="toggleHist('${r.task_id}')">היסטוריה ▾</button>
+    <div class="histbox" id="hb_${r.task_id}"></div></div>`;
+  return `<div class="card" id="rc_${r.task_id}">${body}</div>`;
+}
+const histLoaded = {};
+async function toggleHist(id){
+  const box=document.getElementById("hb_"+id);
+  const open=box.classList.toggle("open");
+  if(open && !histLoaded[id]){
+    box.innerHTML=`<div class="histitem">טוען…</div>`;
+    try{
+      const d=await api("GET",null,"&history="+encodeURIComponent(id));
+      const ev=d.events||[];
+      histLoaded[id]=true;
+      box.innerHTML = ev.length
+        ? ev.map(e=>`<div class="histitem">${esc(e.note)}<span class="ht">${timeAgo(e.at)}</span></div>`).join("")
+        : `<div class="histitem">אין היסטוריה.</div>`;
+    }catch(e){ box.innerHTML=`<div class="histitem">שגיאה: ${esc(e.message)}</div>`; }
+  }
+}
+async function ackReport(id){
+  try{ await api("POST",{action:"ack", task_id:id}); toast("סומן כנצפה ✓"); setTimeout(load,400);}
+  catch(e){ toast("שגיאה: "+e.message);}
+}
+async function replyReport(id){
+  const el=document.getElementById("rp_"+id);
+  const text = el?el.value.trim():"";
+  if(!text){ return ackReport(id); }
+  try{ await api("POST",{action:"reply", task_id:id, text}); toast("התגובה נשלחה ✓"); setTimeout(load,400);}
+  catch(e){ toast("שגיאה: "+e.message);}
+}
+
+/* ---------- BOOT ---------- */
+async function load(){
+  if(!TOKEN && !KEY){ app.innerHTML=`<div class="err">חסר טוקן גישה בכתובת. הלינק צריך להסתיים ב-?t=…</div>`; return; }
+  try{
+    const d = await api("GET");
+    if(d.mode==="owner") renderOwner(d); else renderEmployee(d);
+  }catch(e){
+    app.innerHTML=`<div class="err"><b>לא הצלחתי לטעון.</b><br>${esc(e.message)}</div>`;
+  }
+}
+load();
+</script>
+</body>
+</html>
