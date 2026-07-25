@@ -31,10 +31,14 @@ const AUDIT = () => {
     const rows = [...main.querySelectorAll(".row, .li, .vt, .btn, .foot")].filter(vis);
     const last = rows[rows.length - 1];
     if (last) {
-      // גוללים לתחתית ובודקים שהאלמנט האחרון נגיש מעל הניווט
-      main.scrollTop = main.scrollHeight;
-      const r = last.getBoundingClientRect();
-      if (r.bottom > navTop + 1 && r.top < navTop) out.push(`התוכן האחרון נחתך ע"י הניווט (${Math.round(r.bottom - navTop)}px מוסתרים)`);
+      // נמדד בקואורדינטות המסמך, בלי להסתמך על גלילה: מדידה מיד אחרי
+      // scrollTo תלויה בתזמון ובגובה הגופנים, ולכן הבדיקה נכשלה רק
+      // בסביבה שבה הגופנים באמת נטענים.
+      const navH = nav.getBoundingClientRect().height;
+      const lastBottomDoc = last.getBoundingClientRect().bottom + window.scrollY;
+      const clearance = document.documentElement.scrollHeight - lastBottomDoc;
+      if (clearance < navH)
+        out.push(`מרווח לא מספיק מתחת לתוכן האחרון: ${Math.round(clearance)}px מול ניווט של ${Math.round(navH)}px`);
     }
   }
 
