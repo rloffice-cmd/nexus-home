@@ -1,0 +1,23 @@
+name: בדיקות דפדפן
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: התקנת Playwright
+        run: npm i -D playwright@1.56.1 && npx playwright install --with-deps chromium
+      - name: הפעלת שרת סטטי
+        run: python3 -m http.server 8099 &
+      - name: המתנה לשרת
+        run: for i in $(seq 1 20); do curl -sf http://127.0.0.1:8099/index.html >/dev/null && break; sleep 1; done
+      - name: מסלולי משתמש
+        run: node tests/e2e/flows.mjs
+      - name: המשכיות ושימוש ממושך
+        run: node tests/e2e/continuity.mjs
