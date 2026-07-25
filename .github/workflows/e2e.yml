@@ -21,3 +21,9 @@ jobs:
         run: node tests/e2e/flows.mjs
       - name: המשכיות ושימוש ממושך
         run: node tests/e2e/continuity.mjs
+      - name: פריסה — חפיפות, חריגות ויעדי מגע
+        run: mkdir -p /tmp/nexus-shots && node tests/e2e/layout.mjs
+      - name: תוכן מוסתר מאחורי הכפתור הצף
+        run: node tests/e2e/hidden.mjs
+      - name: התנהגות גלילה
+        run: node tests/e2e/scroll.mjs
