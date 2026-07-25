@@ -183,6 +183,7 @@ nav .bdg{position:absolute;top:5px;margin-inline-start:20px;background:var(--cri
 .blk{margin-top:15px}.blk h4{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--brand);margin:0 2px 7px}
 .kv{font-size:13.5px;line-height:1.5;padding:3px 2px}
 .li{font-size:13.5px;padding:8px 2px;border-top:1px solid var(--hair);display:flex;gap:8px;align-items:flex-start}.li:first-child{border-top:0}
+.li.tapli{cursor:pointer;-webkit-tap-highlight-color:transparent}.li.tapli:active{background:var(--surface2);border-radius:8px}
 .seg{display:flex;gap:6px;background:var(--surface2);border:1px solid var(--hair);border-radius:12px;padding:4px;margin-bottom:12px}
 .seg button{flex:1;border:0;background:none;color:var(--ink2);font-weight:700;font-size:13px;padding:10px;min-height:44px;border-radius:9px;cursor:pointer}
 .seg button.on{background:var(--brand);color:var(--on-brand)}
@@ -333,8 +334,8 @@ function vHome(){
   const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
   const kp=D.kpis, dash=D.dashboard, focus=D.focus;
   const decPend=(D.decisions||[]).filter(d=>d.status==="pending");
-  const soon=[]; open.forEach(t=>{ const di=dueIn(t.due_date); if(di!=null&&di<=3)soon.push({t:t.title,di,due:t.due_date,kind:"משימה"}); });
-  (D.commitments||[]).forEach(c=>{ const di=dueIn(c.due); if(di!=null&&di<=3)soon.push({t:c.what,di,due:c.due,kind:"התחייבות"}); });
+  const soon=[]; open.forEach(t=>{ const di=dueIn(t.due_date); if(di!=null&&di<=3)soon.push({t:t.title,di,due:t.due_date,kind:"משימה",id:t.id,type:"task"}); });
+  (D.commitments||[]).forEach(c=>{ const di=dueIn(c.due); if(di!=null&&di<=3)soon.push({t:c.what,di,due:c.due,kind:"התחייבות",id:c.id,type:"commit"}); });
   soon.sort((a,b)=>a.di-b.di); const risk0=soon.find(s=>s.di<=0);
   const escal=(D.followups||[]).filter(f=>f.level==="escalate"), remind=(D.followups||[]).filter(f=>f.level==="remind");
   const activeAr=(D.arenas||[]).filter(a=>a.status==="active");
@@ -367,7 +368,7 @@ function vHome(){
     }else h+=`<div class="lbl">⭐ הדבר האחד של היום</div><div class="txt">עוד לא נקבע</div><div class="sub">הכי מוזנח שנדחה שוב ושוב — לא בהכרח הכי חשוב.</div><div class="acts"><button class="btn brand sm" onclick="focusPick()">קבע עכשיו</button></div>`;
     return h+`</div>`; }
   function bDecisions(){ if(!decPend.length)return ""; return secH("⚖️ החלטות","רק אתה מחליט",decPend.length,decPend.length>3?{txt:"הכל",fn:"go('decisions')"}:null)+`<div class="card">`+decPend.slice(0,3).map(decRow).join("")+`</div>`; }
-  function bSoon(){ if(!soon.length)return ""; return secH("⚠️ דדליינים קרובים","עד 3 ימים",soon.length)+`<div class="card">`+soon.slice(0,4).map(s=>`<div class="row stripe ${s.di<=1?"s-crit":"s-warn"}"><div class="main"><div class="t">${esc(s.t)}</div><div class="m"><span class="chip ${s.di<=1?"crit":"warn"}">${s.di<=0?"היום":s.di===1?"מחר":"בעוד "+s.di+" ימים"}</span><span class="dim">${s.kind} · ${fmtDay(s.due)}</span></div></div></div>`).join("")+`</div>`; }
+  function bSoon(){ if(!soon.length)return ""; return secH("⚠️ דדליינים קרובים","עד 3 ימים",soon.length)+`<div class="card">`+soon.slice(0,4).map(s=>`<div class="row stripe ${s.di<=1?"s-crit":"s-warn"}" onclick="${s.type==="task"?`openTask('${s.id}')`:`openCommit('${s.id}')`}"><div class="main"><div class="t">${esc(s.t)}</div><div class="m"><span class="chip ${s.di<=1?"crit":"warn"}">${s.di<=0?"היום":s.di===1?"מחר":"בעוד "+s.di+" ימים"}</span><span class="dim">${s.kind} · ${fmtDay(s.due)}</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
   function bRadar(){ if(!radar.length)return ""; return secH("📡 רדאר זירות","שקט = איתות בעיה",radar.length,{txt:"זירות",fn:"go('arenas')"})+`<div class="card">`+radar.map(x=>{ const red=!!x.act.broken; return `<div class="row stripe ${red?"s-crit":"s-warn"}" onclick="openArena('${x.a.id}')"><div class="main"><div class="t">${esc(nm0(x.a.name))}</div><div class="m"><span class="chip ${red?"crit":"warn"}">${red?esc(x.act.broken.slice(0,40)):(x.act.days!=null?x.act.days+" ימי שקט":"ללא תנועה מתועדת")}</span><span class="dim">${x.cnt} פתוחות</span></div></div><div class="lead dim">‹</div></div>`; }).join("")+`</div>`; }
   function bExpire(){ if(!kdSoon.length)return ""; return secH("📅 תפוגות ודדליינים","חוזי · אבני דרך",kdSoon.length,{txt:"נכסים",fn:"go('assets')"})+`<div class="card">`+kdSoon.slice(0,6).map(k=>{ const di=dueIn(k.due); return `<div class="row stripe ${k.overdue?"s-crit":di!=null&&di<=30?"s-warn":"s-info"}"><div class="main"><div class="t">${esc(k.title)}</div><div class="m"><span class="chip ${k.overdue?"crit":di!=null&&di<=30?"warn":"info"}">${k.overdue?"באיחור":"עד "+fmtDay(k.due)}</span>${k.deal?`<span class="dim">${esc(k.deal)}</span>`:""}${k.sev==="קריטי"?`<span class="chip crit">קריטי</span>`:""}</div></div></div>`; }).join("")+`</div>`; }
   function bWaiting(){ if(!(escal.length||remind.length))return ""; return secH("⏳ ממתין לאחרים","על התוצר, לא על האדם",escal.length+remind.length)+`<div class="card">`+[...escal,...remind].slice(0,5).map(f=>`<div class="row stripe ${f.level==="escalate"?"s-crit":"s-warn"}" onclick="openTask('${f.id}')"><div class="lead" style="background:${f.level==="escalate"?"var(--crit-bg)":"var(--warn-bg)"};color:${f.level==="escalate"?"var(--crit)":"var(--warn)"}">${f.level==="escalate"?"❗":"⏰"}</div><div class="main"><div class="t">${esc(f.title)}</div><div class="m">${f.arena?`<span class="dim">${esc(nm0(f.arena))}</span><span class="dot"></span>`:""}<span class="dim">ממתין ${esc(f.days_waiting)} ימים</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
@@ -484,10 +485,10 @@ function openArena(id){ const a=AR[id]; if(!a)return;
   let h=`<div class="grab"></div><h3>${esc(a.name)}</h3><div class="sub2">${esc((a.summary||"").slice(0,240))}</div>`;
   if(goal)h+=`<div class="card pad" style="background:var(--surface2)"><div style="font-size:11px;font-weight:800;color:var(--brand);letter-spacing:.09em;margin-bottom:5px">🎯 מטרת-על</div><div style="font-size:14px;line-height:1.5">${esc(goal)}</div></div>`;
   if(objs.length)h+=`<div class="blk"><h4>יעדים והצעד הבא</h4>${objs.map(o=>`<div class="kv">• <b>${esc(o.title)}</b>${o.next_step?`<br><span class="dim" style="padding-inline-start:12px">→ ${esc(o.next_step)}${o.next_step_due?" ("+fmtDay(o.next_step_due)+")":""}</span>`:""}</div>`).join("")}</div>`;
-  h+=`<div class="blk"><h4>משימות פתוחות · ${open.length}</h4>${list(open,t=>`<div class="li"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span><span>${esc(t.title)}${t.due_date?` <span class="dim">(${fmtDay(t.due_date)})</span>`:""}</span></div>`,"אין משימות פתוחות ✓")}</div>`;
+  h+=`<div class="blk"><h4>משימות פתוחות · ${open.length}</h4>${list(open,t=>`<div class="li tapli" onclick="openTask('${t.id}')"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span><span>${esc(t.title)}${t.due_date?` <span class="dim">(${fmtDay(t.due_date)})</span>`:""}</span></div>`,"אין משימות פתוחות ✓")}</div>`;
   if(decs.length)h+=`<div class="blk"><h4>החלטות ממתינות · ${decs.length}</h4>${decs.map(d=>`<div class="li">✦ <span>${esc(d.title)}</span></div>`).join("")}</div>`;
-  h+=`<div class="blk"><h4>↪ חייבים לך · ${toMe.length}</h4>${list(toMe,c=>`<div class="li"><span>${esc(c.what)}${c.person_id?` <span class="dim">— ${esc(personName(c.person_id))}</span>`:""}${c.due?` <span class="dim">(${fmtDay(c.due)})</span>`:""}</span></div>`,"—")}</div>`;
-  h+=`<div class="blk"><h4>↩ אתה חייב · ${byMe.length}</h4>${list(byMe,c=>`<div class="li"><span>${esc(c.what)}</span></div>`,"—")}</div>`;
+  h+=`<div class="blk"><h4>↪ חייבים לך · ${toMe.length}</h4>${list(toMe,c=>`<div class="li tapli" onclick="openCommit('${c.id}')"><span>${esc(c.what)}${c.person_id?` <span class="dim">— ${esc(personName(c.person_id))}</span>`:""}${c.due?` <span class="dim">(${fmtDay(c.due)})</span>`:""}</span></div>`,"—")}</div>`;
+  h+=`<div class="blk"><h4>↩ אתה חייב · ${byMe.length}</h4>${list(byMe,c=>`<div class="li tapli" onclick="openCommit('${c.id}')"><span>${esc(c.what)}${c.due?` <span class="dim">(${fmtDay(c.due)})</span>`:""}</span></div>`,"—")}</div>`;
   if(evs.length)h+=`<div class="blk"><h4>אירועים אחרונים</h4>${evs.map(e=>`<div class="li"><span class="dim num">${fmtDay(e.happened_at)}</span><span>${esc((e.description||"").slice(0,110))}</span></div>`).join("")}</div>`;
   h+=`<div style="margin-top:16px"><button class="btn brand block" id="draftBtn">✍️ נסח עדכון לצוות</button></div><div id="draftBox" style="margin-top:10px"></div>`;
   openSheet(h); const db=$("#draftBtn"); if(db)db.onclick=()=>draftArena(id,db);
@@ -562,6 +563,18 @@ async function taskWaiting(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t
 async function taskReopen(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.status="open"; closeSheet(); render(); toast("חזר אליך ✓"); try{ await apiPost(API,{action:"task_reopen",id}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } }
 async function taskImportant(id,v){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.important=v; closeSheet(); render(); toast(v?"סומן חשוב ⭐":"הוסר סימון חשוב"); try{ await apiPost(ACT,{action:"task_important",id,important:v}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } }
 async function taskDone(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.status="done"; closeSheet(); render(); toast("בוצע ✓",()=>{ const tt=(D.tasks||[]).find(x=>x.id===id); if(tt)tt.status="open"; render(); if(LIVE)apiPost(API,{action:"task_reopen",id}).catch(()=>{}); }); try{ await apiPost(API,{action:"task_done",id}); }catch(e){} }
+function openCommit(id){ const c=(D.commitments||[]).find(x=>x.id===id); if(!c)return; const who=personName(c.person_id); const di=dueIn(c.due);
+  const mine=c.direction==="by_itay";
+  let h=`<div class="grab"></div><h3>${esc(c.what)}</h3><div class="m" style="margin:0 2px 4px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ${mine?"warn":"brand"}">${mine?"↩ אתה חייב":"↪ חייבים לך"}</span>${who?`<span class="chip mut">${esc(who)}</span>`:""}${c.arena_id?`<span class="chip mut">${esc(nm0(arenaName(c.arena_id)))}</span>`:""}${c.due?`<span class="chip ${di!=null&&di<=0?"crit":di!=null&&di<=3?"warn":"mut"}">${di!=null&&di<0?"באיחור "+(-di)+" ימים":"עד "+fmtDay(c.due)}</span>`:""}</div>`;
+  if(c.evidence)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;margin-top:10px">${esc(c.evidence)}</div>`;
+  h+=`<div style="margin-top:16px"><button class="btn good block" onclick="commitDone('${id}')">✅ נסגר</button></div>`;
+  openSheet(h);
+}
+async function commitDone(id){ const prev=(D.commitments||[]).find(x=>x.id===id); if(!prev)return;
+  D.commitments=(D.commitments||[]).filter(x=>x.id!==id); closeSheet(); render();
+  toast("ההתחייבות נסגרה ✓",()=>{ D.commitments=[...(D.commitments||[]),prev]; render(); });
+  try{ await apiPost(ACT,{action:"commitment_done",id}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); }
+}
 async function setUrg(id,u,el){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.urgency=u; el.parentNode.querySelectorAll(".c").forEach(c=>c.classList.remove("on")); el.classList.add("on"); try{await apiPost(API,{action:"task_urgency",id,urgency:u});}catch(e){} }
 function triage(id){ const c=(D.captures||[]).find(x=>x.id===id); if(!c)return; const arenas=(D.arenas||[]).filter(a=>a.status!=="archived");
   let h=`<div class="grab"></div><h3>נקז קליטה</h3><div class="card pad" style="background:var(--surface2);font-size:14px;margin-bottom:12px">${esc(c.text||"")}</div><div class="field"><label>זירה (לא חובה)</label><select id="trArena"><option value="">— ללא —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div><div style="display:flex;gap:8px"><button class="btn good block" onclick="triageDo('${id}','task')">→ משימה</button><button class="btn line block" onclick="triageDo('${id}','idea')">→ רעיון</button></div>`;
