@@ -49,6 +49,10 @@ await page.route("**/functions/v1/nx-file*", async (route) => {
     res = { ok: true, ignored: 17, ids: ["id-x"] };
   } else if (body.action === "undo") {
     res = { ok: true, restored: body.ids.length };
+  } else if (body.action === "arena_create") {
+    res = body.name === "כבר קיימת"
+      ? { ok: true, id: "arena-2", name: "ג2 — דז'יקוב ויז'ניץ", existed: true }
+      : { ok: true, id: "arena-new", name: body.name, existed: false };
   }
   await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(res) });
 });
@@ -128,6 +132,34 @@ else {
   if (p2.folder !== FOLDERS[1].folder) fail("בחירה ידנית שלחה תיקייה שגויה");
   step("בורר הזירות שולח את הזירה והתיקייה הנכונות");
 }
+
+// פתיחת זירה חדשה מתוך הבורר, ושיוך אליה מיד.
+// הרשימה נטענת מחדש כי השיוך הקודם הוריד ממנה את התיקייה חסרת ההצעה.
+await page.evaluate(() => loadFiling());
+await page.waitForSelector("text=הנהלת חשבונות", { timeout: 4000 });
+const btns2 = await page.$$("#main .card .mini button");
+for (const b of btns2) if ((await b.innerText()).trim() === "בחר זירה") { await b.click(); break; }
+await page.waitForSelector("#newArena", { timeout: 3000 });
+
+// שם קצר מדי לא אמור להגיע לשרת בכלל
+await page.fill("#newArena", "א");
+await page.click(".sheet button.go");
+await page.waitForTimeout(250);
+if (posted.some(p => p.action === "arena_create"))
+  fail("שם קצר מדי נשלח לשרת במקום להיעצר במסך");
+step("שם קצר מדי נעצר לפני השרת");
+
+await page.fill("#newArena", "בית החלמה ליולדות");
+await page.click(".sheet button.go");
+await page.waitForTimeout(450);
+const ac = posted.find(p => p.action === "arena_create");
+if (!ac) fail("פתיחת הזירה לא נשלחה");
+else if (ac.name !== "בית החלמה ליולדות") fail("נשלח שם שגוי: " + ac.name);
+const filedNew = posted.filter(p => p.action === "file_folder").pop();
+if (!filedNew || filedNew.arena_id !== "arena-new")
+  fail("התיקייה לא שויכה לזירה שנפתחה: " + JSON.stringify(filedNew));
+if (filedNew.folder !== FOLDERS[1].folder) fail("שויכה תיקייה שגויה לזירה החדשה");
+step("זירה חדשה נפתחת והתיקייה משויכת אליה מיד");
 
 // המסך אינו חושף פעולות כשאין חיבור חי
 await page.evaluate(() => { LIVE = false; FL.err = "demo"; render(); });

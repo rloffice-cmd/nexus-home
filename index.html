@@ -698,8 +698,29 @@ function vFiling(){
 function pickArena(i){
   const f=FL.folders[i]; if(!f)return;
   let h=`<div class="grab"></div><h3><bdi>${esc(f.short||f.folder)}</bdi></h3><div class="sub2">${f.docs} מסמכים ישויכו לזירה שתבחר.</div>`;
-  h+=(FL.arenas||[]).map(a=>`<div class="li tapli" onclick="fileFolder(${i},'${a.id}')"><span style="flex:1">${esc(a.name)}</span>${a.status!=="active"?`<span class="chip mut">${a.status==="pipeline"?"בצנרת":"ארכיון"}</span>`:""}<span class="dim">›</span></div>`).join("");
+  h+=(FL.arenas||[]).map(a=>`<div class="li tapli" onclick="fileFolder(${i},'${a.id}')"><span style="flex:1">${esc(a.name)}</span>${a.status!=="active"?`<span class="chip mut">${STT[a.status]||a.status}</span>`:""}<span class="dim">›</span></div>`).join("");
+  // תיקייה ששייכת למשהו שאין לו עדיין זירה הייתה נשארת בארגז לנצח.
+  // הפתיחה היא מכאן, כי זה הרגע שבו מתברר שהזירה חסרה.
+  h+=`<div class="blk"><h4>זירה חדשה</h4>
+    <input class="searchbox" id="newArena" placeholder="שם הזירה…" maxlength="80" onkeydown="if(event.key==='Enter')createArena(${i})">
+    <div class="mini" style="margin-top:0"><button class="go" onclick="createArena(${i})">➕ פתח ושייך</button></div></div>`;
   openSheet(h);
+  setTimeout(()=>{ const el=$("#newArena"); if(el)el.value=""; },0);
+}
+const STT={active:"פעילה",pipeline:"בצנרת",on_hold:"בהמתנה",archived:"ארכיון"};
+
+async function createArena(i){
+  const el=$("#newArena"); if(!el)return;
+  const name=(el.value||"").trim();
+  if(name.length<2){ toast("שם קצר מדי"); el.focus(); return; }
+  el.disabled=true;
+  try{
+    const r=await apiPost(FILE,{action:"arena_create",name});
+    if(r.error){ toast(r.error); el.disabled=false; return; }
+    if(!FL.arenas.some(a=>a.id===r.id)) FL.arenas.push({id:r.id,name:r.name,status:"active"});
+    if(r.existed) toast("הזירה כבר קיימת — משייך אליה");
+    fileFolder(i,r.id);
+  }catch(e){ toast("פתיחת הזירה נכשלה"); el.disabled=false; }
 }
 
 function dropFolder(i){ FL.folders.splice(i,1); if(TAB==="filing")render(); }
