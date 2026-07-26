@@ -29,3 +29,5 @@ jobs:
         run: node tests/e2e/scroll.mjs
       - name: מסך שיוך המסמכים
         run: node tests/e2e/filing.mjs
+      - name: מסך ההחלטות
+        run: node tests/e2e/decisions.mjs
