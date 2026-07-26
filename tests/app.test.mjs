@@ -32,7 +32,7 @@ const SERVER_ACTIONS = new Set([
   "focus_approve", "focus_done", "focus_set", "idea_add", "task_create", "task_done",
   "task_important", "task_reopen", "task_urgency", "task_waiting",
   // nx-file — מסך שיוך המסמכים
-  "unfiled_list", "file_folder", "ignore_folder", "undo",
+  "unfiled_list", "file_folder", "ignore_folder", "undo", "arena_create",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));
