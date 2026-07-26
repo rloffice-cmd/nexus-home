@@ -26,11 +26,13 @@ const defined = new Set([...js.matchAll(/function\s+([a-zA-Z_$][\w$]*)\s*\(/g)].
 const missing = [...new Set(handlers)].filter(h => !defined.has(h));
 check(`כל ${new Set(handlers).size} מטפלי onclick מוגדרים`, missing.length === 0, "חסרים: " + missing.join(", "));
 
-// 3. כל פעולה שנשלחת לשרת מוכרת. הרשימה משקפת את nexus-app ו-nx-act בפועל.
+// 3. כל פעולה שנשלחת לשרת מוכרת. הרשימה משקפת את nexus-app, nx-act ו-nx-file בפועל.
 const SERVER_ACTIONS = new Set([
   "arena_draft", "capture_add", "commitment_done", "decision_decide", "draft_sent",
   "focus_approve", "focus_done", "focus_set", "idea_add", "task_create", "task_done",
   "task_important", "task_reopen", "task_urgency", "task_waiting",
+  // nx-file — מסך שיוך המסמכים
+  "unfiled_list", "file_folder", "ignore_folder", "undo",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));
