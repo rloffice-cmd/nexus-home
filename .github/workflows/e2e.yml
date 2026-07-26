@@ -31,3 +31,5 @@ jobs:
         run: node tests/e2e/filing.mjs
       - name: מסך ההחלטות
         run: node tests/e2e/decisions.mjs
+      - name: נפילה שקטה — נתונים ישנים כחיים
+        run: node tests/e2e/stale.mjs
