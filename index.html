@@ -233,7 +233,9 @@ textarea:focus,input:focus,select:focus{border-color:var(--brand)}
 "use strict";
 /* ===== Nexus HQ v3 — "Quiet Authority" · full situation-cockpit (23.7.2026) ==========
    Holistic home cockpit (layered vital signs), assets dossier, arenas, decisions, ask,
-   reports, tasks, people. Dual mode (live + synthetic demo). Reviewed build. */
+   reports, tasks, people. Dual mode (live + synthetic demo). Reviewed build.
+   27.7: מסך פגישות — היומן מסונכרן ל-DB (nexus-app v9): פגישות היום + תיק +
+   טופס סיכום (החלטה·אחראי·לו"ז·הערות) שנכתב דרך nexus_debrief_commit + היסטוריה. */
 const REF="eygeouunxwsrdsijkczh", BASE="https://"+REF+".supabase.co/functions/v1";
 const API=BASE+"/nexus-app", DASH=BASE+"/nx-dash", ASK=BASE+"/nx-ask", ACT=BASE+"/nx-act", REPORT=BASE+"/report", FILE=BASE+"/nx-file", DEC=BASE+"/nx-dec";
 const SNAP={"now":"07:12","today":"2026-07-23","focus":{"title":"גרמושקה לרשות הרישוי — נדחתה כבר 9 ימים","approved":false,"done":false,"task_id":"d-1"},"arenas":[{"id":"a1","name":"מרכז מסחרי — צפון","status":"active","summary":"מרכז מניב בהתייצבות; חברת ניהול נכנסה, בוררות גבייה פתוחה.","goal":"[טיוטת AI לאישור] תפוסה 100% וגבייה מלאה, ניהול עצמאי בלי תלות יומיומית"},{"id":"a2","name":"מגורים — פינוי בינוי","status":"active","summary":"תקוע מול העירייה שמתנה היתרים בהסכם פיתוח.","goal":"[טיוטת AI לאישור] שחרור התקיעות: היתר ראשון בהגשה או עתירה מנהלית"},{"id":"a3","name":"אגרו-אנרגיה — מגרש דרום","status":"active","summary":"העברת זכויות בסגירה; סולארי מאחורי המונה בהקמה.","goal":"[טיוטת AI לאישור] המהלך האנרגטי הראשון החתום ב-2026"},{"id":"a4","name":"מגדל משרדים","status":"active","summary":"נכס מניב שקט, מושכר לטווח ארוך.","goal":"[טיוטת AI לאישור] תפעול בלי חיכוך, שכירות רצה"},{"id":"a5","name":"קרקע חקלאית — הזדמנות","status":"pipeline","summary":"הצעה 834 דונם בחכירה; בדיקת זכויות עתידיות מול דמי הסכמה.","goal":"[טיוטת AI לאישור] הכרעת כניסה/יציאה אחרי חיתום מלא"},{"id":"a6","name":"אישי ומשפחה","status":"active","summary":"מעבר לצפון, זמן משפחה מוגן.","goal":"[טיוטת AI לאישור] התקדמות שוטפת למעבר + זמן משפחה לפני הכל"}],"objectives":[{"id":"o1","arena_id":"a1","title":"סגירת בוררות הגבייה","next_step":"מחר בבוקר לשלוח לבורר סיכום חד-עמודי עם דרישת החלטה דחופה","next_step_due":"2026-07-24"},{"id":"o2","arena_id":"a2","title":"היתר ראשון","next_step":"להעביר לעו״ד את טיוטת העתירה לחתימה","next_step_due":null},{"id":"o3","arena_id":"a3","title":"השלמת העברת זכויות","next_step":"לוודא מול הרשות מה נותר אחרי תשלום ההיטל","next_step_due":null}],"tasks":[{"id":"t1","title":"לאשר הסכם חשמל מול חברת הניהול","arena_id":"a1","owner_id":"p2","status":"open","urgency":"today","important":true,"due_date":"2026-07-23","notes":null,"created_at":"2026-07-18"},{"id":"t2","title":"לחתום דיווח מיסוי על מכירת 31%","arena_id":"a3","owner_id":null,"status":"open","urgency":"today","important":true,"due_date":"2026-07-24","notes":"מס שבח מוערך עד תחילת ספטמבר","created_at":"2026-07-20"},{"id":"t3","title":"להעביר גרמושקה להנדסה","arena_id":"a2","owner_id":"p1","status":"open","urgency":"today","important":false,"due_date":null,"notes":null,"created_at":"2026-07-14"},{"id":"t4","title":"מדידה מעודכנת למגרש הדרום","arena_id":"a3","owner_id":"p3","status":"waiting","urgency":"week","important":false,"due_date":null,"notes":null,"created_at":"2026-07-15"},{"id":"t5","title":"תיאום פגישת ועדה","arena_id":"a2","owner_id":null,"status":"open","urgency":"week","important":false,"due_date":"2026-07-27","notes":null,"created_at":"2026-07-19"},{"id":"t6","title":"בדיקת הסכם EPC — לא לחתום לפני תיקונים","arena_id":"a3","owner_id":"p3","status":"open","urgency":"week","important":true,"due_date":null,"notes":"להעביר להערות עו״ד לפני חתימה","created_at":"2026-07-16"},{"id":"t7","title":"סבב חתימות מוכרים","arena_id":"a3","owner_id":null,"status":"open","urgency":"month","important":false,"due_date":null,"notes":null,"created_at":"2026-07-10"},{"id":"t8","title":"עדכון שווי מבוקש מול הצד השני","arena_id":"a5","owner_id":"p4","status":"waiting","urgency":"month","important":false,"due_date":null,"notes":null,"created_at":"2026-07-12"},{"id":"t9","title":"לבדוק מועדי חופש משפחתי בצפון","arena_id":"a6","owner_id":null,"status":"open","urgency":"whenever","important":false,"due_date":null,"notes":null,"created_at":"2026-07-08"}],"decisions":[{"id":"d1","arena_id":"a1","title":"האם לגבות 60% מחשבונות האנרגיה דרך הבוררות?","recommendation":"כן — לדחוף להחלטה דחופה; זה חמצן תזרימי של מאות אלפי ₪.","alternatives":"להמתין לפשרה כוללת (מאריך את התזרים השלילי).","cost_of_delay":"מאות אלפי ₪ תזרים","needed_by":"2026-07-25","status":"pending"},{"id":"d2","arena_id":"a2","title":"עתירה מנהלית או המתנה נוספת מול העירייה?","recommendation":"להכין עתירה כמנוף לחץ, להגיש רק אם אין תזוזה תוך שבועיים.","alternatives":"המשך מו״מ ישיר (סיכון להיגרר).","cost_of_delay":"עיכוב היתרים","needed_by":"2026-07-30","status":"pending"},{"id":"d3","arena_id":"a5","title":"להיכנס לעסקת הקרקע במחיר המבוקש?","recommendation":"לא לפני קבלת מחיר מזומן וחיתום מלא של דמי ההסכמה.","alternatives":"ירידה מסודרת מהעסקה.","cost_of_delay":null,"needed_by":null,"status":"pending"}],"commitments":[{"id":"c1","person_id":"p1","direction":"to_itay","what":"החזרת טיוטת עתירה מתוקנת","arena_id":"a2","due":"2026-07-24"},{"id":"c2","person_id":"p3","direction":"by_itay","what":"להעביר הערות על הסכם ה-EPC","arena_id":"a3","due":"2026-07-26"}],"followups":[{"id":"f1","title":"איפה עומדת טיוטת העתירה?","arena":"מגורים — פינוי בינוי","days_waiting":9,"level":"escalate"},{"id":"f2","title":"מה מצב המדידה של מגרש הדרום?","arena":"אגרו-אנרגיה — מגרש דרום","days_waiting":6,"level":"remind"},{"id":"f3","title":"האם התקבל מחיר מזומן על הקרקע?","arena":"קרקע חקלאית","days_waiting":4,"level":"remind"}],"people":[{"id":"p1","name":"עו״ד א׳","role":"עורך דין","organization":"משרד עריכת דין","phone":null,"email":null,"reliability_notes":"אמין ויסודי","work_notes":null,"tone_notes":null,"arenas_list":"מגורים"},{"id":"p2","name":"מנהל חברת ניהול","role":"ניהול נכס","organization":"חברת ניהול","phone":null,"email":null,"reliability_notes":"מורח — צריך נדנוד יזום","work_notes":null,"tone_notes":null,"arenas_list":"מרכז מסחרי"},{"id":"p3","name":"מהנדס פרויקט","role":"הנדסה","organization":null,"phone":null,"email":null,"reliability_notes":"אמין","work_notes":null,"tone_notes":null,"arenas_list":"אגרו-אנרגיה"},{"id":"p4","name":"צד נגדי — קרקע","role":"יזם","organization":null,"phone":null,"email":null,"reliability_notes":null,"work_notes":null,"tone_notes":null,"arenas_list":"קרקע"}],"captures":[{"id":"cap1","text":"לבדוק אם אפשר אגירת חשמל בחניון — כדאיות ~1M$","created_at":"2026-07-22"},{"id":"cap2","text":"רעיון: לחבר בין עודף הקרקע לבין הזדמנות הדאטה-סנטר","created_at":"2026-07-22"}],"events":[{"id":"e1","arena_id":"a1","description":"חברת הניהול השלימה חפיפה; הסכם חשמל ממתין לעיון","happened_at":"2026-07-22"},{"id":"e2","arena_id":"a3","description":"שובר תשלום שולם; ממתינים לרשות","happened_at":"2026-07-21"},{"id":"e3","arena_id":"a2","description":"מכתב עו״ד לקראת עתירה אושר","happened_at":"2026-07-20"}],"closed_today":[{"id":"x1","title":"אישור טיוטת הסכם ליווי"},{"id":"x2","title":"תיאום מדידה חוזרת"}],"lessons":[{"lesson":"הדבר האחד = הכי מוזנח שנדחה שוב ושוב, לא הכי חשוב"},{"lesson":"פולו-אפ מנוסח על התוצר/הזירה, לא על האדם"},{"lesson":"שקט בזירה = איתות בעיה, לא רגיעה"}],"kpis":{"total":9,"rented":4,"vacant":5,"rentKnown":43300,"rentLeases":4,"loans":7700000,"loansCount":3,"forSale":3,"forSaleAsking":8700000,"forSalePriced":2,"valuation":18900000,"valuationCount":6},"dashboard":{"key_dates":[{"title":"תום שכירות — חנות במרכז המסחרי","due":"2026-07-15","overdue":true,"deal":"מרכז מסחרי","sev":"קריטי"},{"title":"מימוש אופציית הארכה — מגדל משרדים","due":"2026-08-20","overdue":false,"deal":"מגדל משרדים","sev":null},{"title":"תשלום היטל השבחה — מגרש דרום","due":"2026-09-10","overdue":false,"deal":"אגרו-אנרגיה","sev":"קריטי"},{"title":"חידוש ערבות בנקאית","due":"2026-10-05","overdue":false,"deal":null,"sev":null}]},"assets":[{"id":"s1","code":"N-01","name":"מרכז מסחרי — אגף חנויות","owner_short":"חברה א׳","owner":"חברה א׳ בע״מ","asset_type":"מסחרי","property":"צפון","floor":"קרקע","area":"420","gush":"12345/7","is_rented":true,"for_sale":false,"valuation":5200000,"notes":"נכס עוגן, תפוסה מלאה","leases":[{"tenant":"רשת קמעונאות","rent":15000,"start":"2023-01","end":"2027-12","opt":"אין","guar":"ערבות בנקאית 3 חודשים"}],"loans":[{"lender":"בנק מסחרי","principal":3200000,"interest":"פריים+1.2%"}],"docs":[{"cat":"חוזה","name":"הסכם שכירות ראשי","loc":"https://example.com/lease-n01"}]},{"id":"s2","code":"N-02","name":"משרד במגדל — קומה 8","owner_short":"חברה א׳","owner":"חברה א׳ בע״מ","asset_type":"משרדים","property":"מרכז","floor":"8","area":"180","gush":null,"is_rented":true,"for_sale":false,"valuation":3400000,"notes":null,"leases":[{"tenant":"חברת הייטק","rent":12000,"start":"2022-06","end":"2026-08","opt":"שנה + שנה","guar":null}],"loans":[],"docs":[]},{"id":"s3","code":"N-03","name":"מחסן לוגיסטי","owner_short":"שותפות ב׳","owner":"שותפות ב׳","asset_type":"תעשייה","property":"דרום","floor":null,"area":"600","gush":"5566/12","is_rented":true,"for_sale":false,"valuation":2800000,"notes":null,"leases":[{"tenant":"מפעל","rent":9500,"start":"2024-03","end":"2029-02","opt":"אין","guar":"שטר חוב"}],"loans":[{"lender":"בנק ב׳","principal":1900000,"interest":"קבועה 4.1%"}],"docs":[]},{"id":"s4","code":"N-04","name":"דירת מגורים להשקעה","owner_short":"אישי","owner":"בעלות אישית","asset_type":"מגורים","property":"צפון","floor":"3","area":"95","gush":null,"is_rented":true,"for_sale":false,"valuation":2100000,"notes":null,"leases":[{"tenant":"שוכר פרטי","rent":6800,"start":"2025-09","end":"2026-09","opt":"אין","guar":null}],"loans":[{"lender":"משכנתא","principal":2600000,"interest":"משתנה"}],"docs":[]},{"id":"s5","code":"N-05","name":"מגרש אגרו-אנרגיה","owner_short":"שותפות ב׳","owner":"שותפות ב׳","asset_type":"קרקע","property":"דרום","floor":null,"area":"12 דונם","gush":"7788/3","is_rented":false,"for_sale":true,"asking_price":4800000,"sale_status":"במו״מ","sale_notes":"קונה פוטנציאלי בבדיקת נאותות","valuation":4500000,"notes":null,"leases":[],"loans":[],"docs":[]},{"id":"s6","code":"N-06","name":"חנות פינתית","owner_short":"חברה א׳","owner":"חברה א׳ בע״מ","asset_type":"מסחרי","property":"צפון","floor":"קרקע","area":"70","gush":null,"is_rented":false,"for_sale":true,"asking_price":3900000,"sale_status":"בפרסום","sale_notes":null,"valuation":null,"notes":null,"leases":[],"loans":[],"docs":[]},{"id":"s7","code":"N-07","name":"מגרש חקלאי","owner_short":"אישי","owner":"בעלות אישית","asset_type":"קרקע","property":"מרכז","floor":null,"area":"8 דונם","gush":null,"is_rented":false,"for_sale":true,"asking_price":null,"sale_status":"בחינת מחיר","sale_notes":"טרם תומחר","valuation":null,"notes":null,"leases":[],"loans":[],"docs":[]},{"id":"s8","code":"N-08","name":"דירה פנויה","owner_short":"אישי","owner":"בעלות אישית","asset_type":"מגורים","property":"צפון","floor":"5","area":"110","gush":null,"is_rented":false,"for_sale":false,"asking_rent":5200,"valuation":null,"notes":"פנויה — בהכנה להשכרה","leases":[],"loans":[],"docs":[]},{"id":"s9","code":"N-09","name":"יחידת אחסון","owner_short":"שותפות ב׳","owner":"שותפות ב׳","asset_type":"תעשייה","property":"דרום","floor":null,"area":"150","gush":null,"is_rented":false,"for_sale":false,"asking_rent":3000,"valuation":900000,"notes":null,"leases":[],"loans":[],"docs":[]}],"loans":[{"lender":"בנק מסחרי","principal":3200000,"interest":"פריים+1.2%","collateral":"מרכז מסחרי — אגף חנויות"},{"lender":"בנק ב׳","principal":1900000,"interest":"קבועה 4.1%","collateral":"מחסן לוגיסטי"},{"lender":"משכנתא","principal":2600000,"interest":"משתנה","collateral":"דירת מגורים להשקעה"}],"shared":[{"cat":"ביטוח","name":"פוליסת מטרייה 2026","loc":"https://example.com/insurance"},{"cat":"שמאות","name":"דוח שמאי — תיק נכסים","loc":"https://example.com/appraisal"},{"cat":"מיסוי","name":"אישורי ניכוי מס במקור","loc":"https://example.com/tax"}]};
@@ -322,6 +324,7 @@ function render(){ const el=app();
   document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===TAB));
   const host=$("#main");
   if(TAB==="home")host.innerHTML=vHome();
+  else if(TAB==="meetings")host.innerHTML=vMeetings();
   else if(TAB==="arenas")host.innerHTML=vArenas();
   else if(TAB==="decisions")host.innerHTML=vDecisions();
   else if(TAB==="assets")host.innerHTML=vAssets();
@@ -337,15 +340,22 @@ function render(){ const el=app();
 function staleness(iso){ const m=Math.floor((Date.now()-new Date(iso).getTime())/60000);
   if(!isFinite(m)||m<0)return""; if(m<60)return m+" דק׳"; const h=Math.floor(m/60);
   return h<24?h+" שע׳":Math.floor(h/24)+" ימים"; }
-function badges(){ const b=document.querySelector('nav button[data-tab=decisions] .bdg'); if(!b)return;
-  // nx-dec נכשלה — אין status אמין, ולכן לא מציגים מונה (0 מטעה כמו "אין ✓").
-  if(!DEC_OK){ b.style.display="none"; return; }
-  const dec=(D.decisions||[]).filter(d=>d.status==="pending").length; b.textContent=dec; b.style.display=dec?"":"none"; }
+function badges(){ const b=document.querySelector('nav button[data-tab=decisions] .bdg');
+  if(b){
+    // nx-dec נכשלה — אין status אמין, ולכן לא מציגים מונה (0 מטעה כמו "אין ✓").
+    if(!DEC_OK){ b.style.display="none"; }
+    else { const dec=(D.decisions||[]).filter(d=>d.status==="pending").length; b.textContent=dec; b.style.display=dec?"":"none"; }
+  }
+  // פגישות שכבר הסתיימו ועוד לא סוכמו — זה מה שממתין לאיתי, לא סך הפגישות.
+  const mb=document.querySelector('nav button[data-tab=meetings] .bdg'); if(!mb)return;
+  const pend=(D.meetings||[]).filter(m=>m.debrief_status!=="committed"&&m.ends_at&&ts(m.ends_at)<Date.now()).length;
+  mb.textContent=pend; mb.style.display=pend?"":"none"; }
 function shell(){
   app().innerHTML=`<header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div><span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span><button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
   <main id="main"></main>
   <nav>
     <button data-tab="home"><span class="ic">◈</span>בית</button>
+    <button data-tab="meetings"><span class="ic">◷</span>פגישות<span class="bdg"></span></button>
     <button data-tab="arenas"><span class="ic">▤</span>זירות</button>
     <button data-tab="decisions"><span class="ic">✦</span>החלטות<span class="bdg"></span></button>
     <button data-tab="assets"><span class="ic">▦</span>נכסים</button>
@@ -489,6 +499,93 @@ function toggleAsset(id){ const el=$("#as_"+id); if(el)el.classList.toggle("open
 function setAssetF(f){ assetFilter=f; render(); } function setAssetO(o){ assetOwner=o; render(); }
 function setAssetOEl(el){ setAssetO(el.getAttribute("data-o")); }
 function assetSearch(v){ assetQ=v; const el=$("#assetList"); if(el)el.innerHTML=assetRows(D.assets||[]); }
+
+/* ================= MEETINGS — יומן ← DB ← כאן (שלב 2, 27.7.2026) =================
+   הפגישות מגיעות מ-meetings_today (סנכרון יומן→DB בצד שמחזיק את המחבר).
+   כל פגישה: תיק (אם הוכן) · טופס סיכום במבנה של איתי (החלטה·אחראי·לו"ז·הערות,
+   הוספת שורות) שנכתב אטומית דרך nexus_debrief_commit · והיסטוריית תיקים/סיכומים. */
+function meetTime(m){ if(m.all_day)return "כל היום";
+  const f=t=>{ const x=ts(t); return isNaN(x)?"":new Date(x).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Jerusalem"}); };
+  const s=f(m.starts_at), e=f(m.ends_at); return s+(e?"–"+e:""); }
+function vMeetings(){
+  const ms=D.meetings||[], preps=D.preps||[], dbs=D.debriefs||[];
+  let h=`<div class="sec"><h2>◷ פגישות היום</h2><span class="n num">${ms.length}</span><span class="n dim">· ${LIVE?"מהיומן":"זמין במצב מחובר"}</span></div>`;
+  h+=`<div class="card pad"><div style="font-size:12.5px;color:var(--ink2);line-height:1.5">📂 תיקי פגישות לכל היום — מוכנים בסבב השעתי (עד 13:00) ונשלחים לטלגרם.</div><div class="mini"><button class="go" onclick="prepRequest('full')">📂 תיק מלא</button><button onclick="prepRequest('summary')">⚡ סקירה קצרה</button></div></div>`;
+  if(!ms.length)h+=`<div class="card" style="margin-top:9px"><div class="empty">${LIVE?"אין פגישות ביומן להיום ✓":"הפגישות מסתנכרנות מהיומן ומוצגות במצב מחובר."}</div></div>`;
+  else{
+    h+=`<div class="card" style="margin-top:9px">`+ms.map((m,i)=>{
+      const done=m.debrief_status==="committed", ended=m.ends_at&&ts(m.ends_at)<Date.now();
+      return `<div class="row stripe ${done?"s-good":ended?"s-warn":"s-info"}" onclick="openMeeting(${i})"><div class="main"><div class="t">${esc(m.title||"פגישה")}</div><div class="m"><span class="chip ${ended&&!done?"warn":"info"} num">${meetTime(m)}</span>${m.arena?`<span class="dim">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק ✓</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:ended?`<span class="chip warn">ממתין לסיכום</span>`:""}</div></div><div class="lead dim">‹</div></div>`;
+    }).join("")+`</div>`;
+  }
+  if(preps.length){ h+=secH("📂 היסטוריית תיקים","",preps.length)+`<div class="card">`+preps.slice(0,10).map((p,i)=>`<div class="row" onclick="openPrep(${i})"><div class="lead" style="background:var(--brand-soft);color:var(--brand-2)">📂</div><div class="main"><div class="t">${esc(p.meeting_title||"תיק פגישה")}</div><div class="m"><span class="dim num">${fmtDay(p.meeting_time||p.created_at)}</span>${p.depth?`<span class="chip mut">${p.depth==="full"?"מלא":"סקירה"}</span>`:""}${p.version>1?`<span class="chip mut">גרסה ${p.version}</span>`:""}</div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
+  if(dbs.length){ h+=secH("📝 סיכומים אחרונים","",dbs.length)+`<div class="card">`+dbs.slice(0,10).map((d,i)=>`<div class="row" onclick="openDebrief(${i})"><div class="lead" style="background:var(--good-bg);color:var(--good)">📝</div><div class="main"><div class="t">${esc(d.meeting_title||"סיכום פגישה")}</div><div class="m"><span class="dim num">${fmtDay(d.met_on)}</span><span class="chip ${d.status==="committed"?"good":"mut"}">${d.status==="committed"?"נכתב ✓":"טיוטה"}</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
+  return h;
+}
+function openMeeting(i){ const m=(D.meetings||[])[i]; if(!m)return;
+  const done=m.debrief_status==="committed";
+  let h=`<div class="grab"></div><h3>${esc(m.title||"פגישה")}</h3><div class="m" style="margin:0 2px 8px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip info num">${meetTime(m)}</span>${m.arena?`<span class="chip mut">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק ✓</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:""}</div>`;
+  if(m.location)h+=`<div class="kv">📍 ${esc(m.location)}</div>`;
+  if(m.organizer)h+=`<div class="kv dim">מארגן: ${esc(m.organizer)}</div>`;
+  if((m.attendees||[]).length)h+=`<div class="kv dim">משתתפים: ${esc(m.attendees.slice(0,6).join(", "))}${m.attendees.length>6?` +${m.attendees.length-6}`:""}</div>`;
+  const cu=httpOk(m.conference_url); if(cu)h+=`<div style="margin-top:10px"><a class="btn line block" style="text-decoration:none" href="${esc(cu)}" target="_blank" rel="noopener">🎥 הצטרף לשיחה ↗</a></div>`;
+  h+=`<div style="display:flex;gap:8px;margin-top:14px">`;
+  const pi=(D.preps||[]).findIndex(p=>p.id===m.prep_id);
+  if(m.prep_id&&pi>=0)h+=`<button class="btn brand block" onclick="openPrep(${pi})">📂 פתח את התיק</button>`;
+  else h+=`<button class="btn line block" onclick="prepRequest('full')">📂 הכן תיק</button>`;
+  h+=done?`<button class="btn good block" onclick="openDebriefByMeeting(${i})">📝 הסיכום ✓</button>`:`<button class="btn good block" onclick="debriefSheet(${i})">📝 סיכום פגישה</button>`;
+  h+=`</div>`; openSheet(h);
+}
+function openPrep(i){ const p=(D.preps||[])[i]; if(!p)return;
+  let h=`<div class="grab"></div><h3>📂 ${esc(p.meeting_title||"תיק פגישה")}</h3><div class="sub2">${fmtDay(p.meeting_time||p.created_at)}${p.depth?` · ${p.depth==="full"?"תיק מלא":"סקירה קצרה"}`:""}${p.version>1?` · גרסה ${p.version}`:""}</div>`;
+  h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;line-height:1.6">${esc(p.body||"")}</div>`; openSheet(h);
+}
+function openDebriefByMeeting(i){ const m=(D.meetings||[])[i]; if(!m)return;
+  const di=(D.debriefs||[]).findIndex(d=>d.id===m.debrief_id); if(di>=0)openDebrief(di); else toast("הסיכום לא נטען — רענן"); }
+function openDebrief(i){ const d=(D.debriefs||[])[i]; if(!d)return;
+  const ex=d.extracted||{};
+  let h=`<div class="grab"></div><h3>📝 ${esc(d.meeting_title||"סיכום פגישה")}</h3><div class="sub2">${fmtDay(d.met_on)} · ${d.status==="committed"?"נכתב למערכת ✓":"טיוטה"}</div>`;
+  const dec=ex.decisions||[];
+  if(dec.length)h+=`<div class="blk"><h4>החלטות · ${dec.length}</h4>`+dec.map(x=>`<div class="li">✦ <span><b>${esc(x.title||"")}</b>${x.rationale?`<br><span class="dim">${esc(x.rationale)}</span>`:""}</span></div>`).join("")+`</div>`;
+  const tk=ex.tasks||[];
+  if(tk.length)h+=`<div class="blk"><h4>מעקבים · ${tk.length}</h4>`+tk.map(x=>`<div class="li">☑️ <span>${esc(x.title||"")}${x.owner?` <span class="dim">— ${esc(x.owner)}</span>`:""}${x.due?` <span class="dim">(${fmtDay(x.due)})</span>`:""}</span></div>`).join("")+`</div>`;
+  const op=ex.open||[];
+  if(op.length)h+=`<div class="blk"><h4>נשאר פתוח</h4>`+op.map(x=>`<div class="li">· <span>${esc(x)}</span></div>`).join("")+`</div>`;
+  if(!dec.length&&!tk.length&&d.summary)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px">${esc(d.summary)}</div>`;
+  openSheet(h);
+}
+async function prepRequest(depth){ closeSheet();
+  if(!LIVE){ toast("בקשת תיק זמינה במצב מחובר"); return; }
+  try{ await apiPost(API,{action:"prep_request",depth}); toast(depth==="full"?"📂 תיק מלא — נרשם ✓ יוכן בסבב הקרוב":"⚡ סקירה קצרה — נרשמה ✓"); }
+  catch(e){ toast("הבקשה נכשלה — נסה שוב"); }
+}
+/* טופס הסיכום של איתי: החלטה · באחריות מי · לו"ז · הערות — שורה לכל החלטה. */
+function dbRowHtml(){ return `<div class="dbrow card pad" style="background:var(--surface2);margin-top:8px"><div class="field"><label>ההחלטה</label><input class="db-dec" placeholder="מה הוחלט?"></div><div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>באחריות מי</label><input class="db-own" placeholder="שם"></div><div class="field" style="flex:1"><label>לו״ז</label><input class="db-due" type="date"></div></div><div class="field" style="margin-bottom:2px"><label>הערות</label><input class="db-not" placeholder="לא חובה"></div></div>`; }
+function debriefSheet(i){ const m=(D.meetings||[])[i]||{};
+  let h=`<div class="grab"></div><h3>📝 סיכום פגישה</h3><div class="sub2">${esc(m.title||"")} · המבנה שלך: ההחלטה · באחריות מי · לו״ז · הערות. החלטה עם אחראי/לו״ז יוצרת מעקב אוטומטית.</div>`;
+  h+=`<div id="dbRows">`+dbRowHtml()+`</div>`;
+  h+=`<div class="mini" style="margin-top:8px"><button onclick="dbAddRow()">➕ עוד החלטה</button></div>`;
+  h+=`<div class="field" style="margin-top:12px"><label>נשאר פתוח (שורה לכל נושא, לא חובה)</label><textarea id="dbOpen" rows="2" placeholder="מה לא הוכרע ונשאר על השולחן?"></textarea></div>`;
+  h+=`<button class="btn good block" id="dbSubmit" onclick="debriefSubmit(${i})">✅ כתוב למערכת</button>`;
+  openSheet(h);
+}
+function dbAddRow(){ const box=$("#dbRows"); if(!box)return; box.insertAdjacentHTML("beforeend",dbRowHtml()); const rows=box.querySelectorAll(".dbrow"); const inp=rows[rows.length-1].querySelector(".db-dec"); if(inp)inp.focus(); }
+async function debriefSubmit(i){ const m=(D.meetings||[])[i]||{};
+  const rows=[...document.querySelectorAll("#dbRows .dbrow")].map(r=>({
+    decision:(r.querySelector(".db-dec")||{}).value||"", owner:(r.querySelector(".db-own")||{}).value||"",
+    due:(r.querySelector(".db-due")||{}).value||"", notes:(r.querySelector(".db-not")||{}).value||"",
+  })).filter(r=>r.decision.trim());
+  if(!rows.length){ toast("מלא לפחות החלטה אחת"); return; }
+  const open=(($("#dbOpen")||{}).value||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!LIVE){ closeSheet(); toast("סיכום נכתב במצב מחובר בלבד"); return; }
+  const btn=$("#dbSubmit"); if(btn){ btn.disabled=true; btn.textContent="כותב…"; }
+  try{
+    const r=await apiPost(API,{action:"debrief_submit",event_id:m.id||null,prep_id:m.prep_id||null,meeting_title:m.title||"",arena_id:m.arena_id||null,rows,open});
+    const res=r.result||{};
+    closeSheet(); toast(`נכתב ✓ ${res.decisions_new||0} החלטות${res.decisions_closed?` · ${res.decisions_closed} הוכרעו מהמגירה`:""}${res.tasks?` · ${res.tasks} מעקבים`:""}`);
+    afterAct();
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent="✅ כתוב למערכת"; } toast("הכתיבה נכשלה: "+(e.message||"נסה שוב")); }
+}
 
 /* ================= ARENAS ================= */
 function vArenas(){ const arenas=(D.arenas||[]), open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
