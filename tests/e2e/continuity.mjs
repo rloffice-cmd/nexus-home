@@ -79,7 +79,10 @@ await page.waitForSelector("nav button");
 const tabs = ["home","arenas","decisions","assets","ask"];
 for (let i = 0; i < 120; i++) {
   await page.click(`nav button[data-tab="${tabs[i % 5]}"]`);
-  if (i % 7 === 0) { const s = await page.$('.row[onclick]'); if (s) { await s.click(); await page.waitForTimeout(25); await page.click("#ov").catch(()=>{}); } }
+  // סגירה בנגיעה בחלק החשוף של הרקע (למעלה): מרכז המסך מכוסה על ידי המגירה,
+  // וככל שהיא מתארכת לחיצת-מרכז נבלעת בה ולא סוגרת דבר.
+  if (i % 7 === 0) { const s = await page.$('.row[onclick]'); if (s) { await s.click(); await page.waitForTimeout(25);
+    await page.click("#ov", { position: { x: 40, y: 30 } }).catch(()=>{}); await page.waitForTimeout(25); } }
   await page.waitForTimeout(12);
 }
 const heap = await page.evaluate(() => performance.memory ? performance.memory.usedJSHeapSize/1048576 : 0);
