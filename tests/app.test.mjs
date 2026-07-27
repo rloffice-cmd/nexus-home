@@ -31,8 +31,8 @@ const SERVER_ACTIONS = new Set([
   "arena_draft", "capture_add", "commitment_done", "decision_decide", "draft_sent",
   "focus_approve", "focus_done", "focus_set", "idea_add", "task_create", "task_done",
   "task_important", "task_reopen", "task_urgency", "task_waiting",
-  // nexus-app v9 — מסך הפגישות
-  "prep_request", "debrief_submit",
+  // nexus-app v9/v10 — מרכז הפגישות
+  "prep_request", "debrief_submit", "meeting_create", "meeting_open_items",
   // nx-file — מסך שיוך המסמכים
   "unfiled_list", "file_folder", "ignore_folder", "undo", "arena_create",
 ]);

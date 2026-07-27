@@ -33,3 +33,5 @@ jobs:
         run: node tests/e2e/decisions.mjs
       - name: נפילה שקטה — נתונים ישנים כחיים
         run: node tests/e2e/stale.mjs
+      - name: מרכז הפגישות
+        run: node tests/e2e/meetings.mjs
