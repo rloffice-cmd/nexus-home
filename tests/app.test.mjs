@@ -35,6 +35,8 @@ const SERVER_ACTIONS = new Set([
   "prep_request", "debrief_submit", "meeting_create", "meeting_open_items",
   // nx-file — מסך שיוך המסמכים
   "unfiled_list", "file_folder", "ignore_folder", "undo", "arena_create",
+  // nexus-app v11/v12 — תיבת הפקודה (שיחה עם אובייקט)
+  "command_preview", "command_apply",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));
