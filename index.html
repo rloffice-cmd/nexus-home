@@ -853,12 +853,19 @@ function voiceToggle(btnSel,taSel){ const btn=$(btnSel||"#micBtn"), ta=$(taSel||
    זהה בכל מסך אובייקט: כותבים או מכתיבים בשפה חופשית, השרת מתרגם לפעולות
    מתוך אוצר-מילים סגור, המסך מראה בדיוק מה עומד לקרות — ורק אז מבצעים.
    האישור אינו טקס: המתרגם הוא מודל, ובעבודת סדר בכמות פרשנות שגויה שקטה
-   יקרה בהרבה מהקלקה אחת. השרת גם מחזיר שאלה במקום לנחש — וזה מוצג כאן. */
+   יקרה בהרבה מהקלקה אחת. השרת גם מחזיר שאלה במקום לנחש — וזה מוצג כאן.
+
+   v13: לתיבה שלושה מסלולים, לא אחד. עד כה היא ידעה רק מוטציות, וכשאיתי ביקש
+   טיוטת מייל היא ענתה "מחוץ ליכולות המערכת" — בזמן שהבוט מנסח מיילים מאז
+   v7.9. היכולת הייתה קיימת, החיווט לא. השרת מחזיר route, וכאן מוצג בהתאם:
+   mutate = תצוגה מקדימה ואישור · draft = טיוטה עם קצר/רשמי/אחרת · ask =
+   תשובה מ-nexus-ask. מה שאין לו מסלול חוזר כשאלה שמסבירה מה כן אפשר, ולא
+   כהבטחה. */
 let CMD={kind:null,id:null,ops:null,last:null};
 function cmdBox(ph){ return `<div class="blk"><h4>💬 דבר עם זה</h4>`
-  +`<div class="field capbox"><textarea id="cmdTxt" rows="2" placeholder="${esc(ph||"בשפה חופשית — מה לעשות עם זה")}"></textarea>${canVoiceInput()?`<button class="mic" id="cmdMic" aria-label="הכתבה">🎙</button>`:""}</div>`
+  +`<div class="field capbox"><textarea id="cmdTxt" rows="2" placeholder="${esc(ph||"לשנות · לנסח הודעה · לשאול")}"></textarea>${canVoiceInput()?`<button class="mic" id="cmdMic" aria-label="הכתבה">🎙</button>`:""}</div>`
   +`<button class="btn line block" id="cmdGo">→ מה תעשה עם זה</button><div id="cmdOut"></div></div>`; }
-function cmdWire(kind,id){ CMD={kind,id,ops:null,last:null};
+function cmdWire(kind,id){ CMD={kind,id,ops:null,last:null}; DRAFT=null;
   const go=$("#cmdGo"); if(go)go.onclick=()=>cmdPreview();
   const m=$("#cmdMic"); if(m)m.onclick=()=>voiceToggle("#cmdMic","#cmdTxt");
   const ta=$("#cmdTxt"); if(ta)ta.addEventListener("keydown",e=>{ if((e.metaKey||e.ctrlKey)&&e.key==="Enter")cmdPreview(); });
@@ -905,6 +912,14 @@ async function cmdPreview(fix){ const ta=$(fix?"#cmdFix":"#cmdTxt"); if(!ta)retu
   const payload={action:"command_preview",kind:CMD.kind,id:CMD.id,text};
   if(fix&&CMD.last)payload.prior=CMD.last;
   try{ const r=await apiPost(API,payload); done();
+    // v13: לתיבה יש עכשיו שלושה מסלולים. עד כה כל מה שלא היה מוטציה נפל
+    // לרצפה — "תכין טיוטת מייל" נענה ב"מחוץ ליכולות" בזמן שהבוט עשה בדיוק
+    // את זה. המסלול נקבע בשרת; כאן רק מציגים אותו.
+    if(r.route==="ask"){ CMD.ops=null; DRAFT=null;
+      out.innerHTML=`<div class="card pad" style="margin-top:10px"><div style="font-size:13.5px;font-weight:700;margin-bottom:6px">🧠 ${esc(r.question_text||"תשובה")}</div><div style="white-space:pre-wrap;font-size:14px;line-height:1.6">${esc(r.answer||"")}</div></div>`;
+      return; }
+    if(r.route==="draft"&&r.draft){ CMD.ops=null; DRAFT=r.draft;
+      out.innerHTML=draftCard(r.draft,r.summary); drWire(); return; }
     const ops=r.ops||[];
     if(!ops.length){ out.innerHTML=r.question
       ? `<div class="card pad" style="background:var(--surface2);font-size:13.5px;margin-top:8px">❓ ${esc(r.question)}</div>`
@@ -915,6 +930,38 @@ async function cmdPreview(fix){ const ta=$(fix?"#cmdFix":"#cmdTxt"); if(!ta)retu
     $("#cmdOk").onclick=()=>cmdApply(); $("#cmdNo").onclick=()=>{ CMD.ops=null; CMD.last=null; out.innerHTML=""; };
     $("#cmdFixBtn").onclick=()=>cmdFixOpen();
   }catch(e){ done(); out.innerHTML=`<div class="mini-empty" style="color:var(--crit)">התרגום נכשל — נסה שוב</div>`; }
+}
+// v13: טיוטה שנוצרה מתיבת הפקודה. אותם כפתורים בדיוק כמו בבוט (קצר · רשמי ·
+// גרסה אחרת · נשלח · בטל), ואותה טבלת drafts — כדי שהשניים לא ייפרדו.
+// "העתק" ולא "שלח": המערכת לא שולחת הודעות בשם איתי, והכפתור לא מבטיח מה
+// שלא יקרה. הסימון כנשלח הוא הצהרה שלו, לא פעולה שלה.
+let DRAFT=null;
+function draftCard(d,summary){
+  const chan=d.channel==="email"?("מייל"+(d.subject?" · "+d.subject:"")):d.channel==="whatsapp"?"וואטסאפ":"הודעה";
+  return `<div class="card pad" style="margin-top:10px">`
+    +`<div style="font-size:13.5px;font-weight:700;margin-bottom:6px">✍️ טיוטה ל${esc(d.to_name||"?")} <span class="dim" style="font-weight:500">· ${esc(chan)}</span></div>`
+    +`<div id="drBody" style="white-space:pre-wrap;font-size:14px;line-height:1.65">${esc(d.body||"")}</div>`
+    +(summary?`<div class="kv dim" style="margin-top:8px">${esc(summary)}</div>`:"")
+    +`</div>`
+    +`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn good block" id="drCopy">📋 העתק</button>`
+    +`<button class="btn line" id="drSent" style="flex:0 0 auto;padding-inline:12px">✅ נשלח</button>`
+    +`<button class="btn line" id="drDel" style="flex:0 0 auto;padding-inline:12px">🗑</button></div>`
+    +`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn line block" id="drShort">✂️ קצר</button>`
+    +`<button class="btn line block" id="drFormal">🎩 רשמי</button>`
+    +`<button class="btn line block" id="drAgain">🔁 אחרת</button></div>`;
+}
+function drWire(){ if(!DRAFT)return;
+  const c=$("#drCopy"); if(c)c.onclick=()=>copyTxt(DRAFT.body||"",c);
+  const s=$("#drSent"); if(s)s.onclick=async()=>{ try{ await apiPost(API,{action:"draft_sent",id:DRAFT.id}); toast("סומן כנשלח ✓"); $("#cmdOut").innerHTML=""; DRAFT=null; afterAct(); }catch(e){ toast("לא נשמר"); } };
+  const d=$("#drDel"); if(d)d.onclick=async()=>{ try{ await apiPost(API,{action:"draft_discard",id:DRAFT.id}); $("#cmdOut").innerHTML=""; DRAFT=null; }catch(e){ toast("לא נשמר"); } };
+  [["#drShort","short"],["#drFormal","formal"],["#drAgain","again"]].forEach(([sel,style])=>{
+    const b=$(sel); if(!b)return;
+    b.onclick=async()=>{ const lbl=b.textContent; b.disabled=true; b.textContent="…";
+      try{ const r=await apiPost(API,{action:"draft_refine",id:DRAFT.id,style});
+        if(r&&r.body){ DRAFT.body=r.body; const bd=$("#drBody"); if(bd)bd.textContent=r.body; }
+      }catch(e){ toast("הניסוח מחדש נכשל"); }
+      finally{ if(b.isConnected){ b.disabled=false; b.textContent=lbl; } } };
+  });
 }
 function cmdFixOpen(){ const box=$("#cmdFixBox"); if(!box)return;
   box.innerHTML=`<div class="field capbox" style="margin-top:10px"><textarea id="cmdFix" rows="2" placeholder="מה לא מדויק? למשל: לא לאהרון, לעופר — והשאר אותו דבר"></textarea>${canVoiceInput()?`<button class="mic" id="cmdFixMic" aria-label="הכתבה">🎙</button>`:""}</div><button class="btn line block" id="cmdFixGo">→ שלח תיקון</button>`;

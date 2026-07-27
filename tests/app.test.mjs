@@ -37,6 +37,9 @@ const SERVER_ACTIONS = new Set([
   "unfiled_list", "file_folder", "ignore_folder", "undo", "arena_create",
   // nexus-app v11/v12 — תיבת הפקודה (שיחה עם אובייקט)
   "command_preview", "command_apply",
+  // nexus-app v13 — מסלול הניסוח בתיבת הפקודה. draft_sent כבר היה ברשימה
+  // (עדכון הזירה השתמש בו), ונשאר אותו שם בדיוק: הטיוטה היא אותה טבלה.
+  "draft_refine", "draft_discard",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));

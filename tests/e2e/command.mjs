@@ -195,6 +195,90 @@ else if (JSON.stringify(ap2[0].ops) !== JSON.stringify(FIXED))
   fail("אחרי תיקון בוצעה הגרסה הישנה: " + JSON.stringify(ap2[0].ops));
 step("הביצוע אחרי תיקון שולח את הגרסה המתוקנת בלבד");
 
+// ── 8. מסלול הניסוח (v13) ─────────────────────────────────────────────────
+// הבדיקה הזו נכתבה אחרי שאיתי ביקש טיוטת מייל פולואפ וקיבל "מחוץ ליכולות
+// המערכת שלי" — בזמן שהבוט מנסח מיילים מאז v7.9. הקו האדום כאן הפוך מזה של
+// המוטציות: טיוטה היא הצעת טקסט, ולכן אסור שתצא ממנה **שום** כתיבה לאובייקט.
+const DRAFT = { id: "d1", to_name: "יעקב בן ציון", channel: "email",
+                subject: "מרתף בניין 7 — מעקב", body: "יעקב שלום,\nפניתי אליכם לפני שבוע בנושא המרתף ולא קיבלתי מענה." };
+previewReply = { ok: true, route: "draft", summary: "טיוטת פולואפ ליעקב בן ציון", draft: DRAFT, ops: [] };
+await openObj("openTask", "t1");
+posts = [];
+await page.fill("#cmdTxt", "תכין לי טיוטת מייל פולואפ למי שלא ענה לי");
+await page.click("#cmdGo");
+await page.waitForSelector("#drCopy", { timeout: 4000 });
+
+if (posts.some(p => p.action === "command_apply")) fail("מסלול הניסוח ביצע פעולה — קו אדום");
+if (await page.$("#cmdOk")) fail("טיוטה הציעה כפתור ביצוע של פעולות");
+const drShown = await page.$eval("#cmdOut", el => el.innerText);
+if (!/יעקב בן ציון/.test(drShown)) fail("הנמען אינו מוצג: " + drShown);
+if (!/לא קיבלתי מענה/.test(drShown)) fail("גוף הטיוטה אינו מוצג: " + drShown);
+if (!/מרתף בניין 7/.test(drShown)) fail("נושא המייל אינו מוצג: " + drShown);
+step("טיוטה מוצגת במלואה ואינה מבצעת דבר");
+
+// שכתוב: הגוף על המסך חייב להתחלף במה שהשרת החזיר, אחרת איתי יעתיק גרסה ישנה.
+posts = [];
+await page.route("**/functions/v1/nexus-app*", async (r) => {
+  const req = r.request();
+  if (req.method() === "POST") {
+    const body = JSON.parse(req.postData() || "{}");
+    posts.push(body);
+    if (body.action === "draft_refine")
+      return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, id: "d1", body: "יעקב, מה עם המרתף?" }) });
+    return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  }
+  return r.fallback();
+});
+await page.click("#drShort");
+await page.waitForTimeout(500);
+const ref = posts.filter(p => p.action === "draft_refine");
+if (ref.length !== 1) fail(`שכתוב שלח ${ref.length} בקשות במקום אחת`);
+else {
+  if (ref[0].style !== "short") fail("הסגנון שנשלח אינו short: " + JSON.stringify(ref[0]));
+  if (ref[0].id !== "d1") fail("השכתוב נשלח על טיוטה אחרת: " + JSON.stringify(ref[0]));
+}
+const refShown = await page.$eval("#drBody", el => el.innerText);
+if (!/מה עם המרתף/.test(refShown)) fail("הגוף לא הוחלף בגרסה המשוכתבת: " + refShown);
+if (/לא קיבלתי מענה/.test(refShown)) fail("הגרסה הישנה נשארה על המסך");
+step("שכתוב מחליף את הגוף על המסך — אין סיכון להעתיק גרסה ישנה");
+
+posts = [];
+await page.click("#drSent");
+await page.waitForTimeout(400);
+const snt = posts.filter(p => p.action === "draft_sent");
+if (snt.length !== 1 || snt[0].id !== "d1") fail("סימון כנשלח לא נשלח נכון: " + JSON.stringify(posts));
+step("סימון כנשלח הוא הצהרה של איתי — המערכת לא שולחת בשמו");
+
+// ── 9. מסלול השאלה (v13) ─────────────────────────────────────────────────
+// שאלה היא קריאה בלבד. אם יופיע כאן כפתור ביצוע — משהו התבלבל בין לשאול
+// לבין לעשות, וזו בדיוק הדלת שאסור לפתוח.
+previewReply = { ok: true, route: "ask", question_text: "כמה משימות פתוחות בשדרה?",
+                 answer: "יש 14 משימות פתוחות בזירת השדרה, מהן 3 באיחור.", ops: [] };
+await page.unroute("**/functions/v1/nexus-app*");
+await page.route("**/functions/v1/nexus-app*", async (r) => {
+  const req = r.request();
+  if (req.method() === "POST") {
+    const body = JSON.parse(req.postData() || "{}");
+    posts.push(body);
+    if (body.action === "command_preview")
+      return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(previewReply) });
+    return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+  }
+  return r.fallback();
+});
+await openObj("openArena", "a1");
+posts = [];
+await page.fill("#cmdTxt", "כמה משימות פתוחות בשדרה?");
+await page.click("#cmdGo");
+await page.waitForTimeout(600);
+const askShown = await page.$eval("#cmdOut", el => el.innerText);
+if (!/14 משימות פתוחות/.test(askShown)) fail("התשובה מהמוח לא הוצגה: " + askShown);
+if (await page.$("#cmdOk")) fail("שאלה הציעה כפתור ביצוע");
+if (await page.$("#drCopy")) fail("שאלה הוצגה ככרטיס טיוטה");
+if (posts.some(p => p.action === "command_apply" || p.action === "draft_sent"))
+  fail("מסלול השאלה כתב למערכת: " + JSON.stringify(posts));
+step("שאלה מחזירה תשובה בלבד — קריאה, בלי דלת לביצוע");
+
 await browser.close();
 if (errors.length) { console.log(`\n${errors.length} כשלים`); process.exit(1); }
 console.log("\nתיבת הפקודה — הכל עבר.");
