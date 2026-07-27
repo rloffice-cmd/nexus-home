@@ -500,40 +500,90 @@ function setAssetF(f){ assetFilter=f; render(); } function setAssetO(o){ assetOw
 function setAssetOEl(el){ setAssetO(el.getAttribute("data-o")); }
 function assetSearch(v){ assetQ=v; const el=$("#assetList"); if(el)el.innerHTML=assetRows(D.assets||[]); }
 
-/* ================= MEETINGS — יומן ← DB ← כאן (שלב 2, 27.7.2026) =================
-   הפגישות מגיעות מ-meetings_today (סנכרון יומן→DB בצד שמחזיק את המחבר).
-   כל פגישה: תיק (אם הוכן) · טופס סיכום במבנה של איתי (החלטה·אחראי·לו"ז·הערות,
-   הוספת שורות) שנכתב אטומית דרך nexus_debrief_commit · והיסטוריית תיקים/סיכומים. */
+/* ================= MEETINGS — מרכז הפגישות (27.7.2026) =========================
+   פגישה נכנסת מהיומן (סנכרון שעתי) או נפתחת כאן ידנית. אחרי הפגישה, הסיכום
+   הוא לא רק החלטות: מה נאמר · עדכונים על נושאים (נכנסים לזירה ולאוצר-הידע) ·
+   מה כבר טיפלת בו (נסגר בכל מקום רלוונטי) · הערות על אנשים · ומה נשאר פתוח. */
 function meetTime(m){ if(m.all_day)return "כל היום";
   const f=t=>{ const x=ts(t); return isNaN(x)?"":new Date(x).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Jerusalem"}); };
   const s=f(m.starts_at), e=f(m.ends_at); return s+(e?"–"+e:""); }
+const meetEnded=m=>!!(m.ends_at&&ts(m.ends_at)<Date.now());
+const meetDone=m=>m.debrief_status==="committed";
+function meetRow(m,i,showDay){
+  const done=meetDone(m), ended=meetEnded(m);
+  return `<div class="row stripe ${done?"s-good":ended?"s-warn":"s-info"}" onclick="openMeeting(${i})"><div class="main"><div class="t">${esc(m.title||"פגישה")}${m.source==="manual"?` <span class="chip mut">ידנית</span>`:""}</div><div class="m"><span class="chip ${ended&&!done?"warn":"info"} num">${showDay?fmtDay(m.starts_at)+" · ":""}${meetTime(m)}</span>${m.arena?`<span class="dim">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:ended?`<span class="chip warn">ממתין לסיכום</span>`:""}</div></div><div class="lead dim">‹</div></div>`;
+}
 function vMeetings(){
-  const ms=D.meetings||[], preps=D.preps||[], dbs=D.debriefs||[];
-  let h=`<div class="sec"><h2>◷ פגישות היום</h2><span class="n num">${ms.length}</span><span class="n dim">· ${LIVE?"מהיומן":"זמין במצב מחובר"}</span></div>`;
-  h+=`<div class="card pad"><div style="font-size:12.5px;color:var(--ink2);line-height:1.5">📂 תיקי פגישות לכל היום — מוכנים בסבב השעתי (עד 13:00) ונשלחים לטלגרם.</div><div class="mini"><button class="go" onclick="prepRequest('full')">📂 תיק מלא</button><button onclick="prepRequest('summary')">⚡ סקירה קצרה</button></div></div>`;
-  if(!ms.length)h+=`<div class="card" style="margin-top:9px"><div class="empty">${LIVE?"אין פגישות ביומן להיום ✓":"הפגישות מסתנכרנות מהיומן ומוצגות במצב מחובר."}</div></div>`;
-  else{
-    h+=`<div class="card" style="margin-top:9px">`+ms.map((m,i)=>{
-      const done=m.debrief_status==="committed", ended=m.ends_at&&ts(m.ends_at)<Date.now();
-      return `<div class="row stripe ${done?"s-good":ended?"s-warn":"s-info"}" onclick="openMeeting(${i})"><div class="main"><div class="t">${esc(m.title||"פגישה")}</div><div class="m"><span class="chip ${ended&&!done?"warn":"info"} num">${meetTime(m)}</span>${m.arena?`<span class="dim">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק ✓</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:ended?`<span class="chip warn">ממתין לסיכום</span>`:""}</div></div><div class="lead dim">‹</div></div>`;
-    }).join("")+`</div>`;
-  }
-  if(preps.length){ h+=secH("📂 היסטוריית תיקים","",preps.length)+`<div class="card">`+preps.slice(0,10).map((p,i)=>`<div class="row" onclick="openPrep(${i})"><div class="lead" style="background:var(--brand-soft);color:var(--brand-2)">📂</div><div class="main"><div class="t">${esc(p.meeting_title||"תיק פגישה")}</div><div class="m"><span class="dim num">${fmtDay(p.meeting_time||p.created_at)}</span>${p.depth?`<span class="chip mut">${p.depth==="full"?"מלא":"סקירה"}</span>`:""}${p.version>1?`<span class="chip mut">גרסה ${p.version}</span>`:""}</div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
-  if(dbs.length){ h+=secH("📝 סיכומים אחרונים","",dbs.length)+`<div class="card">`+dbs.slice(0,10).map((d,i)=>`<div class="row" onclick="openDebrief(${i})"><div class="lead" style="background:var(--good-bg);color:var(--good)">📝</div><div class="main"><div class="t">${esc(d.meeting_title||"סיכום פגישה")}</div><div class="m"><span class="dim num">${fmtDay(d.met_on)}</span><span class="chip ${d.status==="committed"?"good":"mut"}">${d.status==="committed"?"נכתב ✓":"טיוטה"}</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
+  const ms=(D.meetings||[]).map((m,i)=>({m,i})), preps=D.preps||[], dbs=D.debriefs||[];
+  // הקיבוץ הוא לפי מה שדורש פעולה, לא לפי כרונולוגיה: קודם מה שהסתיים וטרם
+  // סוכם (זה מה שנופל בין הכיסאות), אחר כך היום, ואז מה שלפניך.
+  const pend=ms.filter(x=>meetEnded(x.m)&&!meetDone(x.m)&&x.m.day_offset>=-7);
+  const today=ms.filter(x=>x.m.day_offset===0&&!pend.includes(x));
+  const soon=ms.filter(x=>x.m.day_offset>0);
+  const past=ms.filter(x=>x.m.day_offset<0&&!pend.includes(x));
+
+  let h=`<div class="sec"><h2>◷ פגישות</h2><span class="n dim">· ${LIVE?"מהיומן ומהמערכת":"זמין במצב מחובר"}</span></div>`;
+  h+=`<div class="mini" style="margin:0 2px 4px"><button class="go" onclick="newMeetingSheet()">➕ פגישה חדשה</button><button onclick="prepRequest('full')">📂 תיקי היום — מלא</button><button onclick="prepRequest('summary')">⚡ סקירה קצרה</button></div>`;
+
+  if(pend.length){ h+=secH("📝 ממתין לסיכום","הסתיימו וטרם נקלטו",pend.length)+`<div class="card">`+pend.map(x=>meetRow(x.m,x.i,true)).join("")+`</div>`; }
+  h+=secH("היום","",today.length);
+  h+=today.length?`<div class="card">`+today.map(x=>meetRow(x.m,x.i,false)).join("")+`</div>`
+                 :`<div class="card"><div class="empty">${LIVE?"אין פגישות ביומן להיום ✓":"הפגישות מסתנכרנות מהיומן ומוצגות במצב מחובר."}</div></div>`;
+  if(soon.length){ h+=secH("לפניך","7 ימים קדימה",soon.length)+`<div class="card">`+soon.slice(0,12).map(x=>meetRow(x.m,x.i,true)).join("")+`</div>`; }
+  if(past.length){ h+=secH("היו","סוכמו",past.length)+`<div class="card">`+past.slice(-8).reverse().map(x=>meetRow(x.m,x.i,true)).join("")+`</div>`; }
+
+  if(preps.length){ h+=secH("📂 תיקים","",preps.length)+`<div class="card">`+preps.slice(0,10).map((p,i)=>`<div class="row" onclick="openPrep(${i})"><div class="lead" style="background:var(--brand-soft);color:var(--brand-2)">📂</div><div class="main"><div class="t">${esc(p.meeting_title||"תיק פגישה")}</div><div class="m"><span class="dim num">${fmtDay(p.meeting_time||p.created_at)}</span>${p.depth?`<span class="chip mut">${p.depth==="full"?"מלא":"סקירה"}</span>`:""}${p.version>1?`<span class="chip mut">גרסה ${p.version}</span>`:""}</div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
+  if(dbs.length){ h+=secH("📝 סיכומים","",dbs.length)+`<div class="card">`+dbs.slice(0,10).map((d,i)=>`<div class="row" onclick="openDebrief(${i})"><div class="lead" style="background:var(--good-bg);color:var(--good)">📝</div><div class="main"><div class="t">${esc(d.meeting_title||"סיכום פגישה")}</div><div class="m"><span class="dim num">${fmtDay(d.met_on)}</span><span class="chip ${d.status==="committed"?"good":"mut"}">${d.status==="committed"?"נכתב ✓":"טיוטה"}</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
   return h;
 }
+
+/* ---- פגישה חדשה (ידנית) ---- */
+function newMeetingSheet(){ closeSheet();
+  const arenas=(D.arenas||[]).filter(a=>a.status!=="archived");
+  const now=new Date(), pad=n=>String(n).padStart(2,"0");
+  const d=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`, t=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  let h=`<div class="grab"></div><h3>➕ פגישה חדשה</h3><div class="sub2">פגישה שאינה ביומן — שיחה שהתקיימה, פגישה מזדמנת, או כזו שאתה רוצה לסכם עכשיו.</div>
+  <div class="field"><label>נושא הפגישה</label><input id="nmTitle" placeholder="עם מי ועל מה" onkeydown="if(event.key==='Enter')createMeeting()"></div>
+  <div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>תאריך</label><input id="nmDate" type="date" value="${d}"></div><div class="field" style="flex:1"><label>שעה</label><input id="nmTime" type="time" value="${t}"></div></div>
+  <div class="field"><label>זירה (ריק = לפי הנושא)</label><select id="nmArena"><option value="">— זיהוי אוטומטי —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div>
+  <div class="field"><label>מיקום</label><input id="nmLoc" placeholder="לא חובה"></div>
+  <div class="field"><label>מי היה</label><input id="nmWho" placeholder="שמות, מופרדים בפסיק"></div>
+  <button class="btn brand block" id="nmSubmit" onclick="createMeeting()">צור פגישה</button>`;
+  openSheet(h); setTimeout(()=>{ const el=$("#nmTitle"); if(el)el.focus(); },250);
+}
+async function createMeeting(){
+  const title=(($("#nmTitle")||{}).value||"").trim();
+  if(!title){ toast("מה נושא הפגישה?"); return; }
+  if(!LIVE){ closeSheet(); toast("פתיחת פגישה זמינה במצב מחובר"); return; }
+  const dt=(($("#nmDate")||{}).value||""), tm=(($("#nmTime")||{}).value||"00:00");
+  const starts=dt?new Date(dt+"T"+tm).toISOString():null;
+  const who=(($("#nmWho")||{}).value||"").split(",").map(s=>s.trim()).filter(Boolean);
+  const btn=$("#nmSubmit"); if(btn){ btn.disabled=true; btn.textContent="יוצר…"; }
+  try{
+    const r=await apiPost(API,{action:"meeting_create",title,starts_at:starts,arena_id:(($("#nmArena")||{}).value||null),
+                              location:(($("#nmLoc")||{}).value||null),attendees:who});
+    closeSheet(); toast(`הפגישה נוצרה ✓${r.arena?" · "+nm0(r.arena):""}`);
+    await load(true);
+    // ישר לסיכום: פגישה שנפתחת ידנית נפתחת כמעט תמיד כדי לסכם אותה עכשיו.
+    const idx=(D.meetings||[]).findIndex(m=>m.id===r.id);
+    if(idx>=0) debriefSheet(idx);
+  }catch(e){ if(btn){ btn.disabled=false; btn.textContent="צור פגישה"; } toast("היצירה נכשלה: "+(e.message||"")); }
+}
+
+/* ---- צפייה ---- */
 function openMeeting(i){ const m=(D.meetings||[])[i]; if(!m)return;
-  const done=m.debrief_status==="committed";
-  let h=`<div class="grab"></div><h3>${esc(m.title||"פגישה")}</h3><div class="m" style="margin:0 2px 8px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip info num">${meetTime(m)}</span>${m.arena?`<span class="chip mut">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק ✓</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:""}</div>`;
+  const done=meetDone(m);
+  let h=`<div class="grab"></div><h3>${esc(m.title||"פגישה")}</h3><div class="m" style="margin:0 2px 8px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip info num">${fmtDay(m.starts_at)} · ${meetTime(m)}</span>${m.arena?`<span class="chip mut">${esc(nm0(m.arena))}</span>`:""}${m.source==="manual"?`<span class="chip mut">ידנית</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק ✓</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:""}</div>`;
   if(m.location)h+=`<div class="kv">📍 ${esc(m.location)}</div>`;
   if(m.organizer)h+=`<div class="kv dim">מארגן: ${esc(m.organizer)}</div>`;
   if((m.attendees||[]).length)h+=`<div class="kv dim">משתתפים: ${esc(m.attendees.slice(0,6).join(", "))}${m.attendees.length>6?` +${m.attendees.length-6}`:""}</div>`;
+  if(m.notes)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;margin-top:10px">${esc(m.notes)}</div>`;
   const cu=httpOk(m.conference_url); if(cu)h+=`<div style="margin-top:10px"><a class="btn line block" style="text-decoration:none" href="${esc(cu)}" target="_blank" rel="noopener">🎥 הצטרף לשיחה ↗</a></div>`;
   h+=`<div style="display:flex;gap:8px;margin-top:14px">`;
   const pi=(D.preps||[]).findIndex(p=>p.id===m.prep_id);
   if(m.prep_id&&pi>=0)h+=`<button class="btn brand block" onclick="openPrep(${pi})">📂 פתח את התיק</button>`;
   else h+=`<button class="btn line block" onclick="prepRequest('full')">📂 הכן תיק</button>`;
-  h+=done?`<button class="btn good block" onclick="openDebriefByMeeting(${i})">📝 הסיכום ✓</button>`:`<button class="btn good block" onclick="debriefSheet(${i})">📝 סיכום פגישה</button>`;
+  h+=done?`<button class="btn good block" onclick="openDebriefByMeeting(${i})">📝 הסיכום ✓</button>`:`<button class="btn good block" onclick="debriefSheet(${i})">📝 סכם פגישה</button>`;
   h+=`</div>`; openSheet(h);
 }
 function openPrep(i){ const p=(D.preps||[])[i]; if(!p)return;
@@ -545,13 +595,14 @@ function openDebriefByMeeting(i){ const m=(D.meetings||[])[i]; if(!m)return;
 function openDebrief(i){ const d=(D.debriefs||[])[i]; if(!d)return;
   const ex=d.extracted||{};
   let h=`<div class="grab"></div><h3>📝 ${esc(d.meeting_title||"סיכום פגישה")}</h3><div class="sub2">${fmtDay(d.met_on)} · ${d.status==="committed"?"נכתב למערכת ✓":"טיוטה"}</div>`;
-  const dec=ex.decisions||[];
-  if(dec.length)h+=`<div class="blk"><h4>החלטות · ${dec.length}</h4>`+dec.map(x=>`<div class="li">✦ <span><b>${esc(x.title||"")}</b>${x.rationale?`<br><span class="dim">${esc(x.rationale)}</span>`:""}</span></div>`).join("")+`</div>`;
-  const tk=ex.tasks||[];
-  if(tk.length)h+=`<div class="blk"><h4>מעקבים · ${tk.length}</h4>`+tk.map(x=>`<div class="li">☑️ <span>${esc(x.title||"")}${x.owner?` <span class="dim">— ${esc(x.owner)}</span>`:""}${x.due?` <span class="dim">(${fmtDay(x.due)})</span>`:""}</span></div>`).join("")+`</div>`;
-  const op=ex.open||[];
-  if(op.length)h+=`<div class="blk"><h4>נשאר פתוח</h4>`+op.map(x=>`<div class="li">· <span>${esc(x)}</span></div>`).join("")+`</div>`;
-  if(!dec.length&&!tk.length&&d.summary)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px">${esc(d.summary)}</div>`;
+  if(d.summary)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;line-height:1.6">${esc(d.summary)}</div>`;
+  const L=(arr,title,icon,fn)=>arr.length?`<div class="blk"><h4>${title} · ${arr.length}</h4>${arr.map(x=>`<div class="li">${icon} <span>${fn(x)}</span></div>`).join("")}</div>`:"";
+  h+=L(ex.decisions||[],"החלטות","✦",x=>`<b>${esc(x.title||"")}</b>${x.rationale||x.notes?`<br><span class="dim">${esc(x.rationale||x.notes)}</span>`:""}${x.owner?`<br><span class="dim">באחריות: ${esc(x.owner)}${x.due?" · עד "+fmtDay(x.due):""}</span>`:""}`);
+  h+=L(ex.updates||[],"עדכוני נושא","📌",x=>`<b>${esc(x.topic||"")}</b>${x.text?`<br><span class="dim">${esc(x.text)}</span>`:""}`);
+  h+=L(ex.handled||[],"טופל","✅",x=>esc(x.what||""));
+  h+=L(ex.tasks||[],"מעקבים","☑️",x=>`${esc(x.title||"")}${x.owner?` <span class="dim">— ${esc(x.owner)}</span>`:""}${x.due?` <span class="dim">(${fmtDay(x.due)})</span>`:""}`);
+  h+=L(ex.people_notes||[],"על אנשים","👤",x=>`<b>${esc(x.who||"")}</b> — ${esc(x.note||"")}`);
+  h+=L((ex.open||[]).map(o=>({o})),"נשאר פתוח","⏳",x=>esc(x.o));
   openSheet(h);
 }
 async function prepRequest(depth){ closeSheet();
@@ -559,30 +610,86 @@ async function prepRequest(depth){ closeSheet();
   try{ await apiPost(API,{action:"prep_request",depth}); toast(depth==="full"?"📂 תיק מלא — נרשם ✓ יוכן בסבב הקרוב":"⚡ סקירה קצרה — נרשמה ✓"); }
   catch(e){ toast("הבקשה נכשלה — נסה שוב"); }
 }
-/* טופס הסיכום של איתי: החלטה · באחריות מי · לו"ז · הערות — שורה לכל החלטה. */
+
+/* ---- טופס הסיכום ---- */
 function dbRowHtml(){ return `<div class="dbrow card pad" style="background:var(--surface2);margin-top:8px"><div class="field"><label>ההחלטה</label><input class="db-dec" placeholder="מה הוחלט?"></div><div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>באחריות מי</label><input class="db-own" placeholder="שם"></div><div class="field" style="flex:1"><label>לו״ז</label><input class="db-due" type="date"></div></div><div class="field" style="margin-bottom:2px"><label>הערות</label><input class="db-not" placeholder="לא חובה"></div></div>`; }
-function debriefSheet(i){ const m=(D.meetings||[])[i]||{};
-  let h=`<div class="grab"></div><h3>📝 סיכום פגישה</h3><div class="sub2">${esc(m.title||"")} · המבנה שלך: ההחלטה · באחריות מי · לו״ז · הערות. החלטה עם אחראי/לו״ז יוצרת מעקב אוטומטית.</div>`;
-  h+=`<div id="dbRows">`+dbRowHtml()+`</div>`;
-  h+=`<div class="mini" style="margin-top:8px"><button onclick="dbAddRow()">➕ עוד החלטה</button></div>`;
-  h+=`<div class="field" style="margin-top:12px"><label>נשאר פתוח (שורה לכל נושא, לא חובה)</label><textarea id="dbOpen" rows="2" placeholder="מה לא הוכרע ונשאר על השולחן?"></textarea></div>`;
-  h+=`<button class="btn good block" id="dbSubmit" onclick="debriefSubmit(${i})">✅ כתוב למערכת</button>`;
-  openSheet(h);
+function dbUpdHtml(){ return `<div class="dbupd card pad" style="background:var(--surface2);margin-top:8px"><div class="field"><label>הנושא</label><input class="du-top" placeholder="על מה דובר"></div><div class="field" style="margin-bottom:2px"><label>מה חדש</label><textarea class="du-txt" rows="2" placeholder="מה השתנה / מה נודע"></textarea></div></div>`; }
+function dbPersonHtml(){ return `<div class="dbper card pad" style="background:var(--surface2);margin-top:8px"><div style="display:flex;gap:8px"><div class="field" style="flex:1;margin-bottom:2px"><label>מי</label><input class="dp-who" placeholder="שם"></div><div class="field" style="flex:2;margin-bottom:2px"><label>מה למדת עליו</label><input class="dp-note" placeholder="סגנון, אמינות, אינטרס"></div></div></div>`; }
+function dbSec(id,title,sub,inner,openNow){
+  return `<div class="blk"><h4 style="cursor:pointer;display:flex;align-items:center;gap:6px" onclick="dbSecToggle('${id}',this)">${title}${sub?` <span style="color:var(--mut);font-weight:600;text-transform:none;letter-spacing:0">${sub}</span>`:""}<span style="margin-inline-start:auto;color:var(--mut)">${openNow?"⌄":"‹"}</span></h4><div id="${id}" style="display:${openNow?"block":"none"}">${inner}</div></div>`;
 }
-function dbAddRow(){ const box=$("#dbRows"); if(!box)return; box.insertAdjacentHTML("beforeend",dbRowHtml()); const rows=box.querySelectorAll(".dbrow"); const inp=rows[rows.length-1].querySelector(".db-dec"); if(inp)inp.focus(); }
+function dbSecToggle(id,el){ const box=$("#"+id); if(!box)return; const on=box.style.display==="none";
+  box.style.display=on?"block":"none"; const c=el.querySelector("span:last-child"); if(c)c.textContent=on?"⌄":"‹"; }
+function debriefSheet(i){ const m=(D.meetings||[])[i]||{};
+  const voice=canVoiceInput();
+  let h=`<div class="grab"></div><h3>📝 סיכום פגישה</h3><div class="sub2">${esc(m.title||"")}${m.arena?` · ${esc(nm0(m.arena))}`:""}<br>מלא רק את מה שרלוונטי. גם סיכום חופשי לבדו נכנס למערכת.</div>`;
+  h+=`<div class="field capbox"><label>מה נאמר בפגישה</label><textarea id="dbSummary" rows="4" placeholder="ספר מה קרה — הטון, מה עלה, מה הבנת. לא חייב להיות מסודר."></textarea>${voice?`<button class="mic" id="dbMic" style="inset-block-start:30px" aria-label="הקלטה">🎙</button>`:""}</div>`;
+  h+=dbSec("dbRows","✦ החלטות","",dbRowHtml()+`<div class="mini" style="margin-top:8px"><button onclick="dbAddRow()">➕ עוד החלטה</button></div>`,true);
+  h+=dbSec("dbUpds","📌 עדכונים על נושאים","(נכנסים לזירה ולידע)",dbUpdHtml()+`<div class="mini" style="margin-top:8px"><button onclick="dbAddUpd()">➕ עוד עדכון</button></div>`,false);
+  h+=dbSec("dbHandledBox","✅ טיפלתי בזה","(סוגר בכל מקום)",`<div id="dbHandled"><div class="mini-empty">טוען פריטים פתוחים…</div></div>`,false);
+  h+=dbSec("dbPersons","👤 על אנשים","",dbPersonHtml()+`<div class="mini" style="margin-top:8px"><button onclick="dbAddPerson()">➕ עוד אדם</button></div>`,false);
+  h+=dbSec("dbOpenBox","⏳ נשאר פתוח","(עובר למגירת ההחלטות)",`<div class="field" style="margin-bottom:2px"><textarea id="dbOpen" rows="2" placeholder="שורה לכל נושא שלא הוכרע"></textarea></div>`,false);
+  h+=`<button class="btn good block" id="dbSubmit" style="margin-top:14px" onclick="debriefSubmit(${i})">✅ כתוב למערכת</button>`;
+  openSheet(h);
+  if(voice){ const mb=$("#dbMic"); if(mb)mb.onclick=()=>voiceToggle("#dbMic","#dbSummary"); }
+  loadHandled(m);
+}
+function dbAddRow(){ const box=$("#dbRows"); if(!box)return; const anchor=box.querySelector(".mini");
+  anchor.insertAdjacentHTML("beforebegin",dbRowHtml()); const r=box.querySelectorAll(".dbrow"); const el=r[r.length-1].querySelector(".db-dec"); if(el)el.focus(); }
+function dbAddUpd(){ const box=$("#dbUpds"); if(!box)return; box.querySelector(".mini").insertAdjacentHTML("beforebegin",dbUpdHtml());
+  const r=box.querySelectorAll(".dbupd"); const el=r[r.length-1].querySelector(".du-top"); if(el)el.focus(); }
+function dbAddPerson(){ const box=$("#dbPersons"); if(!box)return; box.querySelector(".mini").insertAdjacentHTML("beforebegin",dbPersonHtml());
+  const r=box.querySelectorAll(".dbper"); const el=r[r.length-1].querySelector(".dp-who"); if(el)el.focus(); }
+// הפריטים הפתוחים של הזירה — במקום שאיתי יקליד "טיפלתי ב-X" והמערכת תנחש,
+// היא מציגה והוא מסמן. הסימון שולח ref מדויק ואין ניחוש בכלל.
+async function loadHandled(m){
+  const box=$("#dbHandled"); if(!box)return;
+  if(!LIVE){ box.innerHTML=`<div class="mini-empty">זמין במצב מחובר.</div>`; return; }
+  try{
+    const r=await apiPost(API,{action:"meeting_open_items",event_id:m.id||null,arena_id:m.arena_id||null,meeting_title:m.title||null});
+    const items=[...(r.tasks||[]).map(t=>({kind:"task",id:t.id,txt:t.title,meta:[t.owner,t.due?fmtDay(t.due):""].filter(Boolean).join(" · ")})),
+                 ...(r.commitments||[]).map(c=>({kind:"commitment",id:c.id,txt:c.what,meta:[c.who,c.due?fmtDay(c.due):""].filter(Boolean).join(" · ")})),
+                 ...(r.decisions||[]).map(d=>({kind:"decision",id:d.id,txt:d.title,meta:d.needed_by?"עד "+fmtDay(d.needed_by):""}))];
+    if(!items.length){ box.innerHTML=`<div class="mini-empty">${r.arena?"אין פריטים פתוחים ב"+esc(nm0(r.arena))+" ✓":"לא זוהתה זירה לפגישה — סמן ידנית בשדה הסיכום."}</div>`; return; }
+    box.innerHTML=`<div class="sub2" style="margin:0 2px 6px">${esc(nm0(r.arena||""))} · הקש על מה שכבר טיפלת בו — זה ייסגר.</div>`+
+      items.map(x=>`<div class="li tapli dbh" data-kind="${x.kind}" data-id="${x.id}" data-txt="${esc(x.txt)}" data-on="0" onclick="dbToggleHandled(this)"><span class="dbh-box" style="flex:none;width:18px;height:18px;border-radius:6px;border:1.5px solid var(--hair2);display:grid;place-items:center;font-size:11px;margin-top:2px"></span><span style="flex:1">${esc(x.txt)}${x.meta?`<br><span class="dim" style="font-size:12px">${esc(x.meta)}</span>`:""}</span><span class="chip mut">${x.kind==="task"?"משימה":x.kind==="commitment"?"התחייבות":"החלטה"}</span></div>`).join("");
+  }catch(e){ box.innerHTML=`<div class="mini-empty">לא הצלחתי לטעון פריטים פתוחים.</div>`; }
+}
+function dbToggleHandled(el){ const on=el.getAttribute("data-on")==="1"; el.setAttribute("data-on",on?"0":"1");
+  const bx=el.querySelector(".dbh-box");
+  if(bx){ bx.textContent=on?"":"✓"; bx.style.background=on?"":"var(--good)"; bx.style.borderColor=on?"var(--hair2)":"var(--good)"; bx.style.color=on?"":"#fff"; } }
 async function debriefSubmit(i){ const m=(D.meetings||[])[i]||{};
+  const val=(el,sel)=>((el.querySelector(sel)||{}).value||"").trim();
   const rows=[...document.querySelectorAll("#dbRows .dbrow")].map(r=>({
-    decision:(r.querySelector(".db-dec")||{}).value||"", owner:(r.querySelector(".db-own")||{}).value||"",
-    due:(r.querySelector(".db-due")||{}).value||"", notes:(r.querySelector(".db-not")||{}).value||"",
-  })).filter(r=>r.decision.trim());
-  if(!rows.length){ toast("מלא לפחות החלטה אחת"); return; }
-  const open=(($("#dbOpen")||{}).value||"").split("\n").map(s=>s.trim()).filter(Boolean);
+    decision:val(r,".db-dec"), owner:val(r,".db-own"), due:val(r,".db-due"), notes:val(r,".db-not") })).filter(r=>r.decision);
+  const updates=[...document.querySelectorAll("#dbUpds .dbupd")].map(r=>({
+    topic:val(r,".du-top"), text:val(r,".du-txt") })).filter(u=>u.topic||u.text);
+  const people_notes=[...document.querySelectorAll("#dbPersons .dbper")].map(r=>({
+    who:val(r,".dp-who"), note:val(r,".dp-note") })).filter(p=>p.who&&p.note);
+  const handled=[...document.querySelectorAll(".dbh[data-on='1']")].map(el=>({
+    what:el.getAttribute("data-txt"), kind:el.getAttribute("data-kind"), ref:el.getAttribute("data-id") }));
+  const open=((($("#dbOpen")||{}).value)||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  const summary=((($("#dbSummary")||{}).value)||"").trim();
+
+  if(!summary&&!rows.length&&!updates.length&&!handled.length&&!open.length&&!people_notes.length){ toast("מלא לפחות שדה אחד"); return; }
   if(!LIVE){ closeSheet(); toast("סיכום נכתב במצב מחובר בלבד"); return; }
   const btn=$("#dbSubmit"); if(btn){ btn.disabled=true; btn.textContent="כותב…"; }
   try{
-    const r=await apiPost(API,{action:"debrief_submit",event_id:m.id||null,prep_id:m.prep_id||null,meeting_title:m.title||"",arena_id:m.arena_id||null,rows,open});
-    const res=r.result||{};
-    closeSheet(); toast(`נכתב ✓ ${res.decisions_new||0} החלטות${res.decisions_closed?` · ${res.decisions_closed} הוכרעו מהמגירה`:""}${res.tasks?` · ${res.tasks} מעקבים`:""}`);
+    const r=await apiPost(API,{action:"debrief_submit",event_id:m.id||null,prep_id:m.prep_id||null,
+      meeting_title:m.title||"",arena_id:m.arena_id||null,summary,rows,updates,handled,people_notes,open});
+    const x=r.result||{};
+    const bits=[]; if(x.decisions_new)bits.push(`${x.decisions_new} החלטות`);
+    if(x.decisions_closed)bits.push(`${x.decisions_closed} הוכרעו מהמגירה`);
+    if(x.followups)bits.push(`${x.followups} מעקבים`);
+    if(x.updates)bits.push(`${x.updates} עדכונים`);
+    if(x.handled)bits.push(`${x.handled} נסגרו`);
+    if(x.people_notes)bits.push(`${x.people_notes} הערות`);
+    if(x.still_open)bits.push(`${x.still_open} למגירה`);
+    closeSheet();
+    // פריט שדווח כטופל ולא נמצא לו זוג — נאמר במפורש. כשל שקט גרוע מכשל רועש.
+    const miss=(x.handled_unmatched||[]).filter(Boolean);
+    toast(`נכתב ✓${bits.length?" "+bits.join(" · "):""}`);
+    if(miss.length)setTimeout(()=>toast(`⚠ לא נמצא פריט פתוח תואם ל: ${miss.join(", ").slice(0,90)} — נרשם ביומן`),2800);
     afterAct();
   }catch(e){ if(btn){ btn.disabled=false; btn.textContent="✅ כתוב למערכת"; } toast("הכתיבה נכשלה: "+(e.message||"נסה שוב")); }
 }
@@ -721,10 +828,13 @@ function captureSheet(){ capMode="capture"; const arenas=(D.arenas||[]).filter(a
   openSheet(h); const seg=$("#capSeg"), extra=$("#capExtra");
   function drawExtra(){ if(capMode==="capture"){extra.innerHTML="";return;} extra.innerHTML=`<div class="field"><label>זירה</label><select id="capArena"><option value="">— ללא —</option>${arenas.map(a=>`<option value="${a.id}">${esc(nm0(a.name))}</option>`).join("")}</select></div>${capMode==="task"?`<div class="field"><label>דחיפות</label><div class="chips-in">${["today","week","month","whenever"].map((u,i)=>`<span class="c ${i===1?"on":""}" data-u="${u}" onclick="pickUrg(this)">${URG[u]}</span>`).join("")}</div></div>`:""}`; capUrg="week"; }
   seg.querySelectorAll("button").forEach(b=>b.onclick=()=>{ capMode=b.dataset.m; seg.querySelectorAll("button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); drawExtra(); });
-  if(canVoice)$("#micBtn").onclick=voiceToggle;
+  if(canVoice)$("#micBtn").onclick=()=>voiceToggle();
 }
 function pickUrg(el){ el.parentNode.querySelectorAll(".c").forEach(c=>c.classList.remove("on")); el.classList.add("on"); capUrg=el.dataset.u; }
-function voiceToggle(){ const btn=$("#micBtn"), ta=$("#capTxt"); const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const canVoiceInput=()=>("webkitSpeechRecognition" in window)||("SpeechRecognition" in window);
+// הכתבה — נבנתה ללכידה המהירה, ומשמשת גם את סיכום הפגישה: אחרי פגישה מדברים,
+// לא מקלידים. לכן היעד (הכפתור והשדה) פרמטרי ולא קשיח.
+function voiceToggle(btnSel,taSel){ const btn=$(btnSel||"#micBtn"), ta=$(taSel||"#capTxt"); if(!btn||!ta)return; const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(rec){ rec.stop(); rec=null; btn.classList.remove("rec"); return; }
   try{ rec=new SR(); rec.lang="he-IL"; rec.interimResults=true; rec.continuous=true; const base=ta.value?ta.value+" ":"";
     rec.onresult=e=>{ let s=""; for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript; ta.value=base+s; };
