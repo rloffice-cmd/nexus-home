@@ -347,8 +347,10 @@ function badges(){ const b=document.querySelector('nav button[data-tab=decisions
     else { const dec=(D.decisions||[]).filter(d=>d.status==="pending").length; b.textContent=dec; b.style.display=dec?"":"none"; }
   }
   // פגישות שכבר הסתיימו ועוד לא סוכמו — זה מה שממתין לאיתי, לא סך הפגישות.
+  // אותו סינון בדיוק כמו מקטע "ממתין לסיכום" ברשימה: מונה שלא תואם למה
+  // שהמסך מציג הוא מונה שמאבד אמון.
   const mb=document.querySelector('nav button[data-tab=meetings] .bdg'); if(!mb)return;
-  const pend=(D.meetings||[]).filter(m=>m.debrief_status!=="committed"&&m.ends_at&&ts(m.ends_at)<Date.now()).length;
+  const pend=(D.meetings||[]).filter(m=>meetEnded(m)&&!meetDone(m)&&m.day_offset>=-7).length;
   mb.textContent=pend; mb.style.display=pend?"":"none"; }
 function shell(){
   app().innerHTML=`<header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div><span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span><button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
