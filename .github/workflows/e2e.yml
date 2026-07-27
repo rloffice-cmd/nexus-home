@@ -35,3 +35,5 @@ jobs:
         run: node tests/e2e/stale.mjs
       - name: מרכז הפגישות
         run: node tests/e2e/meetings.mjs
+      - name: תיבת הפקודה — שיחה עם אובייקט
+        run: node tests/e2e/command.mjs

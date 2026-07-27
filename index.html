@@ -728,7 +728,8 @@ function openArena(id){ const a=AR[id]; if(!a)return;
   h+=`<div class="blk"><h4>↩ אתה חייב · ${byMe.length}</h4>${list(byMe,c=>`<div class="li tapli" onclick="openCommit('${c.id}')"><span>${esc(c.what)}${c.due?` <span class="dim">(${fmtDay(c.due)})</span>`:""}</span></div>`,"—")}</div>`;
   if(evs.length)h+=`<div class="blk"><h4>אירועים אחרונים</h4>${evs.map(e=>`<div class="li"><span class="dim num">${fmtDay(e.happened_at)}</span><span>${esc((e.description||"").slice(0,110))}</span></div>`).join("")}</div>`;
   h+=`<div style="margin-top:16px"><button class="btn brand block" id="draftBtn">✍️ נסח עדכון לצוות</button></div><div id="draftBox" style="margin-top:10px"></div>`;
-  openSheet(h); const db=$("#draftBtn"); if(db)db.onclick=()=>draftArena(id,db);
+  h+=cmdBox("למשל: המטרה השתנתה — קודם לסגור את ההיתר, ותפתח משימה לעופר");
+  openSheet(h); cmdWire("arena",id); const db=$("#draftBtn"); if(db)db.onclick=()=>draftArena(id,db);
 }
 async function draftArena(id,btn){ if(!LIVE){ toast("ניסוח זמין במצב מחובר"); return; } btn.textContent="✍️ מנסח…"; btn.disabled=true;
   try{ const r=await apiPost(API,{action:"arena_draft",arena_id:id}); const box=$("#draftBox");
@@ -760,7 +761,8 @@ function openDecision(id){ const d=(D.decisions||[]).find(x=>x.id===id); if(!d)r
   if(d.cost_of_delay)h+=`<div class="blk"><h4>עלות העיכוב</h4><div class="kv">${esc(d.cost_of_delay)}</div></div>`;
   if(d.needed_by)h+=`<div class="kv dim" style="margin-top:10px">נדרש עד: ${fmtDay(d.needed_by)}</div>`;
   h+=`<div class="field" style="margin-top:14px"><label>מה הוכרע (יישמר כאסמכתא)</label><input id="decNote" placeholder="${d.recommendation?"ריק = התקבלה ההמלצה":"נסח את ההכרעה"}"></div><div style="display:flex;gap:8px"><button class="btn good block" onclick="decide('${id}','decided',1)">✅ הוכרע</button><button class="btn crit block" onclick="decide('${id}','dropped',1)">✖️ ירד מהפרק</button></div>`;
-  openSheet(h);
+  h+=cmdBox("למשל: הוכרע — הולכים על החלופה השנייה");
+  openSheet(h); cmdWire("decision",id);
 }
 async function decide(id,verdict,fromSheet){ const note=fromSheet?(($("#decNote")||{}).value||"").trim():""; const d=(D.decisions||[]).find(x=>x.id===id); if(d)d.status=verdict; if(fromSheet)closeSheet(); render(); toast(verdict==="decided"?"הוכרע ✓":"ירד מהפרק"); try{ await apiPost(ACT,{action:"decision_decide",id,verdict,note}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } afterAct(); }
 
@@ -797,7 +799,8 @@ function openTask(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; c
   let h=`<div class="grab"></div><h3>${esc(t.title)}</h3><div class="m" style="margin:0 2px 4px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span>${t.status==="waiting"?`<span class="chip warn">⏳ ממתין</span>`:""}${t.important?`<span class="chip brand">⭐ חשוב</span>`:""}${t.arena_id?`<span class="chip mut">${esc(nm0(arenaName(t.arena_id)))}</span>`:""}${owner?`<span class="chip mut">${esc(owner)}</span>`:""}${t.due_date?`<span class="chip mut">${fmtDay(t.due_date)}</span>`:""}</div>`;
   if(t.notes)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;margin-top:10px">${esc(t.notes)}</div>`;
   h+=`<div style="display:flex;gap:8px;margin-top:16px"><button class="btn good block" onclick="taskDone('${id}')">✅ בוצע</button><button class="btn brand block" onclick="focusFromTask('${id}')">⭐ הדבר האחד</button></div><div style="display:flex;gap:8px;margin-top:8px">${t.status==="waiting"?`<button class="btn line block" onclick="taskReopen('${id}')">↩️ חזר אליי</button>`:`<button class="btn line block" onclick="taskWaiting('${id}')">⏳ ממתין לאחרים</button>`}<button class="btn line block" onclick="taskImportant('${id}',${t.important?"false":"true"})">${t.important?"☆ הסר חשוב":"⭐ חשוב"}</button></div><div class="blk"><h4>דחיפות</h4><div class="chips-in">${["today","week","month","whenever"].map(u=>`<span class="c ${t.urgency===u?"on":""}" onclick="setUrg('${id}','${u}',this)">${URG[u]}</span>`).join("")}</div></div>`;
-  openSheet(h);
+  h+=cmdBox("למשל: תעביר לאהרון, דחוף להיום, ותוסיף שדיברתי איתו");
+  openSheet(h); cmdWire("task",id);
 }
 async function taskWaiting(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.status="waiting"; closeSheet(); render(); toast("עבר להמתנה ⏳"); try{ await apiPost(ACT,{action:"task_waiting",id}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } }
 async function taskReopen(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(t)t.status="open"; closeSheet(); render(); toast("חזר אליך ✓"); try{ await apiPost(API,{action:"task_reopen",id}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } }
@@ -808,7 +811,8 @@ function openCommit(id){ const c=(D.commitments||[]).find(x=>x.id===id); if(!c)r
   let h=`<div class="grab"></div><h3>${esc(c.what)}</h3><div class="m" style="margin:0 2px 4px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ${mine?"warn":"brand"}">${mine?"↩ אתה חייב":"↪ חייבים לך"}</span>${who?`<span class="chip mut">${esc(who)}</span>`:""}${c.arena_id?`<span class="chip mut">${esc(nm0(arenaName(c.arena_id)))}</span>`:""}${c.due?`<span class="chip ${di!=null&&di<=0?"crit":di!=null&&di<=3?"warn":"mut"}">${di!=null&&di<0?"באיחור "+(-di)+" ימים":"עד "+fmtDay(c.due)}</span>`:""}</div>`;
   if(c.evidence)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;margin-top:10px">${esc(c.evidence)}</div>`;
   h+=`<div style="margin-top:16px"><button class="btn good block" onclick="commitDone('${id}')">✅ נסגר</button></div>`;
-  openSheet(h);
+  h+=cmdBox("למשל: נסגר, הוא שלח את המסמכים אתמול");
+  openSheet(h); cmdWire("commitment",id);
 }
 async function commitDone(id){ const prev=(D.commitments||[]).find(x=>x.id===id); if(!prev)return;
   D.commitments=(D.commitments||[]).filter(x=>x.id!==id); closeSheet(); render();
@@ -843,6 +847,92 @@ function voiceToggle(btnSel,taSel){ const btn=$(btnSel||"#micBtn"), ta=$(taSel||
     rec.onend=()=>{ btn.classList.remove("rec"); rec=null; }; rec.onerror=()=>{ btn.classList.remove("rec"); rec=null; }; rec.start(); btn.classList.add("rec");
   }catch(e){ toast("הקלטה לא נתמכת"); rec=null; }
 }
+
+/* ================= שיחה עם אובייקט =================
+   עד כאן לכל פעולה היה כפתור, וכשלא היה כפתור — לא הייתה פעולה. תיבה אחת,
+   זהה בכל מסך אובייקט: כותבים או מכתיבים בשפה חופשית, השרת מתרגם לפעולות
+   מתוך אוצר-מילים סגור, המסך מראה בדיוק מה עומד לקרות — ורק אז מבצעים.
+   האישור אינו טקס: המתרגם הוא מודל, ובעבודת סדר בכמות פרשנות שגויה שקטה
+   יקרה בהרבה מהקלקה אחת. השרת גם מחזיר שאלה במקום לנחש — וזה מוצג כאן. */
+let CMD={kind:null,id:null,ops:null,last:null};
+function cmdBox(ph){ return `<div class="blk"><h4>💬 דבר עם זה</h4>`
+  +`<div class="field capbox"><textarea id="cmdTxt" rows="2" placeholder="${esc(ph||"בשפה חופשית — מה לעשות עם זה")}"></textarea>${canVoiceInput()?`<button class="mic" id="cmdMic" aria-label="הכתבה">🎙</button>`:""}</div>`
+  +`<button class="btn line block" id="cmdGo">→ מה תעשה עם זה</button><div id="cmdOut"></div></div>`; }
+function cmdWire(kind,id){ CMD={kind,id,ops:null,last:null};
+  const go=$("#cmdGo"); if(go)go.onclick=()=>cmdPreview();
+  const m=$("#cmdMic"); if(m)m.onclick=()=>voiceToggle("#cmdMic","#cmdTxt");
+  const ta=$("#cmdTxt"); if(ta)ta.addEventListener("keydown",e=>{ if((e.metaKey||e.ctrlKey)&&e.key==="Enter")cmdPreview(); });
+}
+function taskTitle(id){ const t=(D.tasks||[]).find(x=>x.id===id); return t?t.title:"משימה"; }
+// התצוגה המקדימה נכתבת מהמזהים, לא מהניסוח של המודל: אם הוא בחר בעלים שגוי,
+// כאן יופיע השם השגוי — וזו בדיוק הנקודה שבה זה נעצר.
+function opText(o){ const P=i=>i?(personName(i)||"—"):"", A=i=>i?nm0(arenaName(i)):"", d=[];
+  if(o.op==="task.update"){ if(o.title)d.push(`כותרת → "${o.title}"`);
+    if(o.status)d.push(o.status==="done"?"נסגרת":o.status==="waiting"?"עוברת להמתנה":"נפתחת מחדש");
+    if(o.urgency)d.push("דחיפות → "+(URG[o.urgency]||o.urgency));
+    if("due" in o)d.push(o.due?"יעד → "+fmtDay(o.due):"תאריך היעד יוסר");
+    if("important" in o)d.push(o.important?"מסומנת חשוב":"סימון חשוב יוסר");
+    if(o.owner_id)d.push("בעלים → "+P(o.owner_id)); if(o.arena_id)d.push("זירה → "+A(o.arena_id));
+    if(o.note)d.push(`הערה: "${o.note}"`);
+    return {t:"☑️ "+taskTitle(o.id),d}; }
+  if(o.op==="task.create"){ if(o.owner_id)d.push("בעלים → "+P(o.owner_id)); if(o.arena_id)d.push("זירה → "+A(o.arena_id));
+    if(o.urgency)d.push(URG[o.urgency]||o.urgency); if(o.due)d.push("יעד "+fmtDay(o.due)); if(o.note)d.push(`הערה: "${o.note}"`);
+    return {t:"➕ משימה חדשה: "+(o.title||""),d}; }
+  if(o.op==="task.merge")return {t:"🔗 איחוד כפילות",d:[`"${taskTitle(o.from_id)}" נסגרת לתוך "${taskTitle(o.into_id)}"`]};
+  if(o.op==="decision.decide"){ const dd=(D.decisions||[]).find(x=>x.id===o.id);
+    return {t:(o.verdict==="dropped"?"✖️ יורדת מהפרק: ":"✅ מוכרעת: ")+(dd?dd.title:"החלטה"),d:o.rationale?[o.rationale]:[]}; }
+  if(o.op==="decision.create")return {t:"✦ החלטה חדשה: "+(o.title||""),d:o.arena_id?[A(o.arena_id)]:[]};
+  if(o.op==="commitment.close"){ const c=(D.commitments||[]).find(x=>x.id===o.id);
+    return {t:"🤝 נסגרת: "+(c?c.what:"התחייבות"),d:o.evidence?[o.evidence]:[]}; }
+  if(o.op==="arena.update"){ if(o.goal)d.push("מטרת-על → "+o.goal); if(o.summary)d.push("תיאור מתעדכן"); if(o.status)d.push("סטטוס → "+o.status);
+    return {t:"🏛 "+A(o.id),d}; }
+  if(o.op==="objective.update"){ if(o.next_step)d.push("הצעד הבא → "+o.next_step); if(o.due)d.push("עד "+fmtDay(o.due)); if(o.status)d.push("סטטוס → "+o.status);
+    return {t:"🎯 יעד",d}; }
+  if(o.op==="person.note")return {t:"👤 "+P(o.id),d:[o.note||""]};
+  if(o.op==="idea.create")return {t:"💡 רעיון: "+(o.title||""),d:o.arena_id?[A(o.arena_id)]:[]};
+  return {t:o.op||"פעולה",d:[]};
+}
+function cmdOps(ops){ return ops.map(o=>{ const x=opText(o);
+  return `<div class="li" style="align-items:flex-start"><div style="flex:1"><b>${esc(x.t)}</b>${x.d.filter(Boolean).length?`<br><span class="dim" style="font-size:12px">${esc(x.d.filter(Boolean).join(" · "))}</span>`:""}</div></div>`; }).join(""); }
+// fix=true → זה תיקון להצעה שעל המסך, לא בקשה חדשה. שולחים לשרת גם את מה
+// שהובן ומה שהוצע, כדי ש"לא לאהרון, לעופר" יתקן ולא ינסח מחדש מאפס.
+async function cmdPreview(fix){ const ta=$(fix?"#cmdFix":"#cmdTxt"); if(!ta)return; const text=(ta.value||"").trim(); if(!text)return;
+  if(rec){ try{rec.stop();}catch(e){} rec=null; }
+  if(!LIVE){ toast("זמין במצב מחובר"); return; }
+  const go=$(fix?"#cmdFixGo":"#cmdGo"), out=$("#cmdOut"); const label=go.textContent;
+  go.disabled=true; go.textContent="חושב…"; if(!fix)out.innerHTML="";
+  const done=()=>{ if(go.isConnected){ go.disabled=false; go.textContent=label; } };
+  const payload={action:"command_preview",kind:CMD.kind,id:CMD.id,text};
+  if(fix&&CMD.last)payload.prior=CMD.last;
+  try{ const r=await apiPost(API,payload); done();
+    const ops=r.ops||[];
+    if(!ops.length){ out.innerHTML=r.question
+      ? `<div class="card pad" style="background:var(--surface2);font-size:13.5px;margin-top:8px">❓ ${esc(r.question)}</div>`
+      : `<div class="mini-empty">לא זוהתה פעולה. נסח אחרת.</div>`; CMD.ops=null; return; }
+    CMD.ops=ops; CMD.last={text,summary:r.summary||null,ops};
+    out.innerHTML=`<div class="card pad" style="margin-top:10px"><div style="font-size:13.5px;font-weight:700;margin-bottom:8px">${esc(r.summary||"הפעולות שיבוצעו")}</div>${cmdOps(ops)}${r.question?`<div class="kv dim" style="margin-top:8px">❓ ${esc(r.question)}</div>`:""}</div>`
+      +`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn good block" id="cmdOk">✅ בצע</button><button class="btn line" id="cmdFixBtn" style="flex:0 0 auto;padding-inline:14px">✏️ תקן</button><button class="btn line" id="cmdNo" style="flex:0 0 auto;padding-inline:14px">✖️</button></div><div id="cmdFixBox"></div>`;
+    $("#cmdOk").onclick=()=>cmdApply(); $("#cmdNo").onclick=()=>{ CMD.ops=null; CMD.last=null; out.innerHTML=""; };
+    $("#cmdFixBtn").onclick=()=>cmdFixOpen();
+  }catch(e){ done(); out.innerHTML=`<div class="mini-empty" style="color:var(--crit)">התרגום נכשל — נסה שוב</div>`; }
+}
+function cmdFixOpen(){ const box=$("#cmdFixBox"); if(!box)return;
+  box.innerHTML=`<div class="field capbox" style="margin-top:10px"><textarea id="cmdFix" rows="2" placeholder="מה לא מדויק? למשל: לא לאהרון, לעופר — והשאר אותו דבר"></textarea>${canVoiceInput()?`<button class="mic" id="cmdFixMic" aria-label="הכתבה">🎙</button>`:""}</div><button class="btn line block" id="cmdFixGo">→ שלח תיקון</button>`;
+  const m=$("#cmdFixMic"); if(m)m.onclick=()=>voiceToggle("#cmdFixMic","#cmdFix");
+  $("#cmdFixGo").onclick=()=>cmdPreview(true);
+  const t=$("#cmdFix"); if(t){ t.focus(); t.addEventListener("keydown",e=>{ if((e.metaKey||e.ctrlKey)&&e.key==="Enter")cmdPreview(true); }); }
+}
+async function cmdApply(){ if(!CMD.ops||!CMD.ops.length)return; const ok=$("#cmdOk"); if(ok){ ok.disabled=true; ok.textContent="מבצע…"; }
+  try{ const r=await apiPost(API,{action:"command_apply",ops:CMD.ops}); const n=r.applied||0, errs=r.errors||[];
+    CMD.ops=null; CMD.last=null;
+    // כשל חלקי לא נבלע בטוסט: מה שנכשל נשאר על המסך עם הסיבה.
+    if(errs.length){ const out=$("#cmdOut");
+      if(out)out.innerHTML=`<div class="card pad" style="margin-top:10px"><div style="font-size:13px;font-weight:800;color:var(--crit);margin-bottom:6px">בוצעו ${n} · ${errs.length} נכשלו</div>`
+        +errs.map(e=>`<div class="li"><span>${esc(e.error||"שגיאה")}</span><span class="dim">${esc(e.op||"")}</span></div>`).join("")+`</div>`;
+      afterAct(); return; }
+    closeSheet(); toast(n===1?"בוצע ✓":`בוצעו ${n} ✓`); afterAct();
+  }catch(e){ if(ok){ ok.disabled=false; ok.textContent="✅ בצע"; } toast("הביצוע נכשל"); }
+}
 async function capSubmit(){ const txt=($("#capTxt").value||"").trim(); if(!txt)return; if(rec){try{rec.stop();}catch(e){}rec=null;}
   const arenaEl=$("#capArena"), arena_id=arenaEl?arenaEl.value||null:null, mode=capMode; closeSheet();
   if(mode==="capture")(D.captures=D.captures||[]).unshift({id:"tmp"+Date.now(),text:txt,created_at:todayISO()});
@@ -868,7 +958,22 @@ function openPeople(){ const people=(D.people||[]); const morchim=people.filter(
   h+=`<input class="searchbox" id="peopleSearch" placeholder="חפש אדם…" oninput="filterPeople(this.value)" style="margin-top:8px"><div id="peopleList">`+peopleRows(people.slice(0,14))+`</div>`; openSheet(h);
 }
 function peopleRows(arr){ return arr.map(p=>{ const rel=/מורח|לא אמין|מתמהמה/.test((p.reliability_notes||"")+(p.work_notes||""))?"crit":/אמין|מהיר|יסודי/.test((p.reliability_notes||""))?"good":"mut";
-  return `<div class="li"><div style="flex:1"><b>${esc(p.name)}</b>${p.role||p.organization?`<br><span class="dim" style="font-size:12px">${esc([p.role,p.organization].filter(Boolean).join(" · "))}</span>`:""}</div>${p.phone?`<a href="tel:${esc(p.phone)}" class="chip mut" style="text-decoration:none">☎</a>`:""}${p.reliability_notes?`<span class="chip ${rel}">${rel==="crit"?"מורח":rel==="good"?"אמין":"—"}</span>`:""}</div>`; }).join(""); }
+  return `<div class="li tapli" onclick="openPerson('${p.id}')"><div style="flex:1"><b>${esc(p.name)}</b>${p.role||p.organization?`<br><span class="dim" style="font-size:12px">${esc([p.role,p.organization].filter(Boolean).join(" · "))}</span>`:""}</div>${p.phone?`<a href="tel:${esc(p.phone)}" class="chip mut" style="text-decoration:none" onclick="event.stopPropagation()">☎</a>`:""}${p.reliability_notes?`<span class="chip ${rel}">${rel==="crit"?"מורח":rel==="good"?"אמין":"—"}</span>`:""}</div>`; }).join(""); }
+// מסך אדם — נפתח כדי שיהיה עם מי לדבר: לכל אדם יש עכשיו תיבת פקודה משלו,
+// והיא רואה את המשימות וההתחייבויות שלו, כך ש"תעביר לו גם את זה" עובד.
+function openPerson(id){ const p=(D.people||[]).find(x=>x.id===id); if(!p)return;
+  const mine=(D.tasks||[]).filter(t=>t.owner_id===id&&(t.status==="open"||t.status==="waiting"));
+  const com=(D.commitments||[]).filter(c=>c.person_id===id);
+  let h=`<div class="grab"></div><h3>${esc(p.name)}</h3>`;
+  if(p.role||p.organization)h+=`<div class="sub2">${esc([p.role,p.organization].filter(Boolean).join(" · "))}</div>`;
+  h+=`<div class="m" style="margin:0 2px 4px;display:flex;gap:6px;flex-wrap:wrap">${p.phone?`<a href="tel:${esc(p.phone)}" class="chip mut" style="text-decoration:none">☎ ${esc(p.phone)}</a>`:""}${mine.length?`<span class="chip mut">${mine.length} משימות</span>`:""}</div>`;
+  if(p.reliability_notes)h+=`<div class="blk"><h4>אמינות</h4><div class="kv">${esc(p.reliability_notes)}</div></div>`;
+  if(p.work_notes)h+=`<div class="blk"><h4>עבודה איתו</h4><div class="kv">${esc(p.work_notes)}</div></div>`;
+  h+=`<div class="blk"><h4>משימות פתוחות · ${mine.length}</h4>${mine.length?mine.map(t=>`<div class="li tapli" onclick="openTask('${t.id}')"><span class="chip ${URGC[t.urgency]||"mut"}">${t.status==="waiting"?"ממתין":URG[t.urgency]||""}</span><span>${esc(t.title)}</span></div>`).join(""):`<div class="mini-empty">אין ✓</div>`}</div>`;
+  if(com.length)h+=`<div class="blk"><h4>התחייבויות · ${com.length}</h4>${com.map(c=>`<div class="li tapli" onclick="openCommit('${c.id}')"><span class="chip ${c.direction==="by_itay"?"warn":"brand"}">${c.direction==="by_itay"?"↩":"↪"}</span><span>${esc(c.what)}${c.due?` <span class="dim">(${fmtDay(c.due)})</span>`:""}</span></div>`).join("")}</div>`;
+  h+=cmdBox("למשל: הוא מורח בהיתר, תפתח לו משימה לחזור אליי עד חמישי");
+  openSheet(h); cmdWire("person",id);
+}
 function filterPeople(q){ q=(q||"").trim(); const arr=(D.people||[]).filter(p=>!q||((p.name||"")+(p.role||"")+(p.organization||"")).includes(q)).slice(0,20); $("#peopleList").innerHTML=peopleRows(arr); }
 function openLessons(){ const L=(D.lessons||[]); const nL=L.length;
   let h=`<div class="grab"></div><h3>מה המערכת למדה עליי</h3><div class="sub2">${nL?nL+" כללי עבודה — כל אחד מהם נכנס לפרומפט של הבוט בכל הודעה.":"הלקחים חיים בשרת ומכוונים את המערכת."}</div>`;
