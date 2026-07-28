@@ -15,8 +15,12 @@ const fail = (s) => { errors.push(s); console.log("  ✗ " + s); };
 
 const ARENAS = [{ id: "a1", name: "השדרה / קניון בית שמש", status: "active" }];
 const PEOPLE = [{ id: "p-ah", name: "אהרון לואיס", role: "מנהל תפעול", reliability_notes: "אמין" }];
+const BRIEF = "**מה צריך לעשות**\nלסגור את תנאי החידוש מול עופר לפני שהשכירות מתגלגלת אוטומטית.\n\n**איך**\n1. להוציא את ההסכם החתום מתיקיית השדרה\n2. להשוות את סעיף החידוש למה שסוכם בפגישה\n\n**מה נדרש**\nההסכם החתום. עופר גל.";
 const TASKS = [{ id: "t1", title: "לבדוק את הסכם השכירות מול עופר", status: "open",
-                 urgency: "month", arena_id: "a1", owner_id: null, created_at: "2026-07-01" }];
+                 urgency: "month", arena_id: "a1", owner_id: null, created_at: "2026-07-01",
+                 brief: BRIEF, brief_source: "ai" },
+               { id: "t2", title: "משימה בלי הסבר", status: "open", urgency: "week",
+                 arena_id: "a1", owner_id: null, created_at: "2026-07-02" }];
 
 const OPS = [{ op: "task.update", id: "t1", owner_id: "p-ah", urgency: "today", note: "דיברתי איתו בטלפון" }];
 
@@ -339,6 +343,55 @@ await page.waitForTimeout(700);
 box = await page.$eval("#cmdTxt", el => el.value);
 if (box !== "תסמן שנסגר") fail(`כשל בקריאה מחק את מה שאיתי כתב: "${box}"`);
 step("כשל בקריאה משאיר את הטקסט");
+
+// ── 11. ההסבר מוצג במסך המשימה ────────────────────────────────────────────
+// איתי ביקש הסבר נרחב לכל משימה "כך יהיה יותר ברור מה צריך לעשות וגם דרך
+// לבצע אותה". המחולל כותב ב-DB וה-API מחזיר — אבל אם המסך לא מצייר אותו,
+// כל השרשרת שווה כלום. וחשוב לא פחות: הוא חייב להיות **קריא**. המחולל
+// מחזיר כותרות **מודגשות**, ובלי fmtMd הן היו מוצגות כתווי כוכבית גולמיים.
+await page.unroute("**/functions/v1/nexus-app*");
+await page.route("**/functions/v1/nexus-app*", r => r.request().method() === "POST"
+  ? r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) })
+  : r.fallback());
+await openObj("openTask", "t1");
+const sh = await page.$eval("#sheet", el => el.innerText);
+if (!/מה צריך לעשות/.test(sh)) fail("ההסבר אינו מוצג במסך המשימה");
+if (!/להוציא את ההסכם החתום/.test(sh)) fail("הצעדים אינם מוצגים: " + sh.slice(0, 200));
+if (!/ההסכם החתום. עופר גל/.test(sh)) fail("סעיף 'מה נדרש' אינו מוצג");
+if (/\*\*/.test(sh)) fail("ההסבר מוצג עם תווי כוכבית גולמיים — fmtMd לא הופעל");
+const bolds = await page.$$eval("#sheet .md b", els => els.map(e => e.textContent));
+if (!bolds.includes("מה צריך לעשות")) fail("הכותרות אינן מודגשות: " + JSON.stringify(bolds));
+step("ההסבר מוצג במסך המשימה, מעובד ולא כטקסט גולמי");
+
+// ההסבר קודם לכפתורי הפעולה: זו הסיבה שפותחים משימה, ולא הערת שוליים.
+const order = await page.$eval("#sheet", el => {
+  const t = el.innerText;
+  return { brief: t.indexOf("מה צריך לעשות"), done: t.indexOf("✅ בוצע") };
+});
+if (order.brief < 0 || order.done < 0) fail("לא נמצאו ההסבר או כפתור הביצוע במסך");
+else if (order.brief > order.done) fail("ההסבר מוצג אחרי כפתורי הפעולה");
+step("ההסבר קודם לכפתורים — לא צריך לגלול כדי לדעת מה לעשות");
+
+// מקור ההסבר מוצג: הסבר שאיתי חידד אינו נראה כמו הסבר שהמערכת ניחשה.
+if (!/📖 הסבר/.test(sh)) fail("אין סימון מקור להסבר שנוצר אוטומטית");
+// המקור משתנה בזיכרון הדף ולא בפיקסטורה + reload: האפליקציה משחזרת נתונים
+// ממטמון מקומי, ולכן reload החזיר את הערך הישן והבדיקה נכשלה על קוד תקין.
+// מה שנבדק כאן הוא ענף הציור, ולכן נכון לגעת ישירות במצב שממנו הוא מצייר.
+await page.evaluate(() => { const t = D.tasks.find(x => x.id === "t1"); t.brief_source = "itay"; });
+await page.evaluate(() => closeSheet());
+await page.waitForTimeout(300);
+await page.evaluate(() => openTask("t1"));
+await page.waitForSelector("#cmdTxt", { timeout: 4000 });
+const shItay = await page.$eval("#sheet", el => el.innerText);
+if (!/חודד על ידך/.test(shItay)) fail("הסבר שאיתי חידד אינו מסומן ככזה");
+step("מקור ההסבר מוצג — אוטומטי מול מחודד");
+
+// משימה בלי הסבר אינה מציגה כרטיס ריק.
+await openObj("openTask", "t2");
+const shEmpty = await page.$eval("#sheet", el => el.innerText);
+if (/📖 הסבר|לחידוד/.test(shEmpty)) fail("משימה בלי הסבר מציגה כרטיס הסבר ריק");
+if (!/משימה בלי הסבר/.test(shEmpty)) fail("המסך לא נפתח על המשימה הנכונה");
+step("משימה בלי הסבר אינה מציגה כרטיס ריק");
 
 await browser.close();
 if (errors.length) { console.log(`\n${errors.length} כשלים`); process.exit(1); }
