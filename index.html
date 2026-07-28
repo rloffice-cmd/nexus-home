@@ -1030,6 +1030,15 @@ async function focusSetText(){ const v=($("#focusTxt").value||"").trim(); if(!v)
 async function focusFromTask(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; D.focus={title:t.title,task_id:id,approved:true,done:false}; closeSheet(); render(); toast("נקבע ⭐"); try{await apiPost(API,{action:"focus_set",title:t.title,task_id:id});}catch(e){} afterAct(); }
 function openTask(id){ const t=(D.tasks||[]).find(x=>x.id===id); if(!t)return; const owner=personName(t.owner_id);
   let h=`<div class="grab"></div><h3>${esc(t.title)}</h3><div class="m" style="margin:0 2px 4px;display:flex;gap:6px;flex-wrap:wrap"><span class="chip ${URGC[t.urgency]||"mut"}">${URG[t.urgency]||""}</span>${t.status==="waiting"?`<span class="chip warn">⏳ ממתין</span>`:""}${t.important?`<span class="chip brand">⭐ חשוב</span>`:""}${t.arena_id?`<span class="chip mut">${esc(nm0(arenaName(t.arena_id)))}</span>`:""}${owner?`<span class="chip mut">${esc(owner)}</span>`:""}${t.due_date?`<span class="chip mut">${fmtDay(t.due_date)}</span>`:""}</div>`;
+  /* v19: ההסבר קודם לכל השאר. זו הסיבה שבגללה פותחים משימה — מה צריך
+     לעשות ואיך — ולכן הוא לא יושב מתחת לכפתורים, וגם לא מתחת ל-notes
+     שהוא סטטוס חד-שורתי ("נשלח 13.7, לא נקרא") ולא הסבר.
+     fmtMd ולא pre-wrap: המחולל מחזיר כותרות **מודגשות** וצעדים ממוספרים,
+     ובלי עיבוד הן היו מוצגות כתווי כוכבית. fmtMd עושה esc לפני הכל. */
+  if(t.brief)h+=`<div class="card pad md" style="margin-top:10px;font-size:13.5px;line-height:1.65">`
+    +`<div class="dim" style="font-size:12px;font-weight:700;margin-bottom:6px">${t.brief_source==="itay"?"✍️ הסבר · חודד על ידך":"📖 הסבר"}</div>`
+    +fmtMd(t.brief)
+    +`<div class="dim" style="font-size:11.5px;margin-top:8px">לחידוד — כתוב בתיבה למטה מה לשנות.</div></div>`;
   if(t.notes)h+=`<div class="card pad" style="background:var(--surface2);white-space:pre-wrap;font-size:13.5px;margin-top:10px">${esc(t.notes)}</div>`;
   h+=`<div style="display:flex;gap:8px;margin-top:16px"><button class="btn good block" onclick="taskDone('${id}')">✅ בוצע</button><button class="btn brand block" onclick="focusFromTask('${id}')">⭐ הדבר האחד</button></div><div style="display:flex;gap:8px;margin-top:8px">${t.status==="waiting"?`<button class="btn line block" onclick="taskReopen('${id}')">↩️ חזר אליי</button>`:`<button class="btn line block" onclick="taskWaiting('${id}')">⏳ ממתין לאחרים</button>`}<button class="btn line block" onclick="taskImportant('${id}',${t.important?"false":"true"})">${t.important?"☆ הסר חשוב":"⭐ חשוב"}</button></div><div class="blk"><h4>דחיפות</h4><div class="chips-in">${["today","week","month","whenever"].map(u=>`<span class="c ${t.urgency===u?"on":""}" onclick="setUrg('${id}','${u}',this)">${URG[u]}</span>`).join("")}</div></div>`;
   h+=cmdBox("למשל: תעביר לאהרון, דחוף להיום, ותוסיף שדיברתי איתו");
