@@ -37,3 +37,5 @@ jobs:
         run: node tests/e2e/meetings.mjs
       - name: תיבת הפקודה — שיחה עם אובייקט
         run: node tests/e2e/command.mjs
+      - name: גרפים וטיפוס על העץ
+        run: node tests/e2e/viz.mjs

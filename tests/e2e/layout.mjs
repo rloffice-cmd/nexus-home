@@ -23,8 +23,15 @@ const AUDIT = () => {
     if (r.left < -2) out.push(`גולש שמאלה: ${el.className||el.tagName} מ-${Math.round(r.left)}`);
   }
 
+  // מעל 1000px הניווט אינו סרגל תחתון אלא סרגל צד. שתי הבדיקות הבאות
+  // נכתבו נגד כשלים של סרגל תחתון (תוכן מתחתיו, כפתור צף שנבלע בו), ולכן
+  // הן נמדדות לפי הצורה בפועל ולא לפי הנחה: סרגל רחב-מגובה = תחתון.
+  const navEl = document.querySelector("nav");
+  const navBox = navEl && navEl.getBoundingClientRect();
+  const bottomBar = !!navBox && navBox.width > navBox.height;
+
   // 3. תוכן שמסתתר מאחורי הניווט הקבוע בתחתית
-  const nav = document.querySelector("nav");
+  const nav = bottomBar ? navEl : null;
   const main = document.querySelector("#main");
   if (nav && main) {
     const navTop = nav.getBoundingClientRect().top;
@@ -42,11 +49,15 @@ const AUDIT = () => {
     }
   }
 
-  // 4. כפתור הלכידה הצף מול הניווט
+  // 4. כפתור הלכידה הצף מול הניווט. בדסקטופ הוא יושב *בתוך* סרגל הצד
+  // בכוונה — שם אין תוכן — ולכן בדיקת החפיפה חלה רק על סרגל תחתון.
   const fab = document.querySelector("#fab");
-  if (fab && nav && vis(fab)) {
-    const f = fab.getBoundingClientRect(), n = nav.getBoundingClientRect();
-    if (f.bottom > n.top && f.right > n.left && f.left < n.right) out.push("כפתור הלכידה חופף לסרגל הניווט");
+  if (fab && vis(fab)) {
+    const f = fab.getBoundingClientRect();
+    if (bottomBar) {
+      const n = navBox;
+      if (f.bottom > n.top && f.right > n.left && f.left < n.right) out.push("כפתור הלכידה חופף לסרגל הניווט");
+    }
     if (f.right > vw || f.left < 0) out.push("כפתור הלכידה חורג מהמסך");
   }
 
@@ -102,6 +113,10 @@ const VIEWPORTS = [
   { name: "iphone-14", width: 390, height: 844 },
   { name: "iphone-max", width: 430, height: 932 },
   { name: "tablet",    width: 768, height: 1024 },
+  // מעבר לנקודת השבירה: סרגל צד, רשת רב-עמודתית, וגיליון כחלון ממורכז.
+  { name: "laptop",    width: 1280, height: 800 },
+  { name: "desk-1440", width: 1440, height: 900 },
+  { name: "desk-1920", width: 1920, height: 1080 },
 ];
 
 for (const vp of VIEWPORTS) {
@@ -118,6 +133,18 @@ for (const vp of VIEWPORTS) {
     found.forEach(f => issues.push(`[${vp.name}/${tab}] ${f}`));
     if (vp.name === "iphone-14") await page.screenshot({ path: `${OUT}/${tab}.png`, fullPage: false }).catch(()=>{});
   }
+
+  // עדשת הניתוח — הגרפים הם פריסה כמו כל דבר אחר, וצריכים להיבדק ככזו
+  await page.click('nav button[data-tab="home"]');
+  await page.waitForTimeout(120);
+  for (const lens of ["viz","money","move"]) {
+    await page.evaluate(l => setHomeView(l), lens);
+    await page.waitForTimeout(200);
+    const found = await page.evaluate(AUDIT);
+    found.forEach(f => issues.push(`[${vp.name}/עדשה-${lens}] ${f}`));
+  }
+  await page.evaluate(() => setHomeView("all"));
+  await page.waitForTimeout(150);
 
   // גיליונות — השכבה שהכי נוטה לחפוף
   await page.click('nav button[data-tab="home"]');
@@ -145,14 +172,20 @@ for (const vp of VIEWPORTS) {
     });
     sheetIssues.forEach(s => issues.push(`[${vp.name}/גיליון-משימה] ${s}`));
     if (vp.name === "iphone-14") await page.screenshot({ path: `${OUT}/sheet-task.png` }).catch(()=>{});
-    const gap = await page.evaluate(() => window.innerHeight - document.querySelector("#sheet").getBoundingClientRect().top);
+    // הגיליון נשלף מלמטה רק בנייד. בדסקטופ הוא חלון ממורכז, ולכן
+    // "רצועת סגירה מעל" ו"גרירה למטה" הן בדיקות של הצורה ההיא בלבד —
+    // שם הסגירה היא לחיצה בחוץ (מכל צד) או Escape.
+    const isSheet = await page.evaluate(() => {
+      const n = document.querySelector("nav").getBoundingClientRect();
+      return n.width > n.height;
+    });
     const strip = await page.evaluate(() => document.querySelector("#sheet").getBoundingClientRect().top);
-    if (strip < 70) issues.push(`[${vp.name}] רצועת סגירה מעל הגיליון קטנה מדי: ${Math.round(strip)}px`);
+    if (isSheet && strip < 70) issues.push(`[${vp.name}] רצועת סגירה מעל הגיליון קטנה מדי: ${Math.round(strip)}px`);
     await page.mouse.click(vp.width/2, 20); await page.waitForTimeout(300);
     const stillOpen = await page.$(".sheet.on");
     if (stillOpen) issues.push(`[${vp.name}] לחיצה על הכהות מעל הגיליון לא סוגרת`);
     // גרירה למטה לסגירה
-    if (!stillOpen) {
+    if (!stillOpen && isSheet) {
       const row2 = await page.$('.row[onclick^="openTask"]');
       if (row2) { await row2.click(); await page.waitForSelector(".sheet.on"); await page.waitForTimeout(250);
         const top = await page.evaluate(() => document.querySelector("#sheet").getBoundingClientRect().top);
