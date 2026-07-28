@@ -105,6 +105,56 @@ else {
   }
 }
 
+// 5ב. כל מספר שיש מתחתיו רשימה נפתח אליה. שלושת אלה היו הפינות שנשארו
+//     פתוחות בסבב הראשון, ואחד מהם חשף באג שקט: גרף השכירות סינן על שדה
+//     שאינו קיים (a.rent_monthly) בזמן שהנתון יושב ב-leases[].rent, ולכן
+//     הגרף לא רונדר אף פעם — בלי שגיאה, בלי סימן.
+await page.evaluate(() => setHomeView("viz"));
+await page.waitForTimeout(300);
+const chartTitles = await page.$$eval(".vzt", els => els.map(e => e.textContent));
+for (const need of ["הכנסה חודשית לפי נכס", "חוב לפי מלווה"]) {
+  if (!chartTitles.includes(need)) issues.push(`גרף חסר בעדשת הניתוח: ${need}`);
+}
+notes.push(`${chartTitles.length} גרפים בעדשת הניתוח`);
+
+for (const [spec, expect] of [["ln:all", "הלוואות"], ["doc:all", "מסמכים"],
+                              ["as:rented", "מושכרים"], ["as:vacant", "פנויים"],
+                              ["as:sale", "למכירה"], ["as:valued", "מוערכים"]]) {
+  await page.evaluate(sp => drill(sp), spec);
+  await page.waitForTimeout(180);
+  const t = await page.$eval(".sheet h3", e => e.textContent);
+  const n = await page.$$eval(".sheet .li", e => e.length);
+  if (!t.includes(expect)) issues.push(`${spec}: כותרת "${t}" אינה מכילה "${expect}"`);
+  if (!n) issues.push(`${spec}: הרשימה ריקה`);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(120);
+}
+notes.push("שישה צמתי פירוט חדשים נפתחים עם תוכן");
+
+// רמה שלישית: נכסים → נכס → החוזים וההלוואות שלו
+await page.evaluate(() => drill("as:all"));
+await page.waitForTimeout(220);
+const assetRows = await page.$$(".sheet .li.tapli");
+if (!assetRows.length) issues.push("as:all — אין שורות שניתן לרדת מהן");
+else {
+  await assetRows[0].click();
+  await page.waitForTimeout(220);
+  const kinds = await page.$$eval(".sheet .li .chip", e => [...new Set(e.map(x => x.textContent))]);
+  if (!kinds.some(k => /חוזה|הלוואה/.test(k))) issues.push("מסך הנכס אינו מציג חוזים או הלוואות");
+  else notes.push("נכס → חוזים/הלוואות: " + kinds.join(", "));
+}
+await page.keyboard.press("Escape");
+await page.waitForTimeout(150);
+
+// אריח שאינו נפתח הוא מספר שצריך להאמין לו בעיניים עצומות
+await page.evaluate(() => go("assets"));
+await page.waitForTimeout(250);
+const deadTiles = await page.$$eval("#main .vt", els => els.filter(e => !e.getAttribute("onclick")).length);
+if (deadTiles) issues.push(`${deadTiles} אריחים במסך הנכסים אינם נפתחים לפירוט`);
+else notes.push("כל אריחי מסך הנכסים נפתחים");
+await page.evaluate(() => go("home"));
+await page.waitForTimeout(200);
+
 // 6. סרגל צד בדסקטופ, סרגל תחתון בנייד — אותו DOM, פריסה אחרת
 const deskNav = await page.evaluate(() => { const r = document.querySelector("nav").getBoundingClientRect(); return r.height > r.width; });
 if (!deskNav) issues.push("ב-1600px הניווט עדיין סרגל תחתון ולא סרגל צד");
