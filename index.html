@@ -73,7 +73,10 @@ main{max-width:680px;margin:0 auto;padding:14px 14px calc(8px + 76px)}
 #main>.sec:first-child{margin-top:8px}
 .sec h2{font-size:11.5px;font-weight:800;letter-spacing:.03em;color:var(--ink2);margin:0}
 .sec .n{font-size:11.5px;color:var(--mut);font-weight:600}
-.sec .act{margin-inline-start:auto;font-size:12.5px;color:var(--brand);font-weight:700;cursor:pointer;min-height:32px;display:flex;align-items:center}
+.sec.tap{cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:9px;
+  margin-inline:0;padding:0 4px;min-height:38px}
+.sec.tap:active{background:var(--surface2)}
+.sec .act{margin-inline-start:auto;font-size:12.5px;color:var(--brand);font-weight:700;display:flex;align-items:center}
 .divider{margin:28px 4px 2px;padding-top:15px;border-top:1px solid var(--hair);text-align:center}
 .divider span{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--mut)}
 
@@ -354,7 +357,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--brand)}
   .hero{padding:22px 24px}.hero .txt{font-size:24px}
   .card+.card{margin-top:10px}
   .row{padding:14px 17px}
-  .row:hover,.asset .ah:hover,.li.tapli:hover,.vzrow:hover{background:var(--surface2)}
+  .row:hover,.asset .ah:hover,.li.tapli:hover,.vzrow:hover,.sec.tap:hover{background:var(--surface2)}
   .vt.tap:hover{border-color:var(--hair2);box-shadow:0 2px 10px rgba(60,45,20,.08)}
   .btn:hover{filter:brightness(1.06)}
   .moreline:hover{background:var(--surface2)}
@@ -531,7 +534,12 @@ function shell(){
   document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});
   $("#fab").onclick=()=>captureSheet(); $("#moreBtn").onclick=()=>moreSheet(); $("#ov").onclick=closeSheet;
 }
-function secH(title,sub,n,act){ return `<div class="sec"><h2>${title}</h2>${n!=null?`<span class="n num">${n}</span>`:""}${sub?`<span class="n dim">· ${sub}</span>`:""}${act?`<span class="act" onclick="${act.fn}">${act.txt} ‹</span>`:""}</div>`; }
+// כותרת מקטע עם פעולה היא יעד לחיצה **בכל רוחבה**, ולא קישור קטן בקצה.
+// שתי סיבות, ושתיהן נמדדו: (א) יעד מגע של 33x32px בפינה הוא יעד גרוע;
+// (ב) הקצה בקצה השורה הוא בדיוק המקום שבו יושב הכפתור הצף, ובדיקת הפריסה
+// תפסה את החפיפה פעמיים — פעם על "ממתין לאחרים" ופעם על "תפוגות". להזיז
+// תוכן היה פותר את המופע; להרחיב את היעד פותר את המחלקה.
+function secH(title,sub,n,act){ return `<div class="sec${act?" tap":""}"${act?` onclick="${act.fn}"`:""}><h2>${title}</h2>${n!=null?`<span class="n num">${n}</span>`:""}${sub?`<span class="n dim">· ${sub}</span>`:""}${act?`<span class="act">${act.txt} ‹</span>`:""}</div>`; }
 function vt(cls,k,ksub,l,sub,tap){ return `<div class="vt ${cls}${tap?" tap":""}"${tap?` onclick="${tap}"`:""}><div class="k num">${k}${ksub?`<small> ${ksub}</small>`:""}</div><div class="l">${l}</div>${sub?`<div class="sub">${sub}</div>`:""}</div>`; }
 
 /* ================= HOME — layered situation cockpit ================= */
@@ -563,7 +571,7 @@ function vHome(){
     return h+`</div>`; }
   function bVitalsFin(mt){ if(!kp)return ""; let h=`<div class="grp-lbl"${mt?' style="margin-top:13px"':""}>מצב פיננסי · הקש למספר לפירוט</div><div class="vitals">`;
     h+=vt("c-good tap",shekel(kp.rentKnown),"/חו׳","הכנסה חודשית",kp.rentLeases+" שכירויות",`drill('as:all')`);
-    h+=vt("c-brand tap",shekel(kp.loans),"","חוב פעיל",kp.loansCount+" הלוואות",`go('assets')`);
+    h+=vt("c-brand tap",shekel(kp.loans),"","חוב פעיל",kp.loansCount+" הלוואות",`drill('ln:all')`);
     h+=vt("tap",Math.round(kp.rented/(kp.total||1)*100)+"%","","תפוסה",kp.rented+"/"+kp.total+" נכסים",`drill('as:all')`);
     h+=vt(kdOver?"c-crit tap":kdSoon.length?"c-warn tap":"tap",kdSoon.length,"","תפוגות ≤90 יום",kdOver?kdOver+" באיחור":"",`drill('kd:soon')`);
     return h+`</div>`; }
@@ -609,12 +617,12 @@ function vHome(){
     if(!decPend.length&&!soon.length&&!escal.length&&!remind.length&&focus&&focus.done)h+=`<div class="card"><div class="empty">אין עוד מה שדורש הכרעה כרגע ✓</div></div>`;
   } else if(homeView==="money"){
     if(kp){ h+=bVitalsFin(false);
-      h+=grid([G("",vzRent()),G("",vzExpiry()),G("",bExpire())]);
+      h+=grid([G("",vzRent()),G("",vzLoans()),G("",vzExpiry()),G("",bExpire())]);
       h+=`<div style="margin:16px 4px 0"><button class="btn brand block" onclick="go('assets')">▦ פירוט מלא — נכסים, שכירויות והלוואות ‹</button></div>`;
     } else h+=`<div class="card"><div class="empty">נתונים פיננסיים זמינים במצב מחובר.</div></div>`;
   } else if(homeView==="viz"){
     h+=`<div class="viewhint">הנתונים כצורה. כל מוט ומקטע פותחים את הרשימה שמתחתיהם, ומשם ממשיכים לאובייקט עצמו.</div>`;
-    const cards=[vzMovement(),vzLoadByArena(),vzAging(),vzUrgency(),vzByPerson(),vzWaiting(),vzRent(),vzExpiry()];
+    const cards=[vzMovement(),vzLoadByArena(),vzAging(),vzUrgency(),vzByPerson(),vzWaiting(),vzRent(),vzLoans(),vzExpiry()];
     h+= grid(cards.map(c=>G("",c))) || `<div class="card"><div class="empty">אין עדיין מספיק נתונים לגרפים. הם נבנים ממה שהמערכת צברה — משימות, אירועים, נכסים.</div></div>`;
   } else { /* move */
     h+=`<div class="viewhint">תמונה, לא פעולה — מה זז, מה שקט מדי, ומה נסגר.</div>`;
@@ -634,18 +642,20 @@ function vAssets(){
   if(D.kpis){
     const total=kp.total||0, rented=kp.rented||0, occ=total?Math.round(rented/total*100):0, valC=kp.valuationCount||0;
     h+=`<div class="vitals">`;
-    h+=vt("c-good",shekel(kp.rentKnown||0),"/חו׳","הכנסה חודשית",(kp.rentLeases||0)+" שכירויות");
-    h+=vt("c-brand",shekel(kp.loans||0),"","חוב פעיל",(kp.loansCount||0)+" הלוואות");
-    h+=vt("",rented+"/"+total,"","מושכר/סה״כ",occ+"% תפוסה");
-    h+=vt("c-warn",kp.vacant||0,"","פנויים","להשכרה/מכירה");
-    h+=vt("c-brand",kp.forSale||0,"","למכירה",shekel(kp.forSaleAsking||0)+" · "+(kp.forSalePriced||0)+"/"+(kp.forSale||0)+" מתומחרים");
-    h+=vt("",shekel(kp.valuation||0),"","שווי מוערך",valC+"/"+total+" מוערכים");
+    // ששת האריחים האלה היו תצוגה בלבד. כל אחד מהם הוא סכום של רשימה,
+    // ולכן כל אחד מהם נפתח אליה.
+    h+=vt("c-good tap",shekel(kp.rentKnown||0),"/חו׳","הכנסה חודשית",(kp.rentLeases||0)+" שכירויות",`drill('as:rented')`);
+    h+=vt("c-brand tap",shekel(kp.loans||0),"","חוב פעיל",(kp.loansCount||0)+" הלוואות",`drill('ln:all')`);
+    h+=vt("tap",rented+"/"+total,"","מושכר/סה״כ",occ+"% תפוסה",`drill('as:all')`);
+    h+=vt("c-warn tap",kp.vacant||0,"","פנויים","להשכרה/מכירה",`drill('as:vacant')`);
+    h+=vt("c-brand tap",kp.forSale||0,"","למכירה",shekel(kp.forSaleAsking||0)+" · "+(kp.forSalePriced||0)+"/"+(kp.forSale||0)+" מתומחרים",`drill('as:sale')`);
+    h+=vt("tap",shekel(kp.valuation||0),"","שווי מוערך",valC+"/"+total+" מוערכים",`drill('as:valued')`);
     h+=`</div>`;
     if(total&&valC<total)h+=`<div class="card pad" style="margin-top:9px;font-size:12px;color:var(--ink2)">שווי התיק חלקי — ${valC} מתוך ${total} נכסים מוערכים.<div class="meter"><i style="width:${Math.round(valC/total*100)}%"></i></div></div>`;
   } else h+=`<div class="card pad" style="margin-top:2px;font-size:12.5px;color:var(--ink2)">נתוני התיק הפיננסי לא נטענו כרגע — זמין במצב מחובר.</div>`;
   // filters
   const owners=[...new Set(assets.map(a=>a.owner_short).filter(Boolean))];
-  h+=`<div class="sec"><h2>הנכסים</h2></div><input class="searchbox" id="assetSearch" placeholder="חפש נכס / שוכר / גוש…" value="${esc(assetQ)}" oninput="assetSearch(this.value)">`;
+  h+=`<div class="sec"><h2>הנכסים</h2><span class="act" onclick="drill('doc:all')">📄 מסמכים ‹</span></div><input class="searchbox" id="assetSearch" placeholder="חפש נכס / שוכר / גוש…" value="${esc(assetQ)}" oninput="assetSearch(this.value)">`;
   h+=`<div class="chips-row">`+[["all","הכל"],["rented","מושכר"],["vacant","פנוי"],["sale","למכירה"]].map(f=>`<span class="c ${assetFilter===f[0]?"on":""}" onclick="setAssetF('${f[0]}')">${f[1]}</span>`).join("")+`</div>`;
   if(owners.length>1)h+=`<div class="chips-row">`+[["all","כל הבעלים"],...owners.map(o=>[o,o])].map(o=>`<span class="c ${assetOwner===o[0]?"on":""}" data-o="${esc(o[0])}" onclick="setAssetOEl(this)">${esc(o[1])}</span>`).join("")+`</div>`;
   h+=`<div class="card" id="assetList">`+assetRows(assets)+`</div>`;
@@ -1215,7 +1225,7 @@ async function capSubmit(){ const txt=($("#capTxt").value||"").trim(); if(!txt)r
 function moreSheet(){
   let h=`<div class="grab"></div><h3>עוד</h3><div class="mini" style="margin:2px 0 10px"><button onclick="toggleTheme()">🌓 ערכה</button><button onclick="load(true);closeSheet();toast('מרענן…')">🔄 רענון</button>${LIVE?`<button class="warn" onclick="logout()">התנתקות</button>`:""}</div>`;
   h+=`<div class="mini" style="margin-bottom:6px"><button onclick="openReports()">📋 דיווחים</button><button onclick="openTasks()">☑️ כל המשימות</button><button onclick="openPeople()">👥 אנשים</button><button onclick="openLessons()">🧠 לקחים</button></div>`;
-  h+=`<div class="mini" style="margin-bottom:6px"><button onclick="openFiling()">🗂 שיוך מסמכים</button></div>`;
+  h+=`<div class="mini" style="margin-bottom:6px"><button onclick="openFiling()">🗂 שיוך מסמכים</button><button onclick="drill('doc:all')">📄 מסמכים מקוטלגים</button></div>`;
   h+=`<div class="foot" style="text-align:start;padding:14px 2px 2px">Nexus HQ v3 · ${esc(D.now||"")}</div>`;
   openSheet(h);
 }
@@ -1533,13 +1543,32 @@ function vzUrgency(){
     segs.map(s=>[s.label,String(s.value)]),["דחיפות","משימות"]);
 }
 // הכנסה לפי נכס — השוואת גודל, גוון אחד, ערך בקצה.
+// שכר הדירה של נכס הוא סכום החוזים שלו. הגרסה הראשונה סיננה על
+// a.rent_monthly — שדה שאינו קיים במבנה שה-API מחזיר — ולכן הגרף לא רונדר
+// אף פעם, בשקט. שדה שאינו קיים מחזיר undefined ולא שגיאה.
+function assetRent(a){
+  const fromLeases=(a.leases||[]).reduce((s,l)=>s+(Number(l.rent)||0),0);
+  return fromLeases || Number(a.rent_monthly) || 0;
+}
 function vzRent(){
-  const as=(D.assets||[]).filter(a=>Number(a.rent_monthly)>0);
+  const as=(D.assets||[]).filter(a=>assetRent(a)>0);
   if(as.length<2)return "";
-  const rows=as.slice().sort((x,y)=>Number(y.rent_monthly)-Number(x.rent_monthly)).slice(0,10)
-    .map(a=>({label:nm0(a.name||a.code||""),value:Number(a.rent_monthly),fmt:shekel(Number(a.rent_monthly))}));
-  return vzCard("הכנסה חודשית לפי נכס","· "+as.length+" נכסים מושכרים",
+  const rows=as.slice().sort((x,y)=>assetRent(y)-assetRent(x)).slice(0,10)
+    .map(a=>({label:nm0(a.name||a.code||""),value:assetRent(a),fmt:shekel(assetRent(a)),
+              act:`drillIn('as:one:${a.id}')`}));
+  return vzCard("הכנסה חודשית לפי נכס","· "+as.length+" נכסים מושכרים · הקש למוט",
     vzBars(rows),rows.map(r=>[r.label,r.fmt]),["נכס","שכ״ד חודשי"]);
+}
+// חוב לפי מלווה. סדרה אחת → גוון אחד, בלי מקרא.
+function vzLoans(){
+  const ln=(D.loans||[]).filter(l=>Number(l.principal)>0);
+  if(ln.length<2)return "";
+  const rows=ln.slice().sort((a,b)=>Number(b.principal)-Number(a.principal))
+    .map(l=>({label:nm0(l.lender||"—"),value:Number(l.principal),fmt:shekel(Number(l.principal))}));
+  const tot=rows.reduce((s,r)=>s+r.value,0);
+  return vzCard("חוב לפי מלווה","· "+shekel(tot)+" בסך הכל",
+    vzBars(rows),ln.map(l=>[l.lender||"—",shekel(Number(l.principal)),l.interest||"—",l.collateral||"—"]),
+    ["מלווה","קרן","ריבית","בטוחה"]);
 }
 // תפוגות — הסדרה היא חומרה, ולכן צבעי סטטוס עם תווית מפורשת.
 function vzExpiry(){
@@ -1675,12 +1704,59 @@ function drillNode(spec){
       const s=(D.events||[]).filter(e=>String(e.happened_at||"").slice(0,10)===b);
       return {title:"אירועים · "+fmtDay(b),count:s.length,rows:s.map(e=>({t:e.description||"",m:nm0(arenaName(e.arena_id))}))};
     }
-    case "as:all": {
-      const s=(D.assets||[]);
-      return {title:"נכסים",count:s.length,chart:vzRent(),
-        rows:s.map(x=>({chip:x.is_rented?"מושכר":"פנוי",chipCls:x.is_rented?"good":"warn",
-          t:x.name||x.code||"",m:Number(x.rent_monthly)>0?shekel(Number(x.rent_monthly))+"/חו׳":""})),
+    case "as:all": case "as:rented": case "as:vacant": case "as:sale": case "as:valued": {
+      const all=(D.assets||[]);
+      const F={all:[x=>true,"נכסים"],
+               rented:[x=>x.is_rented,"נכסים מושכרים"],
+               vacant:[x=>!x.is_rented&&!x.for_sale,"נכסים פנויים"],
+               sale:[x=>x.for_sale,"נכסים למכירה"],
+               valued:[x=>Number(x.valuation)>0,"נכסים מוערכים"]};
+      const [pred,title]=F[a]||F.all;
+      const s=all.filter(pred);
+      const money=x=> a==="sale" ? (Number(x.asking_price)>0?shekel(Number(x.asking_price)):"טרם תומחר")
+                    : a==="valued" ? shekel(Number(x.valuation))
+                    : (assetRent(x)>0?shekel(assetRent(x))+"/חו׳":"");
+      return {title,count:s.length,chart:a==="valued"?"":vzRent(),
+        rows:s.map(x=>({chip:x.is_rented?"מושכר":x.for_sale?"למכירה":"פנוי",
+          chipCls:x.is_rented?"good":x.for_sale?"brand":"warn",
+          t:x.name||x.code||"", m:money(x), act:`drillIn('as:one:${x.id}')`})),
         foot:`<div style="margin-top:14px"><button class="btn brand block" onclick="go('assets')">▦ מסך הנכסים המלא ‹</button></div>`};
+    }
+    // רמה נוספת: מהנכס אל החוזים, ההלוואות והמסמכים שלו.
+    case "as:one": {
+      const x=(D.assets||[]).find(y=>y.id===b); if(!x)return {title:"נכס לא נמצא",rows:[]};
+      const rows=[];
+      (x.leases||[]).forEach(l=>rows.push({chip:"חוזה",chipCls:"good",
+        t:(l.tenant||"שוכר")+" — "+shekel(Number(l.rent)||0)+"/חו׳",
+        m:[l.start&&l.end?l.start+"→"+l.end:"",l.guar||""].filter(Boolean).join(" · ")}));
+      (x.loans||[]).forEach(l=>rows.push({chip:"הלוואה",chipCls:"warn",
+        t:(l.lender||"מלווה")+" — "+shekel(Number(l.principal)||0), m:l.interest||""}));
+      (x.docs||[]).forEach(d=>rows.push({chip:d.cat||"מסמך",chipCls:"mut",t:d.name||"", m:""}));
+      const meta=[x.owner||x.owner_short,x.asset_type,x.property,x.area?x.area+" מ״ר":"",x.gush?"גוש "+x.gush:""]
+        .filter(Boolean).join(" · ");
+      return {title:x.name||x.code||"נכס",count:rows.length,sub:meta||undefined,rows,
+        foot:x.notes?`<div class="card pad" style="background:var(--surface2);margin-top:12px;font-size:13px">${esc(x.notes)}</div>`:""};
+    }
+    // ההלוואות היו הנתון היחיד בשורת האריחים שלא נפתח לשום מקום.
+    case "ln:all": {
+      const s=(D.loans||[]).slice().sort((x,y)=>Number(y.principal)-Number(x.principal));
+      const tot=s.reduce((n,l)=>n+(Number(l.principal)||0),0);
+      return {title:"הלוואות",count:s.length,sub:"סך הקרן: "+shekel(tot),chart:vzLoans(),
+        rows:s.map(l=>({chip:l.interest||"—",chipCls:"mut",
+          t:(l.lender||"מלווה")+" — "+shekel(Number(l.principal)||0),
+          m:l.collateral?"בטוחה: "+l.collateral:""}))};
+    }
+    // מסמכים: המשותפים + מה שתלוי בנכס, מקובצים לפי קטגוריה.
+    case "doc:all": {
+      const rows=[];
+      (D.shared||[]).forEach(d=>rows.push({chip:d.cat||"כללי",chipCls:"brand",t:d.name||"",m:"משותף"}));
+      (D.assets||[]).forEach(x=>(x.docs||[]).forEach(d=>rows.push({
+        chip:d.cat||"מסמך",chipCls:"mut",t:d.name||"",m:nm0(x.name||x.code||""),
+        act:`drillIn('as:one:${x.id}')`})));
+      return {title:"מסמכים מקוטלגים",count:rows.length,
+        sub:"מה שהמערכת מכירה מהנכסים ומהתיק המשותף. הקבצים עצמם עדיין לא נגישים מכאן.",
+        rows,
+        foot:`<div style="margin-top:14px"><button class="btn line block" onclick="openFiling()">🗂 שיוך מסמכים שטרם שויכו ‹</button></div>`};
     }
   }
   return {title:"אין נתונים",rows:[]};
