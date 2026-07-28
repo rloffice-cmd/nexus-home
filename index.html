@@ -68,7 +68,9 @@ header{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 8
 main{max-width:680px;margin:0 auto;padding:14px 14px calc(8px + 76px)}
 .page{display:none}.page.on{display:block}
 .sec{display:flex;align-items:baseline;gap:8px;margin:22px 4px 10px}
-.sec:first-child{margin-top:8px}
+/* רק המקטע הראשון בעמוד מתקצר. בלי הצמצום ל-#main> הכלל היה תופס גם
+   את המקטע הראשון בכל בלוק ברשת הדסקטופ, ומכווץ את כולם. */
+#main>.sec:first-child{margin-top:8px}
 .sec h2{font-size:11.5px;font-weight:800;letter-spacing:.03em;color:var(--ink2);margin:0}
 .sec .n{font-size:11.5px;color:var(--mut);font-weight:600}
 .sec .act{margin-inline-start:auto;font-size:12.5px;color:var(--brand);font-weight:700;cursor:pointer;min-height:32px;display:flex;align-items:center}
@@ -92,7 +94,10 @@ main{max-width:680px;margin:0 auto;padding:14px 14px calc(8px + 76px)}
 .grp-lbl{font-size:10.5px;font-weight:800;letter-spacing:.03em;color:var(--mut);margin:0 4px 7px}
 
 /* home view switcher (multiple lenses over the cockpit) */
-.hviews{display:flex;gap:5px;background:var(--surface2);border:1px solid var(--hair);border-radius:13px;padding:4px;margin:2px 4px 6px;overflow-x:auto;position:sticky;top:calc(env(safe-area-inset-top) + 65px);z-index:25;box-shadow:var(--shadow)}
+/* גלישה לשורה שנייה ולא גלילה אופקית: עם עדשה חמישית העדשה האחרונה
+   נדחקה מחוץ למסך ב-360px — לשונית שצריך לגלול אליה כדי לגלות שהיא
+   קיימת היא לשונית שלא קיימת. */
+.hviews{display:flex;flex-wrap:wrap;gap:5px;background:var(--surface2);border:1px solid var(--hair);border-radius:13px;padding:4px;margin:2px 4px 6px;position:sticky;top:calc(env(safe-area-inset-top) + 65px);z-index:25;box-shadow:var(--shadow)}
 .hviews button{flex:1;min-width:max-content;border:0;background:none;color:var(--ink2);font-weight:700;font-size:12.5px;padding:9px 12px;min-height:44px;border-radius:9px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:5px;transition:color .12s}
 .hviews button.on{background:var(--brand);color:var(--on-brand)}
 .hviews button:active{transform:scale(.97)}
@@ -225,6 +230,158 @@ textarea:focus,input:focus,select:focus{border-color:var(--brand)}
 .gate input{text-align:center;margin-bottom:11px}
 .gate .err{color:var(--crit);font-size:12.5px;margin:0 0 10px;min-height:16px;font-weight:600}
 .foot{text-align:center;color:var(--mut);font-size:11px;padding:24px 0 6px}.foot b{color:var(--ink2);font-weight:600}
+
+/* ============================================================
+   תצוגה ויזואלית (גרפים)
+   הפלטה אינה נבחרה בעין — היא נגזרה מגוון המותג ואומתה מול
+   validate_palette (--ordinal) בשני המצבים ומול המשטח האמיתי
+   של הכרטיס: בהיר #ffffff, כהה #221e16.
+     ordinal בהיר  #dca363→#8e5a14  2.22/3.00/4.12/5.80:1  ✓
+     ordinal כהה   #8a560c→#e2ab6c  2.70/3.78/5.53/8.12:1  ✓
+     סימון ראשי    בהיר 4.68:1 · כהה 6.68:1                ✓
+   o1..o4 = מעט→הרבה בשני המצבים (בבהיר כהה יותר = יותר,
+   בכהה בהיר יותר = יותר — עוגן שמתהפך, לא היפוך אוטומטי).
+   ============================================================ */
+.vz{--vz-1:#9a6a34;--vz-o1:#dca363;--vz-o2:#c18a4a;--vz-o3:#a77231;--vz-o4:#8e5a14;--vz-track:var(--surface2);--vz-surf:var(--surface)}
+:root[data-theme=dark] .vz{--vz-1:#cd9b5f;--vz-o1:#8a560c;--vz-o2:#a36d2c;--vz-o3:#c18a4a;--vz-o4:#e2ab6c}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]):not([data-theme=dark]) .vz{
+  --vz-1:#cd9b5f;--vz-o1:#8a560c;--vz-o2:#a36d2c;--vz-o3:#c18a4a;--vz-o4:#e2ab6c}}
+
+.vzhead{display:flex;align-items:baseline;gap:8px;padding:13px 16px 2px}
+.vzhead .vzt{font-size:12.5px;font-weight:800;color:var(--ink)}
+.vzhead .vzs{font-size:11px;color:var(--mut);font-weight:500}
+/* מתג הטבלה יושב צמוד לכותרת ולא נדחף לקצה השורה: בנייד קצה השורה הוא
+   בדיוק הפינה שבה יושב הכפתור הצף, ומטרה קטנה שם היא פעולה חסומה. */
+.vzhead .vza{margin-inline-start:6px;font-size:11px;color:var(--brand);font-weight:700;cursor:pointer;
+  border:0;background:none;font-family:inherit;min-height:32px;padding:0 4px;flex:none}
+.vzbody{padding:8px 16px 14px}
+.vzempty{color:var(--mut);font-size:12.5px;padding:6px 16px 16px}
+
+/* מוטות אופקיים — HTML ולא SVG, כדי שתוויות עבריות ויעדי לחיצה יתנהגו נכון
+   ב-RTL. הערך רוכב על קצה המוט ולא בעמודה קבועה בסוף השורה, כך שגם במוט
+   קצר הוא נשאר צמוד למה שהוא מודד. הריפוד בסוף השורה שומר לו מקום גם כשהמוט
+   מלא — ולכן הוא לעולם אינו נחתך ואינו נכתב מעל המילוי. */
+.vzrow{display:grid;grid-template-columns:minmax(64px,32%) 1fr;align-items:center;gap:10px;
+  padding:5px 4px;padding-inline-end:48px;border-radius:9px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;min-height:34px}
+.vzrow.flat{cursor:default}
+.vzlab{font-size:12px;color:var(--ink2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vztrack{background:var(--vz-track);border-radius:4px;height:14px;position:relative}
+.vztrack i{position:absolute;inset-block:0;inset-inline-start:0;background:var(--vz-1);
+  border-start-end-radius:4px;border-end-end-radius:4px;min-width:3px}
+.vzval{position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;padding-inline-start:7px;
+  font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.vzsub{font-size:10.5px;color:var(--mut);font-weight:500}
+
+/* מוט מוערם — הרווח של 2px במשטח הוא המפריד, לא מסגרת */
+.vzstack{display:flex;gap:2px;height:16px;border-radius:4px;overflow:hidden;background:var(--vz-surf)}
+.vzstack i{display:block;height:100%;min-width:2px}
+.vzstack i:first-child{border-start-start-radius:4px;border-end-start-radius:4px}
+.vzstack i:last-child{border-start-end-radius:4px;border-end-end-radius:4px}
+.vzkeys{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px}
+.vzkey{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);font-weight:600;
+  cursor:pointer;background:none;border:0;font-family:inherit;padding:4px 2px;min-height:30px}
+.vzkey s{width:9px;height:9px;border-radius:3px;flex:none;text-decoration:none}
+.vzkey b{font-variant-numeric:tabular-nums;color:var(--ink)}
+
+/* סדרת זמן — ציר הזמן נשאר LTR (ישן→חדש) גם במסמך RTL */
+.vzarea{width:100%;height:auto;display:block;direction:ltr;overflow:visible}
+.vzax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut);
+  font-variant-numeric:tabular-nums;direction:ltr;margin-top:4px;padding:0 1px}
+.vzwrap{position:relative}
+.vztip{position:absolute;pointer-events:none;background:var(--raise);border:1px solid var(--hair2);
+  border-radius:9px;padding:6px 9px;font-size:11.5px;color:var(--ink);box-shadow:var(--shadow);
+  white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5;font-weight:600}
+.vztip.on{opacity:1}
+.vztip b{font-variant-numeric:tabular-nums}
+
+/* טבלה — ערוץ הגיבוי לכל גרף, וגם המענה לניגודיות נמוכה */
+.vztable{display:none;padding:2px 16px 14px}
+.vztable.on{display:block}
+.vztable table{font-size:12px}
+.vztable th,.vztable td{padding:6px 8px}
+
+/* ============================================================
+   דסקטופ — נקודות שבירה מעל רוחב הטאבלט הנבדק (768)
+   כל הכללים כאן נוספים בלבד; מתחת ל-1000px הפריסה זהה בדיוק
+   למה שהייתה, ולכן הנייד אינו מושפע מעצם הבנייה.
+   ============================================================ */
+@media (min-width:1000px){
+  :root{--rail:236px}
+  body{padding-bottom:0}
+  header{padding:16px 30px 14px;padding-inline-start:calc(var(--rail) + 30px)}
+  /* השם חי בסרגל; בכותרת נשאר רק ההקשר (חדר מצב · שעה), אחרת "Nexus"
+     מופיע פעמיים על אותו מסך. */
+  .brand b{display:none}
+  .brand small{font-size:12.5px}
+
+  /* הניווט התחתון הופך לסרגל צד בצד ההתחלה (ימין ב-RTL) */
+  nav{top:0;bottom:0;height:auto;inset-inline-start:0;inset-inline-end:auto;width:var(--rail);
+    padding:calc(env(safe-area-inset-top) + 16px) 12px 16px;flex-direction:column;align-items:stretch;gap:3px;
+    border-top:0;border-inline-end:1px solid var(--hair);background:var(--surface)}
+  nav::before{content:"Nexus";font-family:var(--serif);font-size:19px;font-weight:900;color:var(--brand);
+    padding:2px 14px 14px;letter-spacing:.2px}
+  nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:12px;height:46px;padding:0 14px;
+    border-radius:12px;font-size:14px;font-weight:700;transition:background .12s,color .12s}
+  nav button .ic{font-size:18px}
+  nav button:hover{background:var(--surface2);color:var(--ink2)}
+  nav button.on{background:var(--brand-soft);color:var(--brand-2)}
+  nav .bdg{position:static;margin-inline-start:auto;margin-top:0}
+
+  /* הכפתור הצף יורד לתחתית הסרגל — שם אין תוכן, ולכן הוא לא מכסה דבר */
+  .fab{inset-inline-start:calc((var(--rail) - 52px)/2);inset-inline-end:auto;bottom:22px;
+    width:52px;height:52px;font-size:25px;border-radius:16px}
+  .fab.tucked{transform:none;opacity:1;pointer-events:auto}
+
+  /* התוכן נעצר ב-1560px גם על מסך רחב מאוד — שורת טקסט ברוחב 2000px
+     אינה קריאה. מעבר לזה הרווח הולך לשוליים, לא לשורה. */
+  main{max-width:calc(1560px + var(--rail) + 60px);margin:0 auto;
+    padding:20px 30px 44px;padding-inline-start:calc(var(--rail) + 30px)}
+
+  /* רשת הבית — כל בלוק הוא פריט; ברוחב בינוני 2 עמודות, ברחב 3 */
+  /* dense: בלוק נמוך ממלא חור שנוצר אחרי בלוק רחב, במקום להשאיר עמודה
+     ריקה באמצע המסך. */
+  .hgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;
+    align-items:start;grid-auto-flow:row dense}
+  .hgrid>.hblk{min-width:0}
+  .hgrid>.hblk .sec{margin-top:0}
+  .hgrid>.hblk.wide{grid-column:1/-1}
+  .vitals{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hviews{position:static;margin:2px 0 12px;max-width:520px}
+  .viewhint{margin:0 2px 10px;font-size:12.5px}
+
+  /* היד הארוכה של המסך הגדול: יותר נשימה בכרטיסים, ומצב ריחוף אמיתי */
+  .hero{padding:22px 24px}.hero .txt{font-size:24px}
+  .card+.card{margin-top:10px}
+  .row{padding:14px 17px}
+  .row:hover,.asset .ah:hover,.li.tapli:hover,.vzrow:hover{background:var(--surface2)}
+  .vt.tap:hover{border-color:var(--hair2);box-shadow:0 2px 10px rgba(60,45,20,.08)}
+  .btn:hover{filter:brightness(1.06)}
+  .moreline:hover{background:var(--surface2)}
+  .foot{padding-top:30px}
+
+  /* הגיליון הופך לחלון ממורכז — שליפה מלמטה היא מחווה של אצבע, לא של עכבר */
+  .sheet{inset-inline:auto;inset-block:auto;top:50%;left:50%;right:auto;bottom:auto;
+    width:min(760px,calc(100vw - 340px));max-width:760px;max-height:min(86vh,880px);
+    border-radius:18px;border:1px solid var(--hair2);padding:0 24px 24px;margin:0;
+    transform:translate(-50%,-44%) scale(.985);opacity:0}
+  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .grab{cursor:default}
+  .toast{inset-inline:auto;inset-inline-start:calc(var(--rail) + 30px);bottom:24px;max-width:460px;margin:0}
+  .ask-wrap{min-height:calc(100vh - 190px)}
+  .ask-bar{bottom:0;padding:12px 0}
+  .q-bub,.a-bub{max-width:min(78%,720px)}
+}
+@media (min-width:1500px){
+  .hgrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hgrid>.hblk.wide{grid-column:span 2}
+  .hgrid>.hblk.full{grid-column:1/-1}
+  .vt .k{font-size:23px}
+  /* שתי קבוצות האריחים זו לצד זו: תפעולי ופיננסי הם שני חצאים של אותה
+     שורת פתיחה, ובמסך רחב אין סיבה שהשני ידחק לשורה נפרדת. */
+  .vrow{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+  .vrow .grp-lbl{margin-top:0!important}
+}
 </style>
 </head>
 <body>
@@ -244,7 +401,12 @@ let D=null, KEY=localStorage.getItem("nx_k3")||"", LIVE=false, DEMO=false, CACHE
 let TAB="home", AR={}, PE={}, OB={};
 let capMode="capture", capUrg="week", rec=null, assetFilter="all", assetOwner="all", assetQ="";
 let homeView=localStorage.getItem("nx_hv")||"all";
-function setHomeView(v){ homeView=v; try{localStorage.setItem("nx_hv",v);}catch(e){} const host=$("#main"); if(host){ host.innerHTML=vHome(); host.scrollTop=0; } }
+// מחליף עדשה בלי לעבור דרך render(), ולכן חייב לחווט את הגרפים בעצמו —
+// בלי זה שכבת הריחוף חסרה בדיוק בעדשה שכולה גרפים.
+function setHomeView(v){ homeView=v; try{localStorage.setItem("nx_hv",v);}catch(e){} const host=$("#main");
+  // איפוס גלילת החלון, לא רק של המכל: בלי זה מעבר עדשה משאיר את המשתמש
+  // באמצע העמוד החדש — ובנייד גם דוחף את סוף התוכן אל מתחת לכפתור הצף.
+  if(host){ host.innerHTML=vHome(); host.scrollTop=0; window.scrollTo(0,0); vzWire(); } }
 
 const $=s=>document.querySelector(s), app=()=>document.getElementById("app");
 const esc=s=>(s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -330,7 +492,7 @@ function render(){ const el=app();
   else if(TAB==="assets")host.innerHTML=vAssets();
   else if(TAB==="ask"){ host.innerHTML=vAsk(); renderAsk(); }
   else if(TAB==="filing")host.innerHTML=vFiling();
-  host.scrollTop=0; window.scrollTo(0,0); badges();
+  host.scrollTop=0; window.scrollTo(0,0); badges(); vzWire();
   const dd=$("#demoDot");
   if(dd){ dd.style.display=(DEMO||CACHED)?"":"none";
     dd.textContent=DEMO?"הדגמה":("לא מעודכן"+(CACHED_AT?" · "+staleness(CACHED_AT):""));
@@ -391,17 +553,19 @@ function vHome(){
   const caps=(D.captures||[]), closed=(D.closed_today||[]);
 
   /* ---- block builders (shared by the view lenses) ---- */
-  function bVitalsOp(){ let h=`<div class="grp-lbl">מצב תפעולי</div><div class="vitals">`;
-    h+=redAr?vt("c-crit",redAr,"","זירות דורשות טיפול",activeAr.length+" פעילות בסך הכל",`go('arenas')`):vt(activeAr.length?"c-good":"",activeAr.length,"","זירות פעילות","",`go('arenas')`);
-    h+=vt(decPend.length?"c-warn":"",decPend.length,"","החלטות ממתינות","",`go('decisions')`);
-    h+=vt(escal.length?"c-crit":"",escal.length,"","תקוע 8+ ימים","",escal.length?`setHomeView('focus')`:null);
-    h+=vt("",open.length,"","משימות פתוחות",todayT.length?todayT.length+" להיום":"",`openTasks()`);
+  /* כל אריח מוביל עכשיו לרשימה שמרכיבה אותו ולא למסך כללי: מספר שאי
+     אפשר לפרק הוא מספר שצריך לסמוך עליו בעיניים עצומות. */
+  function bVitalsOp(){ let h=`<div class="grp-lbl">מצב תפעולי · הקש למספר לפירוט</div><div class="vitals">`;
+    h+=redAr?vt("c-crit tap",redAr,"","זירות דורשות טיפול",activeAr.length+" פעילות בסך הכל",`drill('ar:hot')`):vt((activeAr.length?"c-good":"")+" tap",activeAr.length,"","זירות פעילות","",`drill('ar:active')`);
+    h+=vt((decPend.length?"c-warn":"")+" tap",decPend.length,"","החלטות ממתינות","",`drill('dec:pending')`);
+    h+=vt((escal.length?"c-crit":"")+" tap",escal.length,"","תקוע 8+ ימים","",`drill('fu:all')`);
+    h+=vt("tap",open.length,"","משימות פתוחות",todayT.length?todayT.length+" להיום":"",`drill('t:all')`);
     return h+`</div>`; }
-  function bVitalsFin(mt){ if(!kp)return ""; let h=`<div class="grp-lbl"${mt?' style="margin-top:13px"':""}>מצב פיננסי · הקש לנכסים</div><div class="vitals">`;
-    h+=vt("c-good tap",shekel(kp.rentKnown),"/חו׳","הכנסה חודשית",kp.rentLeases+" שכירויות",`go('assets')`);
+  function bVitalsFin(mt){ if(!kp)return ""; let h=`<div class="grp-lbl"${mt?' style="margin-top:13px"':""}>מצב פיננסי · הקש למספר לפירוט</div><div class="vitals">`;
+    h+=vt("c-good tap",shekel(kp.rentKnown),"/חו׳","הכנסה חודשית",kp.rentLeases+" שכירויות",`drill('as:all')`);
     h+=vt("c-brand tap",shekel(kp.loans),"","חוב פעיל",kp.loansCount+" הלוואות",`go('assets')`);
-    h+=vt("tap",Math.round(kp.rented/(kp.total||1)*100)+"%","","תפוסה",kp.rented+"/"+kp.total+" נכסים",`go('assets')`);
-    h+=vt(kdOver?"c-crit tap":kdSoon.length?"c-warn tap":"tap",kdSoon.length,"","תפוגות ≤90 יום",kdOver?kdOver+" באיחור":"",`go('assets')`);
+    h+=vt("tap",Math.round(kp.rented/(kp.total||1)*100)+"%","","תפוסה",kp.rented+"/"+kp.total+" נכסים",`drill('as:all')`);
+    h+=vt(kdOver?"c-crit tap":kdSoon.length?"c-warn tap":"tap",kdSoon.length,"","תפוגות ≤90 יום",kdOver?kdOver+" באיחור":"",`drill('kd:soon')`);
     return h+`</div>`; }
   function bHero(){ let h=`<div class="hero">`;
     if(risk0)h+=`<div class="override" onclick="setHomeView('focus')">⚠ <span>${risk0.di<0?"דדליין באיחור":"דדליין להיום"} — <b>${esc(nm0(risk0.t))}</b> — גובר על הדבר האחד</span></div>`;
@@ -412,36 +576,49 @@ function vHome(){
     return h+`</div>`; }
   function bDecisions(){ if(!decPend.length)return ""; return secH("⚖️ החלטות","רק אתה מחליט",decPend.length,decPend.length>3?{txt:"הכל",fn:"go('decisions')"}:null)+`<div class="card">`+decPend.slice(0,3).map(decRow).join("")+`</div>`; }
   function bSoon(){ if(!soon.length)return ""; return secH("⚠️ דדליינים קרובים","עד 3 ימים",soon.length)+`<div class="card">`+soon.slice(0,4).map(s=>`<div class="row stripe ${s.di<=1?"s-crit":"s-warn"}" onclick="${s.type==="task"?`openTask('${s.id}')`:`openCommit('${s.id}')`}"><div class="main"><div class="t">${esc(s.t)}</div><div class="m"><span class="chip ${s.di<=1?"crit":"warn"}">${s.di<=0?"היום":s.di===1?"מחר":"בעוד "+s.di+" ימים"}</span><span class="dim">${s.kind} · ${fmtDay(s.due)}</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
-  function bRadar(){ if(!radar.length)return ""; return secH("📡 רדאר זירות","שקט = איתות בעיה",radar.length,{txt:"זירות",fn:"go('arenas')"})+`<div class="card">`+radar.map(x=>{ const red=!!x.act.broken; return `<div class="row stripe ${red?"s-crit":"s-warn"}" onclick="openArena('${x.a.id}')"><div class="main"><div class="t">${esc(nm0(x.a.name))}</div><div class="m"><span class="chip ${red?"crit":"warn"}">${red?esc(x.act.broken.slice(0,40)):(x.act.days!=null?x.act.days+" ימי שקט":"ללא תנועה מתועדת")}</span><span class="dim">${x.cnt} פתוחות</span></div></div><div class="lead dim">‹</div></div>`; }).join("")+`</div>`; }
-  function bExpire(){ if(!kdSoon.length)return ""; return secH("📅 תפוגות ודדליינים","חוזי · אבני דרך",kdSoon.length,{txt:"נכסים",fn:"go('assets')"})+`<div class="card">`+kdSoon.slice(0,6).map(k=>{ const di=dueIn(k.due); return `<div class="row stripe ${k.overdue?"s-crit":di!=null&&di<=30?"s-warn":"s-info"}"><div class="main"><div class="t">${esc(k.title)}</div><div class="m"><span class="chip ${k.overdue?"crit":di!=null&&di<=30?"warn":"info"}">${k.overdue?"באיחור":"עד "+fmtDay(k.due)}</span>${k.deal?`<span class="dim">${esc(k.deal)}</span>`:""}${k.sev==="קריטי"?`<span class="chip crit">קריטי</span>`:""}</div></div></div>`; }).join("")+`</div>`; }
+  function bRadar(){ if(!radar.length)return ""; return secH("📡 רדאר זירות","שקט = איתות בעיה",radar.length,{txt:"הכל",fn:"drill('ar:hot')"})+`<div class="card">`+radar.map(x=>{ const red=!!x.act.broken; return `<div class="row stripe ${red?"s-crit":"s-warn"}" onclick="openArena('${x.a.id}')"><div class="main"><div class="t">${esc(nm0(x.a.name))}</div><div class="m"><span class="chip ${red?"crit":"warn"}">${red?esc(x.act.broken.slice(0,40)):(x.act.days!=null?x.act.days+" ימי שקט":"ללא תנועה מתועדת")}</span><span class="dim">${x.cnt} פתוחות</span></div></div><div class="lead dim">‹</div></div>`; }).join("")+`</div>`; }
+  function bExpire(){ if(!kdSoon.length)return ""; return secH("📅 תפוגות ודדליינים","חוזי · אבני דרך",kdSoon.length,{txt:"הכל",fn:"drill('kd:soon')"})+`<div class="card">`+kdSoon.slice(0,6).map(k=>{ const di=dueIn(k.due); return `<div class="row stripe ${k.overdue?"s-crit":di!=null&&di<=30?"s-warn":"s-info"}"><div class="main"><div class="t">${esc(k.title)}</div><div class="m"><span class="chip ${k.overdue?"crit":di!=null&&di<=30?"warn":"info"}">${k.overdue?"באיחור":"עד "+fmtDay(k.due)}</span>${k.deal?`<span class="dim">${esc(k.deal)}</span>`:""}${k.sev==="קריטי"?`<span class="chip crit">קריטי</span>`:""}</div></div></div>`; }).join("")+`</div>`; }
   function bWaiting(){ if(!(escal.length||remind.length))return ""; return secH("⏳ ממתין לאחרים","על התוצר, לא על האדם",escal.length+remind.length)+`<div class="card">`+[...escal,...remind].slice(0,5).map(f=>`<div class="row stripe ${f.level==="escalate"?"s-crit":"s-warn"}" onclick="openTask('${f.id}')"><div class="lead" style="background:${f.level==="escalate"?"var(--crit-bg)":"var(--warn-bg)"};color:${f.level==="escalate"?"var(--crit)":"var(--warn)"}">${f.level==="escalate"?"❗":"⏰"}</div><div class="main"><div class="t">${esc(f.title)}</div><div class="m">${f.arena?`<span class="dim">${esc(nm0(f.arena))}</span><span class="dot"></span>`:""}<span class="dim">ממתין ${esc(f.days_waiting)} ימים</span></div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
   function bCaptures(){ if(!caps.length)return ""; return secH("📥 קליטות","הקש לניקוז",caps.length)+`<div class="card">`+caps.slice(0,5).map(c=>`<div class="row" onclick="triage('${c.id}')"><div class="lead dim">·</div><div class="main"><div class="t" style="font-weight:500">${esc((c.text||"").slice(0,130))}</div></div><div class="lead dim">‹</div></div>`).join("")+`</div>`; }
   function bClosed(){ if(!closed.length)return ""; return secH("✅ נסגר היום","מומנטום",closed.length)+`<div class="card"><div class="pad" style="display:flex;flex-wrap:wrap;gap:6px">`+closed.map(c=>`<span class="chip good" style="font-weight:600">${esc((c.title||"").slice(0,38))}</span>`).join("")+`</div></div>`; }
 
   /* ---- header + view switcher ---- */
   let h=`<div class="sec"><h2>◈ תמונת מצב</h2><span class="n dim">· ${LIVE?"חי":CACHED?"מטמון — לא מעודכן":"הדגמה"}</span></div>`;
-  const VIEWS=[["all","הכל"],["focus","דורש אותי"],["money","פיננסי"],["move","תנועה"]];
+  const VIEWS=[["all","הכל"],["focus","דורש אותי"],["money","פיננסי"],["move","תנועה"],["viz","ניתוח"]];
   if(!VIEWS.some(v=>v[0]===homeView))homeView="all";
   // cross-lens urgency signal: a lens carries a dot when it holds items that need attention and is not currently shown
-  const vAlert={all:false, focus:!!(decPend.length||soon.length||escal.length), money:!!kdOver, move:!!redAr};
+  const vAlert={all:false, focus:!!(decPend.length||soon.length||escal.length), money:!!kdOver, move:!!redAr, viz:false};
   h+=`<div class="hviews">`+VIEWS.map(v=>`<button class="${homeView===v[0]?"on":""}" onclick="setHomeView('${v[0]}')">${esc(v[1])}${vAlert[v[0]]&&homeView!==v[0]?'<span class="vbd"></span>':""}</button>`).join("")+`</div>`;
 
   /* ---- assemble by lens ---- */
+  /* עטיפת בלוק. במובייל .hgrid הוא div רגיל והבלוקים נערמים בדיוק כמו
+     קודם; רק מעל 1000px הוא הופך לרשת. כך המסך הגדול מנוצל בלי שהנייד
+     ישתנה — הכללים החדשים כולם מאחורי נקודת השבירה. */
+  const G=(cls,inner)=>inner?`<div class="hblk${cls?" "+cls:""}">${inner}</div>`:"";
+  const grid=arr=>{ const s=arr.filter(Boolean).join(""); return s?`<div class="hgrid">${s}</div>`:""; };
+
   if(homeView==="all"){
-    h+=bVitalsOp()+bVitalsFin(true);
-    h+=`<div class="sec" style="margin-top:24px"><h2>דורש אותך</h2></div>`+bHero()+bDecisions()+bSoon();
-    h+=`<div class="divider"><span>תנועה · תמונה, לא פעולה</span></div>`+bRadar()+bExpire()+bWaiting()+bCaptures()+bClosed();
+    h+=`<div class="vrow"><div>${bVitalsOp()}</div><div>${bVitalsFin(true)}</div></div>`;
+    h+=`<div class="sec" style="margin-top:24px"><h2>דורש אותך</h2></div>`;
+    h+=grid([G("wide",bHero()),G("",bDecisions()),G("",bSoon())]);
+    h+=`<div class="divider"><span>תנועה · תמונה, לא פעולה</span></div>`;
+    h+=grid([G("",bRadar()),G("",bExpire()),G("",bWaiting()),G("",vzMovement()),G("",bCaptures()),G("",bClosed())]);
   } else if(homeView==="focus"){
     h+=`<div class="viewhint">מה שרק אתה יכול להזיז — הדבר האחד, החלטות, דדליינים קרובים ומשימות שממתינות לאחרים.</div>`;
-    h+=bHero()+bDecisions()+bSoon()+bWaiting();
+    h+=grid([G("wide",bHero()),G("",bDecisions()),G("",bSoon()),G("",bWaiting())]);
     if(!decPend.length&&!soon.length&&!escal.length&&!remind.length&&focus&&focus.done)h+=`<div class="card"><div class="empty">אין עוד מה שדורש הכרעה כרגע ✓</div></div>`;
   } else if(homeView==="money"){
-    if(kp){ h+=bVitalsFin(false)+bExpire();
+    if(kp){ h+=bVitalsFin(false);
+      h+=grid([G("",vzRent()),G("",vzExpiry()),G("",bExpire())]);
       h+=`<div style="margin:16px 4px 0"><button class="btn brand block" onclick="go('assets')">▦ פירוט מלא — נכסים, שכירויות והלוואות ‹</button></div>`;
     } else h+=`<div class="card"><div class="empty">נתונים פיננסיים זמינים במצב מחובר.</div></div>`;
+  } else if(homeView==="viz"){
+    h+=`<div class="viewhint">הנתונים כצורה. כל מוט ומקטע פותחים את הרשימה שמתחתיהם, ומשם ממשיכים לאובייקט עצמו.</div>`;
+    const cards=[vzMovement(),vzLoadByArena(),vzAging(),vzUrgency(),vzByPerson(),vzWaiting(),vzRent(),vzExpiry()];
+    h+= grid(cards.map(c=>G("",c))) || `<div class="card"><div class="empty">אין עדיין מספיק נתונים לגרפים. הם נבנים ממה שהמערכת צברה — משימות, אירועים, נכסים.</div></div>`;
   } else { /* move */
     h+=`<div class="viewhint">תמונה, לא פעולה — מה זז, מה שקט מדי, ומה נסגר.</div>`;
-    const mv=bRadar()+bExpire()+bWaiting()+bCaptures()+bClosed();
+    const mv=grid([G("",vzMovement()),G("",bRadar()),G("",bExpire()),G("",bWaiting()),G("",bCaptures()),G("",bClosed())]);
     h+= mv || `<div class="card"><div class="empty">שקט תפעולי — אין תנועה חריגה לתשומת לבך ✓</div></div>`;
   }
   h+=`<div class="foot">Nexus HQ · ${LIVE?"מחובר חי":CACHED?("נתונים אמיתיים מהמטמון"+(CACHED_AT?" · נשמרו לפני "+staleness(CACHED_AT):"")+" — אין חיבור"):"הדגמה (נתונים סינתטיים)"} · ${esc(D.now||"")}</div>`;
@@ -1185,6 +1362,328 @@ async function undoFiling(ids,folder){
   try{ await apiPost(FILE,{action:"undo",ids,folder:folder||null}); toast("בוטל ↩"); }
   catch(e){ toast("הביטול נכשל"); }
   loadFiling();
+}
+
+/* ================= תצוגה ויזואלית — גרפים =================
+   בלי ספריות חיצוניות: האפליקציה עובדת אופליין דרך sw.js, וכל CDN היה
+   הופך גרף לתלות רשת. מוטות אופקיים נבנים ב-HTML ולא ב-SVG כי תווית
+   עברית, ellipsis ויעד לחיצה מתנהגים נכון ב-RTL רק שם; סדרת זמן היא
+   SVG כי היא באמת עקומה — ושם הציר נשאר LTR (ישן→חדש).
+   כל גרף נושא טבלה מקבילה: זה גם ערוץ הנגישות וגם התשובה למי שרוצה
+   את המספר המדויק ולא את הצורה. */
+let VZN=0; const vzid=()=>"vz"+(++VZN);
+function vzCard(title,sub,body,rows,head){
+  const id=vzid();
+  let h=`<div class="card vz"><div class="vzhead"><span class="vzt">${esc(title)}</span>${sub?`<span class="vzs">${esc(sub)}</span>`:""}`;
+  if(rows&&rows.length)h+=`<button class="vza" onclick="vzTable('${id}',this)">טבלה</button>`;
+  h+=`</div>`+body;
+  if(rows&&rows.length)h+=`<div class="vztable" id="${id}"><table><thead><tr>${(head||[]).map(t=>`<th>${esc(t)}</th>`).join("")}</tr></thead><tbody>`+
+    rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")+`</tbody></table></div>`;
+  return h+`</div>`;
+}
+function vzTable(id,btn){ const t=document.getElementById(id); if(!t)return; btn.textContent=t.classList.toggle("on")?"גרף":"טבלה"; }
+
+// מוטות אופקיים. הערך יושב מחוץ לקצה המוט ולעולם לא בתוכו — תווית
+// שנחתכת בתוך המוט גרועה מתווית שאינה קיימת.
+function vzBars(rows,opts){
+  opts=opts||{};
+  if(!rows.length)return `<div class="vzempty">${esc(opts.empty||"אין נתונים להצגה")}</div>`;
+  const max=Math.max.apply(null,rows.map(r=>Math.abs(r.value)))||1;
+  return `<div class="vzbody">`+rows.map(r=>{
+    const w=Math.max(2,Math.round(Math.abs(r.value)/max*100));
+    return `<div class="vzrow${r.act?"":" flat"}"${r.act?` onclick="${r.act}"`:""} title="${esc(r.label)} — ${esc(r.fmt!=null?r.fmt:r.value)}">`+
+      `<span class="vzlab">${esc(r.label)}</span>`+
+      `<span class="vztrack"><i style="width:${w}%;background:${r.color||"var(--vz-1)"}"></i>`+
+      `<span class="vzval" style="inset-inline-start:${w}%">${esc(r.fmt!=null?r.fmt:r.value)}</span></span></div>`;
+  }).join("")+`</div>`;
+}
+// מוט מוערם + מקרא. המקרא תמיד נוכח כשיש שתי סדרות ומעלה — זהות
+// שנשענת על צבע בלבד אינה זהות.
+function vzStack(segs,opts){
+  opts=opts||{}; const tot=segs.reduce((s,x)=>s+(x.value||0),0);
+  if(!tot)return `<div class="vzempty">${esc(opts.empty||"אין נתונים להצגה")}</div>`;
+  let h=`<div class="vzbody"><div class="vzstack">`;
+  segs.forEach(s=>{ if(!s.value)return;
+    h+=`<i style="flex:${s.value};background:${s.color}" title="${esc(s.label)} — ${s.value}"></i>`; });
+  h+=`</div><div class="vzkeys">`+segs.filter(s=>s.value).map(s=>
+    `<button class="vzkey"${s.act?` onclick="${s.act}"`:""}><s style="background:${s.color}"></s>${esc(s.label)} <b class="num">${s.value}</b></button>`).join("")+`</div></div>`;
+  return h;
+}
+// סדרת זמן. non-scaling-stroke שומר על קו 2px בכל רוחב, ו-preserveAspectRatio
+// ברירת המחדל שומר על העיגול עגול (עם "none" הוא היה נמתח לאליפסה).
+function vzArea(pts,opts){
+  opts=opts||{};
+  if(pts.length<2)return `<div class="vzempty">${esc(opts.empty||"אין מספיק היסטוריה לגרף")}</div>`;
+  const W=600,H=140,PL=10,PR=10,PT=12,PB=10;
+  // ×1.2 מרווח עליון: בלי זה סדרה שטוחה נצמדת לתקרה והשטח נראה כמו מלבן
+  // מלא — צורה שמשדרת "משהו שבור" ולא "ערך קבוע".
+  const max=Math.max.apply(null,[1].concat(pts.map(p=>p.v)))*1.2;
+  const X=i=>PL+(W-PL-PR)*(i/(pts.length-1)), Y=v=>PT+(H-PT-PB)*(1-v/max);
+  const line=pts.map((p,i)=>`${i?"L":"M"}${X(i).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(" ");
+  const area=`${line} L${X(pts.length-1).toFixed(1)} ${H-PB} L${X(0).toFixed(1)} ${H-PB} Z`;
+  const last=pts[pts.length-1], id=vzid();
+  return `<div class="vzbody"><div class="vzwrap" id="${id}" data-vz="area" data-pts="${esc(JSON.stringify(pts.map(p=>[p.l,p.v])))}">`+
+    `<svg class="vzarea" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.alt||"סדרת זמן")}">`+
+    `<line x1="${PL}" y1="${H-PB}" x2="${W-PR}" y2="${H-PB}" stroke="var(--hair)" stroke-width="1" vector-effect="non-scaling-stroke"/>`+
+    `<path d="${area}" fill="var(--vz-1)" opacity=".1"/>`+
+    `<path d="${line}" fill="none" stroke="var(--vz-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`+
+    `<line class="vzcross" x1="0" y1="${PT}" x2="0" y2="${H-PB}" stroke="var(--hair2)" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/>`+
+    `<circle cx="${X(pts.length-1).toFixed(1)}" cy="${Y(last.v).toFixed(1)}" r="4.5" fill="var(--vz-1)" stroke="var(--vz-surf)" stroke-width="2"/>`+
+    `</svg><div class="vztip"></div></div>`+
+    `<div class="vzax"><span>${esc(pts[0].l)}</span><span>${esc(last.l)}</span></div></div>`;
+}
+// ריחוף — שכבת ברירת מחדל, לא תוספת. נקרא מחדש אחרי כל render/openSheet.
+function vzWire(){
+  document.querySelectorAll('[data-vz=area]').forEach(w=>{
+    if(w.dataset.wired)return; w.dataset.wired="1";
+    let pts=[]; try{ pts=JSON.parse(w.getAttribute("data-pts")||"[]"); }catch(e){}
+    const svg=w.querySelector("svg"), tip=w.querySelector(".vztip"), cross=w.querySelector(".vzcross");
+    if(!svg||!tip||!cross||pts.length<2)return;
+    const at=e=>{
+      const r=svg.getBoundingClientRect();
+      const cx=(e.touches&&e.touches[0]?e.touches[0].clientX:e.clientX);
+      if(cx==null||!r.width)return;
+      const f=Math.min(1,Math.max(0,((cx-r.left)-r.width*10/600)/(r.width*580/600)));
+      const i=Math.round(f*(pts.length-1)), p=pts[i]; if(!p)return;
+      const ux=10+580*(i/(pts.length-1));
+      cross.setAttribute("x1",ux); cross.setAttribute("x2",ux); cross.setAttribute("opacity","1");
+      tip.innerHTML=esc(p[0])+' · <b class="num">'+esc(p[1])+"</b>"; tip.classList.add("on");
+      const tw=tip.offsetWidth||70;
+      tip.style.insetInlineStart="auto";
+      tip.style.left=Math.max(0,Math.min(r.width-tw,ux/600*r.width-tw/2))+"px";
+      tip.style.top="-2px";
+    };
+    const off=()=>{ tip.classList.remove("on"); cross.setAttribute("opacity","0"); };
+    w.addEventListener("mousemove",at); w.addEventListener("mouseleave",off);
+    w.addEventListener("touchstart",at,{passive:true}); w.addEventListener("touchmove",at,{passive:true}); w.addEventListener("touchend",off);
+  });
+}
+
+/* ---- הגרפים עצמם. כולם נגזרים ממה שה-API כבר מחזיר היום ---- */
+const VZO=["var(--vz-o1)","var(--vz-o2)","var(--vz-o3)","var(--vz-o4)"];
+const AGE=[[0,7,"עד שבוע"],[8,14,"8–14 יום"],[15,30,"15–30 יום"],[31,1e9,"31+ יום"]];
+function vzOpenTasks(){ return (D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting"); }
+
+// תנועה: ספירת אירועים ליום. סדרה אחת → בלי מקרא, הכותרת אומרת מה מוצג.
+function vzMovement(){
+  const ev=(D.events||[]); if(ev.length<5)return "";
+  const by={}; ev.forEach(e=>{ const d=String(e.happened_at||"").slice(0,10); if(d)by[d]=(by[d]||0)+1; });
+  // מתחת ל-5 ימים אין עקומה, יש שלוש נקודות — וגרף שמצייר רעש כמגמה
+  // גרוע מהיעדר גרף.
+  const days=Object.keys(by).sort(); if(days.length<5)return "";
+  const from=new Date(days[0]+"T00:00:00"), to=new Date(days[days.length-1]+"T00:00:00");
+  const pts=[]; for(let d=new Date(from); d<=to; d.setDate(d.getDate()+1)){
+    const iso=d.toISOString().slice(0,10);
+    pts.push({l:fmtDay(iso),v:by[iso]||0,iso});
+  }
+  if(pts.length<2)return "";
+  const tot=pts.reduce((s,p)=>s+p.v,0);
+  return vzCard("תנועה מתועדת","· "+pts.length+" ימים · "+tot+" אירועים",
+    vzArea(pts,{alt:"אירועים מתועדים לפי יום"}),
+    pts.filter(p=>p.v).map(p=>[p.l,String(p.v)]),["יום","אירועים"]);
+}
+// עומס לפי זירה: השוואת גודל → מוטות בגוון אחד. הצבע אינו מקודד את
+// הערך (זה תפקיד האורך) — הוא רק מסמן שמדובר באותה סדרה.
+function vzLoadByArena(){
+  const open=vzOpenTasks(), rows=[];
+  (D.arenas||[]).filter(a=>a.status==="active").forEach(a=>{
+    const n=open.filter(t=>t.arena_id===a.id).length; if(n)rows.push({a,n});
+  });
+  const none=open.filter(t=>!t.arena_id).length;
+  rows.sort((x,y)=>y.n-x.n);
+  const bars=rows.map(r=>({label:nm0(r.a.name),value:r.n,act:`drillIn('t:arena:${r.a.id}')`}));
+  if(none)bars.push({label:"ללא זירה",value:none,color:"var(--vz-o1)",act:`drillIn('t:arena:')`});
+  if(!bars.length)return "";
+  return vzCard("עומס פתוח לפי זירה","· הקש למוט לפירוט",
+    vzBars(bars,{empty:"אין משימות פתוחות"}),
+    bars.map(b=>[b.label,String(b.value)]),["זירה","משימות פתוחות"]);
+}
+// גיל המשימות: דליים מסודרים → סולם גוון אחד, כהה יותר = ותיק יותר
+// (ובמצב כהה בהיר יותר = ותיק יותר; העוגן מתהפך, לא הסולם).
+function vzAging(){
+  const open=vzOpenTasks(); if(!open.length)return "";
+  const segs=AGE.map((b,i)=>{
+    const n=open.filter(t=>{ const d=daysAgo(t.created_at); return d!=null&&d>=b[0]&&d<=b[1]; }).length;
+    return {label:b[2],value:n,color:VZO[i],act:`drillIn('t:age:${i}')`};
+  });
+  const old=segs[2].value+segs[3].value;
+  return vzCard("גיל המשימות הפתוחות",old?"· "+old+" מעל שבועיים":"· הכול טרי",
+    vzStack(segs,{empty:"אין משימות פתוחות"}),
+    segs.map(s=>[s.label,String(s.value)]),["טווח","משימות"]);
+}
+// ממתין לאחרים — כאן הסדרה *היא* מצב (תקין/בעייתי), ולכן צבעי סטטוס
+// ולא הסולם הקטגורי, ותמיד עם תווית ולא צבע לבד.
+function vzWaiting(){
+  const fu=(D.followups||[]); if(!fu.length)return "";
+  const rows=fu.slice().sort((a,b)=>(b.days_waiting||0)-(a.days_waiting||0)).slice(0,8).map(f=>({
+    label:nm0(f.title||""),value:f.days_waiting||0,fmt:(f.days_waiting||0)+"ד",
+    color:f.level==="escalate"?"var(--crit)":"var(--warn)",act:`openTask('${f.id}')`}));
+  return vzCard("ממתין לאחרים","· ימי המתנה · אדום = להסלים",
+    vzBars(rows,{empty:"אף אחד לא מעכב אותך"}),
+    rows.map(r=>[r.label,r.fmt]),["פריט","ימי המתנה"]);
+}
+// פיזור דחיפות — דחיפות היא סקאלה מסודרת (היום→מתישהו), ולכן סולם
+// גוון אחד ולא ארבעה צבעים שמתחרים ביניהם.
+function vzUrgency(){
+  const open=vzOpenTasks(); if(!open.length)return "";
+  const U=["today","week","month","whenever"];
+  const segs=U.map((u,i)=>({label:URG[u],value:open.filter(t=>t.urgency===u).length,
+    color:VZO[3-i],act:`drillIn('t:urg:${u}')`}));
+  return vzCard("פיזור לפי דחיפות","· הקש למקטע",vzStack(segs),
+    segs.map(s=>[s.label,String(s.value)]),["דחיפות","משימות"]);
+}
+// הכנסה לפי נכס — השוואת גודל, גוון אחד, ערך בקצה.
+function vzRent(){
+  const as=(D.assets||[]).filter(a=>Number(a.rent_monthly)>0);
+  if(as.length<2)return "";
+  const rows=as.slice().sort((x,y)=>Number(y.rent_monthly)-Number(x.rent_monthly)).slice(0,10)
+    .map(a=>({label:nm0(a.name||a.code||""),value:Number(a.rent_monthly),fmt:shekel(Number(a.rent_monthly))}));
+  return vzCard("הכנסה חודשית לפי נכס","· "+as.length+" נכסים מושכרים",
+    vzBars(rows),rows.map(r=>[r.label,r.fmt]),["נכס","שכ״ד חודשי"]);
+}
+// תפוגות — הסדרה היא חומרה, ולכן צבעי סטטוס עם תווית מפורשת.
+function vzExpiry(){
+  const kd=((D.dashboard&&D.dashboard.key_dates)||[]).filter(k=>{ const di=dueIn(k.due); return k.overdue||(di!=null&&di<=180); });
+  if(kd.length<2)return "";
+  const rows=kd.slice().sort((a,b)=>String(a.due).localeCompare(String(b.due))).slice(0,10).map(k=>{
+    const di=dueIn(k.due);
+    return {label:nm0(k.title||""),value:k.overdue?0:Math.max(1,di||1),
+      fmt:k.overdue?"באיחור":(di<=0?"היום":di+"ד"),
+      color:k.overdue?"var(--crit)":di!=null&&di<=30?"var(--warn)":"var(--vz-1)"};
+  });
+  return vzCard("תפוגות ואבני דרך","· ימים עד המועד · אדום = עבר",
+    vzBars(rows),rows.map(r=>[r.label,r.fmt]),["פריט","מועד"]);
+}
+// עומס לפי אדם — מי מחזיק כמה, ומי לא מוגדר בכלל.
+function vzByPerson(){
+  const open=vzOpenTasks(), by={};
+  open.forEach(t=>{ const k=t.owner_id||""; by[k]=(by[k]||0)+1; });
+  const rows=Object.keys(by).map(k=>({k,n:by[k]})).sort((a,b)=>b.n-a.n).slice(0,8)
+    .map(x=>({label:x.k?personName(x.k)||"—":"לא משויך",value:x.n,act:`drillIn('t:owner:${x.k}')`}));
+  if(rows.length<2)return "";
+  return vzCard("עומס לפי אדם","· הקש למוט לפירוט",vzBars(rows),
+    rows.map(r=>[r.label,String(r.value)]),["אדם","משימות פתוחות"]);
+}
+
+/* ================= טיפוס על העץ (drill-down) =================
+   כל מספר שיש מתחתיו נתונים פותח את הרשימה שמרכיבה אותו, וכל שורה
+   ברשימה ממשיכה לאובייקט עצמו. המחסנית מאפשרת לרדת עוד רמה ולחזור
+   בלי לאבד את המקום. */
+let DRILL=[];
+function drill(spec){ DRILL=[spec]; drillPaint(); }
+function drillIn(spec){ DRILL.push(spec); drillPaint(); }
+function drillUp(){ DRILL.pop(); if(DRILL.length)drillPaint(); else closeSheet(); }
+function drillRow(r){ return `<div class="li${r.act?" tapli":""}"${r.act?` onclick="${r.act}"`:""}>${r.chip?`<span class="chip ${r.chipCls||"mut"}">${esc(r.chip)}</span>`:""}<span style="flex:1">${esc(r.t)}${r.m?` <span class="dim">· ${esc(r.m)}</span>`:""}</span>${r.act?`<span class="dim">‹</span>`:""}</div>`; }
+function drillPaint(){
+  const n=drillNode(DRILL[DRILL.length-1]);
+  let h=`<div class="grab"></div>`;
+  if(DRILL.length>1)h+=`<button class="btn line sm" style="margin:0 0 10px" onclick="drillUp()">‹ חזרה</button>`;
+  h+=`<h3>${esc(n.title)}${n.count!=null?` · ${n.count}`:""}</h3>`;
+  if(n.sub)h+=`<div class="sub2">${esc(n.sub)}</div>`;
+  if(n.chart)h+=`<div style="margin:0 -2px 12px">${n.chart}</div>`;
+  h+=(n.rows&&n.rows.length)?n.rows.map(drillRow).join(""):`<div class="empty">אין פריטים ברמה הזו</div>`;
+  if(n.foot)h+=n.foot;
+  openSheet(h); vzWire();
+}
+function drillTasks(arr){
+  const ord=["today","week","month","whenever"];
+  return arr.slice().sort((a,b)=>ord.indexOf(a.urgency)-ord.indexOf(b.urgency)).map(t=>({
+    chip:t.status==="waiting"?"ממתין":(URG[t.urgency]||""), chipCls:t.status==="waiting"?"warn":(URGC[t.urgency]||"mut"),
+    t:(t.important?"⭐ ":"")+(t.title||""),
+    m:[nm0(arenaName(t.arena_id)),personName(t.owner_id),t.due_date?fmtDay(t.due_date):""].filter(Boolean).join(" · "),
+    act:`openTask('${t.id}')`}));
+}
+function drillNode(spec){
+  const p=String(spec).split(":"), k=p[0], a=p[1]||"", b=p.slice(2).join(":");
+  const open=vzOpenTasks(), today=todayISO();
+  switch(k+":"+a){
+    case "t:all":   return {title:"כל המשימות הפתוחות",count:open.length,chart:vzUrgency(),rows:drillTasks(open)};
+    case "t:urg":   return {title:"דחיפות · "+(URG[b]||b),count:open.filter(t=>t.urgency===b).length,rows:drillTasks(open.filter(t=>t.urgency===b))};
+    case "t:today": {const s=open.filter(t=>t.urgency==="today");return {title:"להיום",count:s.length,rows:drillTasks(s)};}
+    case "t:late":  {const s=open.filter(t=>t.due_date&&t.due_date<today);return {title:"עברו את המועד",count:s.length,sub:"תאריך יעד שחלף ולא נסגר",rows:drillTasks(s)};}
+    case "t:arena": {
+      const s=open.filter(t=>(t.arena_id||"")===b), nm=b?nm0(arenaName(b)):"ללא זירה";
+      return {title:"משימות · "+nm,count:s.length,rows:drillTasks(s),
+        foot:b?`<div style="margin-top:14px"><button class="btn line block" onclick="openArena('${b}')">▤ פתח את הזירה ‹</button></div>`:""};
+    }
+    case "t:owner": {
+      const s=open.filter(t=>(t.owner_id||"")===b), nm=b?(personName(b)||"—"):"לא משויך";
+      return {title:"משימות · "+nm,count:s.length,rows:drillTasks(s),
+        foot:b?`<div style="margin-top:14px"><button class="btn line block" onclick="openPerson('${b}')">◔ פתח את הכרטיס ‹</button></div>`:""};
+    }
+    case "t:age": {
+      const g=AGE[Number(b)]||AGE[0];
+      const s=open.filter(t=>{const d=daysAgo(t.created_at);return d!=null&&d>=g[0]&&d<=g[1];});
+      return {title:"נפתחו לפני "+g[2],count:s.length,sub:"לפי תאריך היצירה, לא לפי תאריך היעד",rows:drillTasks(s)};
+    }
+    case "ppl:load": {
+      const by={}; open.forEach(t=>{const key=t.owner_id||"";by[key]=(by[key]||0)+1;});
+      const rows=Object.keys(by).sort((x,y)=>by[y]-by[x]).map(key=>({
+        chip:String(by[key]),chipCls:by[key]>=6?"crit":by[key]>=3?"warn":"mut",
+        t:key?(personName(key)||"—"):"לא משויך",act:`drillIn('t:owner:${key}')`}));
+      return {title:"עומס לפי אדם",count:rows.length,chart:vzByPerson(),rows};
+    }
+    case "ar:active": {
+      const rows=(D.arenas||[]).filter(x=>x.status==="active").map(x=>{
+        const cnt=open.filter(t=>t.arena_id===x.id).length, act=arenaActivity(x.id);
+        return {chip:String(cnt),chipCls:act.broken?"crit":cnt>=6?"warn":"mut",
+          t:nm0(x.name),m:act.broken?String(act.broken).slice(0,40):(act.days!=null?act.days+" ימי שקט":""),
+          act:`drillIn('t:arena:${x.id}')`};
+      }).sort((x,y)=>Number(y.chip)-Number(x.chip));
+      return {title:"זירות פעילות",count:rows.length,sub:"המספר = משימות פתוחות. הקש כדי לרדת אליהן.",chart:vzLoadByArena(),rows};
+    }
+    case "ar:hot": {
+      const rows=(D.arenas||[]).filter(x=>x.status==="active").map(x=>({x,act:arenaActivity(x.id),cnt:open.filter(t=>t.arena_id===x.id).length}))
+        .filter(r=>r.cnt>0&&(r.act.broken||(r.act.days!=null&&r.act.days>=6)))
+        .sort((r1,r2)=>(r2.act.broken?1:0)-(r1.act.broken?1:0)||(r2.act.days||0)-(r1.act.days||0))
+        .map(r=>({chip:r.act.broken?"תקוע":(r.act.days+" ימי שקט"),chipCls:r.act.broken?"crit":"warn",
+          t:nm0(r.x.name),m:r.cnt+" פתוחות",act:`drillIn('t:arena:${r.x.id}')`}));
+      return {title:"זירות דורשות טיפול",count:rows.length,sub:"התחייבות באיחור, צעד שעבר מועדו, או שקט ארוך מדי",rows};
+    }
+    case "dec:pending": {
+      const s=(D.decisions||[]).filter(d=>d.status==="pending");
+      return {title:"החלטות ממתינות",count:s.length,rows:s.map(d=>({
+        chip:d.needed_by?"עד "+fmtDay(d.needed_by):"", chipCls:(dueIn(d.needed_by)||99)<=2?"crit":"mut",
+        t:d.title||"",m:nm0(arenaName(d.arena_id)),act:`openDecision('${d.id}')`}))};
+    }
+    case "cm:open": {
+      const s=(D.commitments||[]);
+      return {title:"התחייבויות פתוחות",count:s.length,sub:"↩ אתה חייב · ↪ חייבים לך",rows:s.map(c=>{
+        const di=dueIn(c.due);
+        return {chip:c.direction==="by_itay"?"↩ אתה":"↪ לך",chipCls:c.direction==="by_itay"?"warn":"brand",
+          t:c.what||"",m:[personName(c.person_id),c.due?(di!=null&&di<0?"באיחור "+(-di)+"ד":"עד "+fmtDay(c.due)):""].filter(Boolean).join(" · "),
+          act:`openCommit('${c.id}')`};})};
+    }
+    case "fu:all": {
+      const s=(D.followups||[]).slice().sort((x,y)=>(y.days_waiting||0)-(x.days_waiting||0));
+      return {title:"ממתין לאחרים",count:s.length,sub:"על התוצר, לא על האדם",chart:vzWaiting(),
+        rows:s.map(f=>({chip:(f.days_waiting||0)+"ד",chipCls:f.level==="escalate"?"crit":"warn",
+          t:f.title||"",m:nm0(f.arena||""),act:`openTask('${f.id}')`}))};
+    }
+    case "kd:soon": {
+      const kd=((D.dashboard&&D.dashboard.key_dates)||[]).filter(x=>{const di=dueIn(x.due);return x.overdue||(di!=null&&di<=90);})
+        .sort((x,y)=>String(x.due).localeCompare(String(y.due)));
+      return {title:"תפוגות ≤90 יום",count:kd.length,chart:vzExpiry(),
+        rows:kd.map(x=>({chip:x.overdue?"באיחור":"עד "+fmtDay(x.due),chipCls:x.overdue?"crit":(dueIn(x.due)||99)<=30?"warn":"info",
+          t:x.title||"",m:x.deal||""}))};
+    }
+    case "cap:open": {
+      const s=(D.captures||[]);
+      return {title:"קליטות ממתינות לניקוז",count:s.length,rows:s.map(c=>({t:(c.text||"").slice(0,140),act:`triage('${c.id}')`}))};
+    }
+    case "ev:day": {
+      const s=(D.events||[]).filter(e=>String(e.happened_at||"").slice(0,10)===b);
+      return {title:"אירועים · "+fmtDay(b),count:s.length,rows:s.map(e=>({t:e.description||"",m:nm0(arenaName(e.arena_id))}))};
+    }
+    case "as:all": {
+      const s=(D.assets||[]);
+      return {title:"נכסים",count:s.length,chart:vzRent(),
+        rows:s.map(x=>({chip:x.is_rented?"מושכר":"פנוי",chipCls:x.is_rented?"good":"warn",
+          t:x.name||x.code||"",m:Number(x.rent_monthly)>0?shekel(Number(x.rent_monthly))+"/חו׳":""})),
+        foot:`<div style="margin-top:14px"><button class="btn brand block" onclick="go('assets')">▦ מסך הנכסים המלא ‹</button></div>`};
+    }
+  }
+  return {title:"אין נתונים",rows:[]};
 }
 
 /* ================= sheets / nav / gate ================= */

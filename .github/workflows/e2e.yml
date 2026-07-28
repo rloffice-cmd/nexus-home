@@ -39,3 +39,5 @@ jobs:
         run: node tests/e2e/command.mjs
       - name: "זו לא פגישה — ניטרול דרישת הסיכום"
         run: node tests/e2e/waiver.mjs
+      - name: גרפים וטיפוס על העץ
+        run: node tests/e2e/viz.mjs
