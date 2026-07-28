@@ -1142,6 +1142,14 @@ async function cmdPreview(fix){ const ta=$(fix?"#cmdFix":"#cmdTxt"); if(!ta)retu
   const go=$(fix?"#cmdFixGo":"#cmdGo"), out=$("#cmdOut"); const label=go.textContent;
   go.disabled=true; go.textContent="חושב…"; if(!fix)out.innerHTML="";
   const done=()=>{ if(go.isConnected){ go.disabled=false; go.textContent=label; } };
+  /* v18: התיבה מתרוקנת אחרי בקשה שהצליחה — ורק אז.
+     איתי: "אחרי שמקבלים מענה התיבה נשארת מלאה במה שכתבתי, ואם אני רוצה
+     לנהל דיאלוג אני צריך למחוק ולכתוב מחדש." תיבה שלא מתנקה הופכת כל
+     שאלת המשך לעבודת מחיקה, וזה בדיוק מה שהורג שיחה.
+     אבל **לא מנקים כשנכשל**: כשלא זוהתה פעולה, או כשהקריאה נפלה, מה
+     שהוא כתב הוא הדבר שהוא צריך לנסח מחדש — מחיקה שם הייתה מאלצת אותו
+     להקליד הכול שוב, כלומר להחליף תקלה אחת באחרת גרועה יותר. */
+  const clearBox=()=>{ if(ta.isConnected)ta.value=""; };
   const payload={action:"command_preview",kind:CMD.kind,id:CMD.id,text};
   if(fix&&CMD.last)payload.prior=CMD.last;
   try{ const r=await apiPost(API,payload); done();
@@ -1149,15 +1157,17 @@ async function cmdPreview(fix){ const ta=$(fix?"#cmdFix":"#cmdTxt"); if(!ta)retu
     // לרצפה — "תכין טיוטת מייל" נענה ב"מחוץ ליכולות" בזמן שהבוט עשה בדיוק
     // את זה. המסלול נקבע בשרת; כאן רק מציגים אותו.
     if(r.route==="ask"){ CMD.ops=null; DRAFT=null;
-      out.innerHTML=`<div class="card pad" style="margin-top:10px"><div style="font-size:13.5px;font-weight:700;margin-bottom:6px">🧠 ${esc(r.question_text||"תשובה")}</div><div style="white-space:pre-wrap;font-size:14px;line-height:1.6">${esc(r.answer||"")}</div></div>`;
-      return; }
+      // השאלה נכתבת מ-text ולא רק מ-question_text: התיבה מתרוקנת מיד אחרי
+      // זה, ובלי זה איתי היה רואה תשובה בלי לדעת על מה היא.
+      out.innerHTML=`<div class="card pad" style="margin-top:10px"><div style="font-size:13.5px;font-weight:700;margin-bottom:6px">🧠 ${esc(r.question_text||text)}</div><div style="white-space:pre-wrap;font-size:14px;line-height:1.6">${esc(r.answer||"")}</div></div>`;
+      clearBox(); return; }
     if(r.route==="draft"&&r.draft){ CMD.ops=null; DRAFT=r.draft;
-      out.innerHTML=draftCard(r.draft,r.summary); drWire(); return; }
+      out.innerHTML=draftCard(r.draft,r.summary); drWire(); clearBox(); return; }
     const ops=r.ops||[];
     if(!ops.length){ out.innerHTML=r.question
       ? `<div class="card pad" style="background:var(--surface2);font-size:13.5px;margin-top:8px">❓ ${esc(r.question)}</div>`
       : `<div class="mini-empty">לא זוהתה פעולה. נסח אחרת.</div>`; CMD.ops=null; return; }
-    CMD.ops=ops; CMD.last={text,summary:r.summary||null,ops};
+    CMD.ops=ops; CMD.last={text,summary:r.summary||null,ops}; clearBox();
     out.innerHTML=`<div class="card pad" style="margin-top:10px"><div style="font-size:13.5px;font-weight:700;margin-bottom:8px">${esc(r.summary||"הפעולות שיבוצעו")}</div>${cmdOps(ops)}${r.question?`<div class="kv dim" style="margin-top:8px">❓ ${esc(r.question)}</div>`:""}</div>`
       +`<div style="display:flex;gap:8px;margin-top:8px"><button class="btn good block" id="cmdOk">✅ בצע</button><button class="btn line" id="cmdFixBtn" style="flex:0 0 auto;padding-inline:14px">✏️ תקן</button><button class="btn line" id="cmdNo" style="flex:0 0 auto;padding-inline:14px">✖️</button></div><div id="cmdFixBox"></div>`;
     $("#cmdOk").onclick=()=>cmdApply(); $("#cmdNo").onclick=()=>{ CMD.ops=null; CMD.last=null; out.innerHTML=""; };

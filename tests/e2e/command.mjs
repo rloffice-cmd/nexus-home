@@ -279,6 +279,67 @@ if (posts.some(p => p.action === "command_apply" || p.action === "draft_sent"))
   fail("מסלול השאלה כתב למערכת: " + JSON.stringify(posts));
 step("שאלה מחזירה תשובה בלבד — קריאה, בלי דלת לביצוע");
 
+// ── 10. התיבה מתרוקנת אחרי מענה — ורק כשהצליח ────────────────────────────
+// איתי: "אחרי שמקבלים מענה התיבה נשארת מלאה במה שכתבתי, ואם אני רוצה לנהל
+// דיאלוג אז אני צריך למחוק את מה שכתבתי קודם ולכתוב מחדש."
+//
+// תיבה שאינה מתנקה הופכת כל שאלת המשך לעבודת מחיקה, וזה מה שהורג שיחה.
+// אבל הכיוון ההפוך מסוכן יותר: ניקוי אחרי כשל מוחק בדיוק את הטקסט שצריך
+// לנסח מחדש. לכן שני הכיוונים נבדקים כאן, ולא רק זה שהתלוננו עליו.
+
+// א. אחרי תשובה — התיבה ריקה, והשאלה עצמה נשארת על המסך.
+let box = await page.$eval("#cmdTxt", el => el.value);
+if (box !== "") fail(`אחרי תשובה התיבה נשארה מלאה: "${box}"`);
+if (!/כמה משימות פתוחות בשדרה/.test(askShown))
+  fail("השאלה לא מוצגת ליד התשובה — עם תיבה שמתנקה, איתי מאבד את ההקשר");
+
+previewReply = { ok: true, route: "ask", question_text: "ומי הכי תקוע?",
+                 answer: "אהרון לואיס — שלושה פריטים באיחור.", ops: [] };
+await page.fill("#cmdTxt", "ומי הכי תקוע?");
+await page.click("#cmdGo");
+await page.waitForTimeout(600);
+const second = await page.$eval("#cmdOut", el => el.innerText);
+if (!/שלושה פריטים/.test(second)) fail("שאלת ההמשך לא נענתה: " + second);
+box = await page.$eval("#cmdTxt", el => el.value);
+if (box !== "") fail("התיבה לא התרוקנה אחרי שאלת ההמשך");
+step("דיאלוג: שאלה, תשובה, ושאלה נוספת — בלי מחיקה ידנית באמצע");
+
+// ב. תצוגה מקדימה של מוטציה — ההצעה על המסך והתיבה פנויה. התיקון אינו
+//    עובר כאן אלא בתיבה משלו (#cmdFix), ולכן אין מה לשמר.
+previewReply = { ok: true, summary: "מעביר לאהרון", ops: OPS, question: null };
+await openObj("openTask", "t1");
+await page.fill("#cmdTxt", "תעביר לאהרון");
+await page.click("#cmdGo");
+await page.waitForSelector("#cmdOk", { timeout: 4000 });
+box = await page.$eval("#cmdTxt", el => el.value);
+if (box !== "") fail(`אחרי תצוגה מקדימה התיבה נשארה מלאה: "${box}"`);
+step("תצוגה מקדימה מרוקנת את התיבה");
+
+// ג. **הכיוון ההפוך.** לא זוהתה פעולה → הטקסט נשאר, כי הוא מה שצריך לנסח
+//    מחדש. ניקוי כאן היה מחליף תקלה אחת בגרועה ממנה.
+previewReply = { ok: true, summary: null, ops: [], question: null };
+await openObj("openTask", "t1");
+await page.fill("#cmdTxt", "בלגן מוחלט שאי אפשר להבין");
+await page.click("#cmdGo");
+await page.waitForTimeout(600);
+box = await page.$eval("#cmdTxt", el => el.value);
+if (box !== "בלגן מוחלט שאי אפשר להבין")
+  fail(`בקשה שלא הובנה מחקה את מה שאיתי כתב: "${box}"`);
+step("בקשה שלא הובנה משאירה את הטקסט — יש מה לנסח מחדש");
+
+// ד. כשל רשת — אותו כלל בדיוק. תקלה חולפת לא גובה הקלדה מחדש.
+await page.unroute("**/functions/v1/nexus-app*");
+await page.route("**/functions/v1/nexus-app*", r => r.request().method() === "POST"
+  ? r.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+  : r.fallback());
+await openObj("openTask", "t1");
+await page.fill("#cmdTxt", "תסמן שנסגר");
+await page.click("#cmdGo");
+await page.waitForTimeout(700);
+box = await page.$eval("#cmdTxt", el => el.value);
+if (box !== "תסמן שנסגר") fail(`כשל בקריאה מחק את מה שאיתי כתב: "${box}"`);
+step("כשל בקריאה משאיר את הטקסט");
+
 await browser.close();
 if (errors.length) { console.log(`\n${errors.length} כשלים`); process.exit(1); }
 console.log("\nתיבת הפקודה — הכל עבר.");
