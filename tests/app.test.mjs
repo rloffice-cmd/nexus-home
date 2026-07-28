@@ -40,6 +40,10 @@ const SERVER_ACTIONS = new Set([
   // nexus-app v13 — מסלול הניסוח בתיבת הפקודה. draft_sent כבר היה ברשימה
   // (עדכון הזירה השתמש בו), ונשאר אותו שם בדיוק: הטיוטה היא אותה טבלה.
   "draft_refine", "draft_discard",
+  // nexus-app v14 — "זו לא פגישה" (ניטרול דרישת הסיכום). שתי השורות האחרונות
+  // נבנו בשני סשנים במקביל, שניהם קראו לגרסה שלהם v13, ופריסה אחת מחקה את
+  // השנייה מהייצור. v14 מחזיק את שתיהן.
+  "meeting_waive_debrief", "meeting_unwaive_debrief",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));
