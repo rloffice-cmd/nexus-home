@@ -37,3 +37,5 @@ jobs:
         run: node tests/e2e/meetings.mjs
       - name: תיבת הפקודה — שיחה עם אובייקט
         run: node tests/e2e/command.mjs
+      - name: "זו לא פגישה — ניטרול דרישת הסיכום"
+        run: node tests/e2e/waiver.mjs

@@ -350,7 +350,7 @@ function badges(){ const b=document.querySelector('nav button[data-tab=decisions
   // אותו סינון בדיוק כמו מקטע "ממתין לסיכום" ברשימה: מונה שלא תואם למה
   // שהמסך מציג הוא מונה שמאבד אמון.
   const mb=document.querySelector('nav button[data-tab=meetings] .bdg'); if(!mb)return;
-  const pend=(D.meetings||[]).filter(m=>meetEnded(m)&&!meetDone(m)&&m.day_offset>=-7).length;
+  const pend=(D.meetings||[]).filter(meetPending).length;
   mb.textContent=pend; mb.style.display=pend?"":"none"; }
 function shell(){
   app().innerHTML=`<header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div><span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span><button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
@@ -511,15 +511,21 @@ function meetTime(m){ if(m.all_day)return "כל היום";
   const s=f(m.starts_at), e=f(m.ends_at); return s+(e?"–"+e:""); }
 const meetEnded=m=>!!(m.ends_at&&ts(m.ends_at)<Date.now());
 const meetDone=m=>m.debrief_status==="committed";
+// לא כל אירוע ביומן הוא פגישה: תזכורת יומית ("זעפן" ב-08:10) או חסימת זמן.
+// debrief_waived מגיע מהשרת (meetings_window) ולא מנחוש כאן.
+const meetWaived=m=>!!m.debrief_waived;
+// הגדרה אחת ל"ממתין לסיכום". היא נצרכת גם ברשימה וגם במונה שבסרגל, ושני
+// עותקים של אותו תנאי הם שני מקומות לתקן — ואחד שיישכח.
+const meetPending=m=>meetEnded(m)&&!meetDone(m)&&!meetWaived(m)&&m.day_offset>=-7;
 function meetRow(m,i,showDay){
-  const done=meetDone(m), ended=meetEnded(m);
-  return `<div class="row stripe ${done?"s-good":ended?"s-warn":"s-info"}" onclick="openMeeting(${i})"><div class="main"><div class="t">${esc(m.title||"פגישה")}${m.source==="manual"?` <span class="chip mut">ידנית</span>`:""}</div><div class="m"><span class="chip ${ended&&!done?"warn":"info"} num">${showDay?fmtDay(m.starts_at)+" · ":""}${meetTime(m)}</span>${m.arena?`<span class="dim">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:ended?`<span class="chip warn">ממתין לסיכום</span>`:""}</div></div><div class="lead dim">‹</div></div>`;
+  const done=meetDone(m), ended=meetEnded(m), waived=meetWaived(m);
+  return `<div class="row stripe ${done?"s-good":waived?"":ended?"s-warn":"s-info"}" onclick="openMeeting(${i})"><div class="main"><div class="t">${esc(m.title||"פגישה")}${m.source==="manual"?` <span class="chip mut">ידנית</span>`:""}</div><div class="m"><span class="chip ${ended&&!done&&!waived?"warn":"info"} num">${showDay?fmtDay(m.starts_at)+" · ":""}${meetTime(m)}</span>${m.arena?`<span class="dim">${esc(nm0(m.arena))}</span>`:""}${m.prep_id?`<span class="chip brand">📂 תיק</span>`:""}${done?`<span class="chip good">📝 סוכם ✓</span>`:waived?`<span class="chip mut">🔕 לא דורש סיכום</span>`:ended?`<span class="chip warn">ממתין לסיכום</span>`:""}</div></div><div class="lead dim">‹</div></div>`;
 }
 function vMeetings(){
   const ms=(D.meetings||[]).map((m,i)=>({m,i})), preps=D.preps||[], dbs=D.debriefs||[];
   // הקיבוץ הוא לפי מה שדורש פעולה, לא לפי כרונולוגיה: קודם מה שהסתיים וטרם
   // סוכם (זה מה שנופל בין הכיסאות), אחר כך היום, ואז מה שלפניך.
-  const pend=ms.filter(x=>meetEnded(x.m)&&!meetDone(x.m)&&x.m.day_offset>=-7);
+  const pend=ms.filter(x=>meetPending(x.m));
   const today=ms.filter(x=>x.m.day_offset===0&&!pend.includes(x));
   const soon=ms.filter(x=>x.m.day_offset>0);
   const past=ms.filter(x=>x.m.day_offset<0&&!pend.includes(x));
@@ -586,7 +592,47 @@ function openMeeting(i){ const m=(D.meetings||[])[i]; if(!m)return;
   if(m.prep_id&&pi>=0)h+=`<button class="btn brand block" onclick="openPrep(${pi})">📂 פתח את התיק</button>`;
   else h+=`<button class="btn line block" onclick="prepRequest('full')">📂 הכן תיק</button>`;
   h+=done?`<button class="btn good block" onclick="openDebriefByMeeting(${i})">📝 הסיכום ✓</button>`:`<button class="btn good block" onclick="debriefSheet(${i})">📝 סכם פגישה</button>`;
-  h+=`</div>`; openSheet(h);
+  h+=`</div>`;
+  // "זה לא פגישה" — אירוע יומן שאינו דורש סיכום. מוצג רק כשאין סיכום: אחרי
+  // שסוכם השאלה כבר לא רלוונטית.
+  if(!done){
+    h+=meetWaived(m)
+      ? `<button class="btn line block" style="margin-top:8px" onclick="unwaiveDebrief(${i})">🔔 החזר להמתנה לסיכום</button>`
+      : `<button class="btn line block" style="margin-top:8px" onclick="waiveSheet(${i})">🔕 זו לא פגישה — לא צריך סיכום</button>`;
+  }
+  openSheet(h);
+}
+/* ---- "זו לא פגישה" ---- */
+// אישור לפני ביצוע, ובחירת ההיקף היא חלק מהאישור ולא הנחה שקטה: אירוע חוזר
+// עם ניטרול פר-מופע פירושו לחיצה כל בוקר, ולכן הסדרה היא ברירת המחדל.
+function waiveSheet(i){ const m=(D.meetings||[])[i]; if(!m)return;
+  const rec=!!m.is_recurring;
+  let h=`<div class="grab"></div><h3>🔕 ${esc(m.title||"אירוע")}</h3>
+  <div class="sub2">האירוע ייצא מ"ממתין לסיכום" ולא ייספר יותר כפגישה שלא סוכמה. תמיד אפשר להחזיר.</div>
+  <div class="field"><label>למה? (לא חובה — עוזר למערכת ללמוד)</label><input id="wvReason" placeholder="למשל: תזכורת אישית, לא פגישה"></div>`;
+  h+=rec
+    ? `<button class="btn brand block" onclick="waiveDo(${i},'series')">כל הסדרה — זה חוזר ביומן</button>
+       <button class="btn line block" style="margin-top:8px" onclick="waiveDo(${i},'event')">רק הפעם הזו</button>`
+    : `<button class="btn brand block" onclick="waiveDo(${i},'event')">אישור</button>`;
+  h+=`<button class="btn line block" style="margin-top:8px" onclick="closeSheet()">ביטול</button>`;
+  openSheet(h);
+}
+async function waiveDo(i,scope){ const m=(D.meetings||[])[i]; if(!m)return;
+  if(!LIVE){ closeSheet(); toast("זמין במצב מחובר"); return; }
+  const reason=(($("#wvReason")||{}).value||"").trim();
+  try{
+    const r=await apiPost(API,{action:"meeting_waive_debrief",event_id:m.id,scope,reason:reason||null});
+    closeSheet();
+    toast(r.scope==="series"?`סומן — ${r.affected} מופעים לא ידרשו סיכום`:"סומן — לא דורש סיכום");
+    await load(true);
+  }catch(e){ toast("לא נשמר: "+(e.message||"")); }
+}
+async function unwaiveDebrief(i){ const m=(D.meetings||[])[i]; if(!m)return;
+  if(!LIVE){ closeSheet(); toast("זמין במצב מחובר"); return; }
+  try{
+    await apiPost(API,{action:"meeting_unwaive_debrief",event_id:m.id});
+    closeSheet(); toast("חזר להמתנה לסיכום"); await load(true);
+  }catch(e){ toast("לא נשמר: "+(e.message||"")); }
 }
 function openPrep(i){ const p=(D.preps||[])[i]; if(!p)return;
   let h=`<div class="grab"></div><h3>📂 ${esc(p.meeting_title||"תיק פגישה")}</h3><div class="sub2">${fmtDay(p.meeting_time||p.created_at)}${p.depth?` · ${p.depth==="full"?"תיק מלא":"סקירה קצרה"}`:""}${p.version>1?` · גרסה ${p.version}`:""}</div>`;
