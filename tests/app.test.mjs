@@ -48,6 +48,12 @@ const SERVER_ACTIONS = new Set([
   // שמזהה kind='gap' ומאציל ל-nexus_spine_commit: נקודת כניסה אחת בשרת,
   // ולכן גם פעולה אחת כאן. verify_refresh מריץ nexus_verify_queue.
   "verify_commit", "verify_refresh",
+  // nexus-app v20 — "לחפור". איתי ראה את המסך ואמר שאי אפשר לענות: הכרטיס
+  // הציג "יש 7 עובדות שטרם אומתו, וחלקן עשויות לסתור זו את זו" ואפס עובדות,
+  // כי הוא חיפש context.samples ו-nexus_verify_queue כותבת מערך חשוף.
+  // verify_detail שולף חי מ-nexus_verify_detail — לא מה-context השמור,
+  // שהוא צילום מרגע יצירת השאלה.
+  "verify_detail",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));

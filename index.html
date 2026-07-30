@@ -1416,7 +1416,7 @@ async function undoFiling(ids,folder){
    הסדר מגיע מהשרת (`order by priority`) ואינו מחושב כאן: הדירוג הוא לפי
    מינוף, וכפילות שלו בלקוח הייתה מתפצלת ממנו בשקט — אותו כשל שהוליד את
    חוק המנוע-האחד (דף הדיווח והבוט, 26.7). */
-let VQ={busy:""};
+let VQ={busy:"",detail:{}};
 const VQ_KIND={gap:"יחידה חסרה",contradiction:"סתירה",stale_lease:"שכירות ללא המשך"};
 function vqList(){ return Array.isArray(D&&D.verifications)?D.verifications:[]; }
 function openVerify(){ closeSheet(); TAB="verify"; render(); }
@@ -1450,8 +1450,18 @@ function vVerify(){
       <div style="font-size:14px;font-weight:700;line-height:1.45;word-break:break-word"><bdi>${esc(q.subject||"")}</bdi></div>
       <div class="sub2" style="margin:6px 2px 0;line-height:1.6">${esc(q.question||"")}</div>`;
     // מדגם מהמסמכים: בלעדיו איתי מכריע על סמך הניסוח שלי במקום על סמך המקור.
-    const s=Array.isArray(c.samples)&&c.samples.length?String(c.samples[0].ctx||c.samples[0].fact||""):"";
+    //
+    // ⚠️ עד 30.7 השורה קראה רק `c.samples`. `nexus_verify_queue` כותבת
+    // **מערך חשוף** ל-contradiction ו-{tenant,status,end_date} ל-stale_lease,
+    // ולכן רק כרטיסי `gap` הציגו תוכן — ואיתי נתבקש ללחוץ "נכון כמו שכתוב"
+    // על טקסט שלא כתוב. שלוש הצורות נקראות עכשיו במפורש.
+    const arr = Array.isArray(c.samples) ? c.samples : (Array.isArray(c) ? c : []);
+    const s = arr.length ? String(arr[0].ctx||arr[0].fact||"") : "";
     if(s) h+=`<div class="sub2" style="margin:7px 2px 0;opacity:.72;font-size:12px">מהמסמכים: <bdi>${esc(s.slice(0,160))}</bdi></div>`;
+    // החפירה. מכוּוצת כברירת מחדל — 17 שאלות פרושות הן קיר טקסט בנייד —
+    // אבל **שורה אחת מרחק**, לא מסך אחר.
+    h+=`<div class="mini" style="margin-top:8px"><button onclick="vqDig('${q.id}',this)">🔍 לחפור — מה בדיוק לא ברור</button></div>
+      <div id="vqd-${q.id}" data-open="0"></div>`;
     h+=`<div class="mini">`;
     if(q.kind==="gap") h+=`<button class="go" onclick="vqSheet('${q.id}','confirm')">✓ כן, קיימת ושלי</button>
         <button class="warn" onclick="vqSheet('${q.id}','dismiss')">✗ לא יחידה שלי</button>`;
@@ -1463,6 +1473,105 @@ function vVerify(){
   return h;
 }
 
+/* ---- החפירה (v20). איתי, 30.7: "קשה להבין מה אתה לא מבין ולענות לך, וגם
+   צריך אפשרות לחפור ולהבין את הדילמה. צריך יותר הסברים על מנת שאוכל לענות."
+
+   והוא צדק לגמרי. הדילמות היו שמורות כל הזמן ואף אחת לא הוצגה:
+     · "אי-התאמה בת.ז — שומת קושניר משייכת 034543678 לאיתי, הפוך מהסכם השכירות"
+     · "אי-דיוק בנקסוס: החכירה המהוונת עד 15/11/2059 ולא עד 31.12.9999"
+     · "פער: אישור הזכויות ציין 780,000 ₪ מול יתרת סילוק 518,939.76 ₪"
+   אלה שאלות שאפשר לענות עליהן בשנייה. מה שהוצג במקומן: "יש 7 עובדות שטרם
+   אומתו, וחלקן עשויות לסתור זו את זו" — קטגוריה של שאלה, לא שאלה.
+
+   נשלף חי מ-nexus_verify_detail ולא מה-context השמור: ה-context הוא צילום
+   מרגע יצירת השאלה, והעובדות ממשיכות להשתנות תחתיו. */
+async function vqDig(id,btn){
+  const host=$("#vqd-"+id); if(!host)return;
+  if(host.dataset.open==="1"){ host.innerHTML=""; host.dataset.open="0";
+    if(btn)btn.textContent="🔍 לחפור — מה בדיוק לא ברור"; return; }
+  if(!LIVE){ toast("המסך עובד מול נתונים אמיתיים בלבד"); return; }
+  if(btn){ btn.disabled=true; btn.textContent="… טוען"; }
+  try{
+    let d=VQ.detail[id];
+    if(!d){ d=await apiPost(API,{action:"verify_detail",id}); VQ.detail[id]=d; }
+    if(d && d.error){ toast(d.error); }
+    else { host.innerHTML=vqDetailHtml(d||{}); host.dataset.open="1"; }
+  }catch(e){ toast("הפירוט לא נטען: "+(e.message||e)); }
+  if(btn){ btn.disabled=false;
+    btn.textContent=host.dataset.open==="1"?"▲ סגור את הפירוט":"🔍 לחפור — מה בדיוק לא ברור"; }
+}
+
+function vqDetailHtml(d){
+  const a=d.asset||{}, fx=d.facts||[], kn=d.known||[], ls=d.leases||[], dc=d.documents||[];
+  const wc=d.what_changes||{}, hid=Number(d.known_hidden||0);
+  let h=`<div style="margin-top:9px;border-top:1px solid var(--hair);padding-top:9px">`;
+
+  // מי הנכס. בלעדי זה "שכירות -60-2" הוא קוד שבור ולא מקום שאיתי מזהה.
+  if(a.code||a.name){
+    const bits=[a.name,a.property,a.area?a.area+' מ"ר':"",a.floor?"קומה "+a.floor:"",a.status]
+      .filter(Boolean).map(x=>esc(String(x)));
+    h+=`<div class="sub2" style="font-size:12px;margin:0 2px 9px;line-height:1.55"><bdi>${bits.join(" · ")}</bdi></div>`;
+  }
+
+  if(fx.length){
+    h+=`<div style="font-size:12.5px;font-weight:700;margin:0 2px 7px">מה לא ברור · ${fx.length}</div>`;
+    fx.forEach(f=>{
+      const mk=Array.isArray(f.markers)?f.markers:[];
+      h+=`<div style="margin:0 0 8px;padding:8px 9px;background:var(--surface2);border-radius:10px">
+        <div style="font-size:12.5px;line-height:1.58"><bdi>${esc(f.fact||"")}</bdi></div>
+        ${f.detail&&String(f.detail).trim()?`<div class="sub2" style="font-size:11.5px;margin-top:4px;opacity:.78"><bdi>${esc(f.detail)}</bdi></div>`:""}
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
+          ${mk.map(m=>`<span class="chip warn">${esc(m)}</span>`).join("")}
+          ${f.date?`<span class="chip mut">${esc(f.date)}</span>`:""}
+          ${f.src?`<span class="chip mut"><bdi>${esc(String(f.src).slice(0,40))}</bdi></span>`:""}
+          ${f.n_srcs>1?`<span class="chip info">${f.n_srcs} מסמכים</span>`:""}
+        </div>
+        ${f.path?`<div class="sub2" style="font-size:10.5px;margin-top:5px;opacity:.6;word-break:break-all"><bdi>📁 ${esc(f.path)}</bdi></div>`:""}
+      </div>`;
+    });
+  }
+
+  // ומה כן ידוע — ההקשר שבלעדיו אין על מה להכריע. התקרה **מוצהרת** ולא
+  // שקטה: "12 מתוך 38" ולא 12 שנראים כמו הכול. חוק ברזל 9.
+  if(kn.length){
+    h+=`<div style="font-size:12.5px;font-weight:700;margin:11px 2px 6px">מה כבר מאומת${hid>0?` · ${kn.length} מתוך ${kn.length+hid}`:""}</div>`;
+    kn.forEach(f=>{
+      h+=`<div class="sub2" style="font-size:11.5px;margin:0 2px 6px;line-height:1.5;opacity:.85">
+        <bdi>• ${esc(String(f.fact||"").slice(0,220))}</bdi>${f.date?` <span style="opacity:.6">(${esc(f.date)})</span>`:""}</div>`;
+    });
+    if(hid>0) h+=`<div class="sub2" style="font-size:11px;margin:0 2px 6px;opacity:.6">ועוד ${hid} עובדות מאומתות — שאל עליהן במסך "שאל".</div>`;
+  }
+
+  if(ls.length){
+    h+=`<div style="font-size:12.5px;font-weight:700;margin:11px 2px 6px">חוזי שכירות</div>`;
+    ls.forEach(l=>{
+      h+=`<div class="sub2" style="font-size:11.5px;margin:0 2px 5px;line-height:1.5">
+        <bdi>• ${esc(l.tenant||"—")}${l.rent?` · ${Number(l.rent).toLocaleString("he-IL")} ₪`:""}${l.from?` · ${esc(l.from)}`:""}${l.to?` → ${esc(l.to)}`:""}${l.status?` · ${esc(l.status)}`:""}</bdi>
+        ${l.option?`<div style="opacity:.65;font-size:11px;margin-top:2px"><bdi>${esc(l.option)}</bdi></div>`:""}</div>`;
+    });
+  }
+
+  if(dc.length){
+    h+=`<div style="font-size:12.5px;font-weight:700;margin:11px 2px 6px">מסמכים על הנכס</div>`;
+    dc.forEach(x=>{
+      h+=`<div class="sub2" style="font-size:11px;margin:0 2px 4px;line-height:1.5;opacity:.8">
+        <bdi>• ${esc(x.name||"")}${x.date?` · ${esc(x.date)}`:""}</bdi></div>`;
+    });
+  }
+
+  // ומה כל כפתור **יעשה**. עד עכשיו איתי לחץ בלי לדעת מה משתנה — וזה
+  // בדיוק מה שמונע מאדם ללחוץ.
+  if(wc.confirm||wc.truth||wc.dismiss){
+    h+=`<div style="font-size:12.5px;font-weight:700;margin:11px 2px 6px">מה יקרה כשתענה</div>
+      <div class="sub2" style="font-size:11.5px;line-height:1.6;margin:0 2px">
+      ${wc.confirm?`<div>✓ <b>נכון כמו שכתוב</b> — ${esc(wc.confirm)}</div>`:""}
+      ${wc.truth?`<div style="margin-top:3px">✏️ <b>אני אסביר</b> — ${esc(wc.truth)}</div>`:""}
+      ${wc.dismiss?`<div style="margin-top:3px">🗑 <b>לא רלוונטי</b> — ${esc(wc.dismiss)}</div>`:""}
+      </div>`;
+  }
+  return h+`</div>`;
+}
+
 // התיבה משתנה לפי מה שהתשובה **עושה**. 'truth' הוא היחיד שההסבר בו חובה,
 // כי הוא נכתב כעובדה מאומתת שמחליפה את הקיימות — הסבר ריק שם היה מוריד
 // עובדות בלי לשים מה במקומן.
@@ -1472,8 +1581,18 @@ function vqSheet(id,verdict){
             : verdict==="dismiss" ? {t:"למה לא?",ph:"למשל: זה גוש/חלקה ולא יחידה — יישמר כלקח",req:false,btn:"✗ סמן שאינה יחידה שלי"}
             : {t:"מה נכון היום?",ph:"הסבר בקצרה מה המצב האמיתי. זה יירשם כעובדה מאומתת ויחליף את הקיימות.",req:true,btn:"✏️ שמור כאמת"};
   let h=`<div class="grab"></div><h3><bdi>${esc(q.subject||"")}</bdi></h3>
-    <div class="sub2" style="line-height:1.6">${esc(q.question||"")}</div>
-    <div class="blk"><h4>${esc(cfg.t)}</h4>
+    <div class="sub2" style="line-height:1.6">${esc(q.question||"")}</div>`;
+  // v20: מה בדיוק מוחלף. תיבת טקסט ריקה מול "יש 7 עובדות" היא בקשה לענות
+  // בעיוורון; אם איתי כבר חפר, הפירוט כאן ולא צריך לזכור אותו.
+  const dd=VQ.detail[id];
+  if(dd && Array.isArray(dd.facts) && dd.facts.length){
+    h+=`<div class="sub2" style="margin-top:9px;font-size:11.5px;line-height:1.55;opacity:.85">
+      ${verdict==="truth"?"מה שההסבר שלך יחליף:":"העובדות שבשאלה:"}
+      ${dd.facts.slice(0,6).map(f=>`<div style="margin-top:4px"><bdi>• ${esc(String(f.fact||"").slice(0,170))}</bdi></div>`).join("")}
+      ${dd.facts.length>6?`<div style="margin-top:3px;opacity:.6">ועוד ${dd.facts.length-6}</div>`:""}
+    </div>`;
+  }
+  h+=`<div class="blk"><h4>${esc(cfg.t)}</h4>
     <textarea id="vqTxt" rows="3" maxlength="600" placeholder="${esc(cfg.ph)}"></textarea>
     <div class="mini" style="margin-top:8px"><button class="go" onclick="vqAct('${id}','${verdict}',(($('#vqTxt')||{}).value||'').trim(),${cfg.req})">${esc(cfg.btn)}</button></div></div>`;
   openSheet(h);
