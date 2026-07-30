@@ -1250,9 +1250,35 @@ function moreSheet(){
   // מסמכים לזירות, כאן מסדרים עובדות לישויות. והמספר על הכפתור הוא
   // העיקר — בלעדיו המסך קיים ואיש אינו יודע שיש בו משהו.
   h+=`<div class="mini" style="margin-bottom:6px"><button class="go" onclick="openVerify()">❓ מה לא ברור${vqList().length?` · ${vqList().length}`:""}</button></div>`;
+  h+=`<div class="mini" style="margin-bottom:6px"><button class="go" onclick="openAlpha()">🤖 אלפא${alphaProposed().length?` · ${alphaProposed().length} לאישור`:""}</button></div>`;
   h+=`<div class="foot" style="text-align:start;padding:14px 2px 2px">Nexus HQ v3 · ${esc(D.now||"")}</div>`;
   openSheet(h);
 }
+/* ============ אלפא — העוזר האישי הדיגיטלי (nexus-app v21) ============
+   הממשק לא מחליט ולא כותב: אישור/עצירה/הצעה עוברים ב-alpha_mandate_*
+   ב-SQL. פתיחת מנדט נכנסת כהצעה והאישור הוא כפתור נפרד — כדי שאיתי
+   יראה בדיוק מה אושר (חוק ברזל 11). */
+function alphaD(){ return D.alpha||{mandates:[],recent_actions:[],shifts_today:0}; }
+function alphaProposed(){ return (alphaD().mandates||[]).filter(m=>m.status==="proposed"); }
+const ALPHA_KIND={overdue_tasks:"רדיפת משימות באיחור",open_commitments:"מעקב התחייבויות מפגישות"};
+const ALPHA_ACT={remind:"תזכורת",follow_up:"תזכורת שנייה",escalate:"הסלמה אליך"};
+const ALPHA_OUT={pending:["ממתין","mut"],delivered:["נמסר","good"],failed:["כשל מסירה","crit"],replied:["נענה","good"],blocked:["נחסם","crit"]};
+function openAlpha(){
+  const A=alphaD(); const prop=alphaProposed(); const act=(A.mandates||[]).filter(m=>m.status==="active");
+  let h=`<div class="grab"></div><h3>🤖 אלפא · העוזר הדיגיטלי</h3>`;
+  h+=`<div class="sub2">משמרות היום: ${A.shifts_today}/3 (א'–ה' 07:45 · 13:00 · 17:30) · פועל רק בתוך מנדט שאישרת · תזכורות לצוות יוצאות בשמו, לא בשמך</div>`;
+  if(prop.length){ h+=`<div class="blk"><h4>ממתין לאישורך · ${prop.length}</h4>`+prop.map(m=>`<div class="li" style="flex-direction:column;align-items:stretch;gap:8px"><div><b>${esc(m.title)}</b><br><span class="dim" style="font-size:12px">${esc(m.goal||"")} · עד ${m.max_msgs_per_person_day} הודעות/אדם/יום · שעות 08:00–18:00 א'–ה'</span></div><div class="mini"><button class="go" onclick="alphaApprove('${m.id}')">✔ אשר ל-30 יום</button><button class="warn" onclick="alphaStop('${m.id}')">✖ דחה</button></div></div>`).join("")+`</div>`; }
+  if(act.length){ h+=`<div class="blk"><h4>מנדטים פעילים · ${act.length}</h4>`+act.map(m=>{const dl=Math.max(0,Math.ceil((new Date(m.expires_at)-Date.now())/864e5));return `<div class="li"><span style="flex:1"><b>${esc(m.title)}</b><br><span class="dim" style="font-size:12px">${ALPHA_KIND[m.kind]||m.kind} · פג בעוד ${dl} ימים</span></span><button class="warn" style="font-size:12px" onclick="alphaStop('${m.id}')">עצור</button></div>`;}).join("")+`</div>`; }
+  const missing=["overdue_tasks","open_commitments"].filter(k=>!(A.mandates||[]).some(m=>m.kind===k&&(m.status==="proposed"||m.status==="active")));
+  if(missing.length){ h+=`<div class="blk"><h4>פתיחת מנדט</h4><div class="mini">`+missing.map(k=>`<button onclick="alphaPropose('${k}')">+ ${ALPHA_KIND[k]}</button>`).join("")+`</div><div class="sub2">נפתח כהצעה — האישור בכפתור נפרד, כדי שתראה בדיוק מה אושר.</div></div>`; }
+  const ra=A.recent_actions||[];
+  h+=`<div class="blk"><h4>מה אלפא עשה${ra.length?` · ${ra.length} אחרונות`:""}</h4>`+(ra.length?ra.slice(0,15).map(a=>{const o=ALPHA_OUT[a.outcome]||[a.outcome,"mut"];return `<div class="li"><span style="flex:1">${ALPHA_ACT[a.action]||a.action} ל-<b>${esc(personName(a.recipient_id)||"?")}</b><br><span class="dim" style="font-size:12px">${esc(a.body||"")}</span></span><span class="chip ${o[1]}">${o[0]}</span></div>`;}).join(""):`<div class="sub2">אין עדיין פעולות — אלפא ממתין למנדט הראשון שלך.</div>`)+`</div>`;
+  openSheet(h);
+}
+async function alphaApprove(id){ try{ await apiPost(API,{action:"alpha_mandate_approve",id}); toast("המנדט אושר — אלפא יוצא לדרך מהמשמרת הבאה"); if(LIVE)await load(true); openAlpha(); }catch(e){ toast("שגיאה: "+e.message); } }
+async function alphaStop(id){ try{ await apiPost(API,{action:"alpha_mandate_stop",id}); toast("המנדט נעצר"); if(LIVE)await load(true); openAlpha(); }catch(e){ toast("שגיאה: "+e.message); } }
+async function alphaPropose(kind){ try{ await apiPost(API,{action:"alpha_mandate_propose",kind,title:ALPHA_KIND[kind]||kind,goal:kind==="overdue_tasks"?"משימת צוות שעבר מועדה לא נשארת דוממת":"התחייבות מפגישה לא מתאדה"}); toast("נפתחה הצעה — עכשיו אשר אותה"); if(LIVE)await load(true); openAlpha(); }catch(e){ toast("שגיאה: "+e.message); } }
+
 function openTasks(){ const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting").sort((a,b)=>["today","week","month","whenever"].indexOf(a.urgency)-["today","week","month","whenever"].indexOf(b.urgency));
   let h=`<div class="grab"></div><h3>כל המשימות · ${open.length}</h3>`; ["today","week","month","whenever"].forEach(u=>{ const g=open.filter(t=>t.urgency===u); if(g.length){ h+=`<div class="blk"><h4>${URG[u]} · ${g.length}</h4>${g.map(t=>`<div class="li tapli" onclick="openTask('${t.id}')"><span class="chip ${URGC[u]}">${t.status==="waiting"?"ממתין":URG[u]}</span><span style="flex:1">${t.important?"⭐ ":""}${esc(t.title)}${t.arena_id?` <span class="dim">· ${esc(nm0(arenaName(t.arena_id)))}</span>`:""}${t.due_date?` <span class="dim">· ${fmtDay(t.due_date)}</span>`:""}</span><span class="dim">‹</span></div>`).join("")}</div>`; } }); openSheet(h);
 }
