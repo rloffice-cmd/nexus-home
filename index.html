@@ -495,12 +495,13 @@ function render(){ const el=app();
   else if(TAB==="assets")host.innerHTML=vAssets();
   else if(TAB==="ask"){ host.innerHTML=vAsk(); renderAsk(); }
   else if(TAB==="filing")host.innerHTML=vFiling();
+  else if(TAB==="verify")host.innerHTML=vVerify();
   host.scrollTop=0; window.scrollTo(0,0); badges(); vzWire();
   const dd=$("#demoDot");
   if(dd){ dd.style.display=(DEMO||CACHED)?"":"none";
     dd.textContent=DEMO?"הדגמה":("לא מעודכן"+(CACHED_AT?" · "+staleness(CACHED_AT):""));
     dd.classList.toggle("stale", CACHED && !DEMO); }
-  const fb=$("#fab"); if(fb)fb.style.display=(TAB==="ask"||TAB==="filing")?"none":"";
+  const fb=$("#fab"); if(fb)fb.style.display=(TAB==="ask"||TAB==="filing"||TAB==="verify")?"none":"";
 }
 function staleness(iso){ const m=Math.floor((Date.now()-new Date(iso).getTime())/60000);
   if(!isFinite(m)||m<0)return""; if(m<60)return m+" דק׳"; const h=Math.floor(m/60);
@@ -1245,6 +1246,10 @@ function moreSheet(){
   let h=`<div class="grab"></div><h3>עוד</h3><div class="mini" style="margin:2px 0 10px"><button onclick="toggleTheme()">🌓 ערכה</button><button onclick="load(true);closeSheet();toast('מרענן…')">🔄 רענון</button>${LIVE?`<button class="warn" onclick="logout()">התנתקות</button>`:""}</div>`;
   h+=`<div class="mini" style="margin-bottom:6px"><button onclick="openReports()">📋 דיווחים</button><button onclick="openTasks()">☑️ כל המשימות</button><button onclick="openPeople()">👥 אנשים</button><button onclick="openLessons()">🧠 לקחים</button></div>`;
   h+=`<div class="mini" style="margin-bottom:6px"><button onclick="openFiling()">🗂 שיוך מסמכים</button><button onclick="drill('doc:all')">📄 מסמכים מקוטלגים</button></div>`;
+  // "מה לא ברור" יושב ליד שיוך המסמכים כי זו אותה משפחה: שם מסדרים
+  // מסמכים לזירות, כאן מסדרים עובדות לישויות. והמספר על הכפתור הוא
+  // העיקר — בלעדיו המסך קיים ואיש אינו יודע שיש בו משהו.
+  h+=`<div class="mini" style="margin-bottom:6px"><button class="go" onclick="openVerify()">❓ מה לא ברור${vqList().length?` · ${vqList().length}`:""}</button></div>`;
   h+=`<div class="foot" style="text-align:start;padding:14px 2px 2px">Nexus HQ v3 · ${esc(D.now||"")}</div>`;
   openSheet(h);
 }
@@ -1391,6 +1396,108 @@ async function undoFiling(ids,folder){
   try{ await apiPost(FILE,{action:"undo",ids,folder:folder||null}); toast("בוטל ↩"); }
   catch(e){ toast("הביטול נכשל"); }
   loadFiling();
+}
+
+/* ================= מה לא ברור — תור האימות =================
+   איתי: "מודל עם שאלות גלומות ודברים שאתה לא בטוח בהם, שאני צריך להסביר
+   למערכת את האמת בצורה נוחה, וזה יעדכן את הממצאים."
+
+   הבעיה שזה פותר: הכרייה הפיקה 2,668 עובדות מ-832 מסמכים, וכולן נשמרות
+   `confidence='לאימות'` — כי עובדה שמודל חילץ ממסמך אינה מאומתת גם כשהיא
+   נכונה. עד המסך הזה הן היו נגישות רק ב-SQL, כלומר בפועל לא נגישות.
+
+   ושלוש השאלות אינן אותו דבר, ולכן גם הכפתורים אינם אותם כפתורים:
+     gap            → "האם היחידה קיימת ושלך". כן יוצר `assets` ומחבר אליו
+                      את העובדות. **זו הפעולה עם המינוף** — תשובה אחת
+                      מסדרת אשכול שלם (4-5 סוגרת 7 עובדות).
+     contradiction  → כמה עובדות לא-מאומתות על אותו נכס, וחלקן סותרות.
+     stale_lease    → חוזה שהסתיים ואין אחריו כלום.
+
+   הסדר מגיע מהשרת (`order by priority`) ואינו מחושב כאן: הדירוג הוא לפי
+   מינוף, וכפילות שלו בלקוח הייתה מתפצלת ממנו בשקט — אותו כשל שהוליד את
+   חוק המנוע-האחד (דף הדיווח והבוט, 26.7). */
+let VQ={busy:""};
+const VQ_KIND={gap:"יחידה חסרה",contradiction:"סתירה",stale_lease:"שכירות ללא המשך"};
+function vqList(){ return Array.isArray(D&&D.verifications)?D.verifications:[]; }
+function openVerify(){ closeSheet(); TAB="verify"; render(); }
+
+async function refreshVerify(btn){
+  if(!LIVE){ toast("המסך עובד מול נתונים אמיתיים בלבד"); return; }
+  if(btn)btn.disabled=true;
+  try{ const r=await apiPost(API,{action:"verify_refresh"});
+    toast(r.new_questions?`${r.new_questions} שאלות חדשות`:"אין שאלות חדשות");
+    await load(true);
+  }catch(e){ toast("הרענון נכשל: "+(e.message||e)); if(btn)btn.disabled=false; }
+  if(TAB==="verify")render();
+}
+
+function vVerify(){
+  const qs=vqList();
+  let h=`<div class="sec"><h2>❓ מה לא ברור</h2>${qs.length?`<span class="n num">${qs.length}</span>`:""}<span class="act" onclick="TAB='home';render()">חזרה ›</span></div>`;
+  if(!LIVE) return h+`<div class="card pad"><div class="sub2">המסך עובד מול הנתונים האמיתיים בלבד. התחבר עם המפתח.</div></div>`;
+  if(!qs.length) return h+`<div class="card pad"><div class="sub2">אין שאלות פתוחות. ✓</div><div class="mini"><button onclick="refreshVerify(this)">🔄 חפש שאלות חדשות</button></div></div>`;
+
+  h+=`<div class="sub2" style="margin:0 2px 10px">מדורג לפי <b>מינוף</b> — כמה עובדות כל תשובה מסדרת. הראשונה שווה יותר מהעשירית.</div>`;
+  h+=`<div class="mini" style="margin:0 2px 12px"><button onclick="refreshVerify(this)">🔄 חפש שאלות חדשות</button></div>`;
+
+  qs.forEach(q=>{
+    const c=q.context||{}, lev=c.leverage||c.facts;
+    h+=`<div class="card pad">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;flex-wrap:wrap">
+        <span class="chip mut">${esc(VQ_KIND[q.kind]||q.kind||"")}</span>
+        ${lev?`<span class="chip brand">${lev} עובדות</span>`:""}
+      </div>
+      <div style="font-size:14px;font-weight:700;line-height:1.45;word-break:break-word"><bdi>${esc(q.subject||"")}</bdi></div>
+      <div class="sub2" style="margin:6px 2px 0;line-height:1.6">${esc(q.question||"")}</div>`;
+    // מדגם מהמסמכים: בלעדיו איתי מכריע על סמך הניסוח שלי במקום על סמך המקור.
+    const s=Array.isArray(c.samples)&&c.samples.length?String(c.samples[0].ctx||c.samples[0].fact||""):"";
+    if(s) h+=`<div class="sub2" style="margin:7px 2px 0;opacity:.72;font-size:12px">מהמסמכים: <bdi>${esc(s.slice(0,160))}</bdi></div>`;
+    h+=`<div class="mini">`;
+    if(q.kind==="gap") h+=`<button class="go" onclick="vqSheet('${q.id}','confirm')">✓ כן, קיימת ושלי</button>
+        <button class="warn" onclick="vqSheet('${q.id}','dismiss')">✗ לא יחידה שלי</button>`;
+    else h+=`<button class="go" onclick="vqAct('${q.id}','confirm','',false)">✓ נכון כמו שכתוב</button>
+        <button onclick="vqSheet('${q.id}','truth')">✏️ אני אסביר</button>
+        <button class="warn" onclick="vqAct('${q.id}','dismiss','',false)">🗑 לא רלוונטי</button>`;
+    h+=`</div></div>`;
+  });
+  return h;
+}
+
+// התיבה משתנה לפי מה שהתשובה **עושה**. 'truth' הוא היחיד שההסבר בו חובה,
+// כי הוא נכתב כעובדה מאומתת שמחליפה את הקיימות — הסבר ריק שם היה מוריד
+// עובדות בלי לשים מה במקומן.
+function vqSheet(id,verdict){
+  const q=vqList().find(x=>x.id===id); if(!q)return;
+  const cfg = verdict==="confirm" ? {t:"איך לקרוא לה?",ph:"למשל: חנות 4-5 בקומת הקרקע — אפשר גם להשאיר ריק",req:false,btn:"➕ צור נכס וחבר את העובדות"}
+            : verdict==="dismiss" ? {t:"למה לא?",ph:"למשל: זה גוש/חלקה ולא יחידה — יישמר כלקח",req:false,btn:"✗ סמן שאינה יחידה שלי"}
+            : {t:"מה נכון היום?",ph:"הסבר בקצרה מה המצב האמיתי. זה יירשם כעובדה מאומתת ויחליף את הקיימות.",req:true,btn:"✏️ שמור כאמת"};
+  let h=`<div class="grab"></div><h3><bdi>${esc(q.subject||"")}</bdi></h3>
+    <div class="sub2" style="line-height:1.6">${esc(q.question||"")}</div>
+    <div class="blk"><h4>${esc(cfg.t)}</h4>
+    <textarea id="vqTxt" rows="3" maxlength="600" placeholder="${esc(cfg.ph)}"></textarea>
+    <div class="mini" style="margin-top:8px"><button class="go" onclick="vqAct('${id}','${verdict}',(($('#vqTxt')||{}).value||'').trim(),${cfg.req})">${esc(cfg.btn)}</button></div></div>`;
+  openSheet(h);
+  setTimeout(()=>{ const el=$("#vqTxt"); if(el){el.value="";el.focus();} },250);
+}
+
+async function vqAct(id,verdict,answer,req){
+  if(req && (answer||"").length<3){ toast("צריך להסביר מה נכון"); return; }
+  if(VQ.busy===id)return; VQ.busy=id;
+  closeSheet();
+  try{
+    const r=await apiPost(API,{action:"verify_commit",id,verdict,answer:answer||null});
+    if(r.error){ toast(r.error); VQ.busy=""; return; }
+    // ההודעה נגזרת ממה שהשרת **עשה**, לא ממה שהכפתור הבטיח. אותה הכרעה
+    // כמו בתצוגה המקדימה של מנוע הפקודות: אישור שמסכים עם עצמו חסר משמעות.
+    toast(r.facts_linked!=null ? `נוצר ${r.code||""} · ${r.facts_linked} עובדות התחברו`
+        : r.insights_verified!=null ? `${r.insights_verified} עובדות אומתו`
+        : r.superseded!=null ? `הוחלף · ${r.superseded} עובדות ירדו`
+        : (r.action||"נרשם"));
+    if(Array.isArray(D.verifications)) D.verifications=D.verifications.filter(x=>x.id!==id);
+    if(TAB==="verify")render();
+    load(true);
+  }catch(e){ toast("הפעולה נכשלה: "+(e.message||e)); }
+  VQ.busy="";
 }
 
 /* ================= תצוגה ויזואלית — גרפים =================

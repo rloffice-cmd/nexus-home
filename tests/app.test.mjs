@@ -44,6 +44,10 @@ const SERVER_ACTIONS = new Set([
   // נבנו בשני סשנים במקביל, שניהם קראו לגרסה שלהם v13, ופריסה אחת מחקה את
   // השנייה מהייצור. v14 מחזיק את שתיהן.
   "meeting_waive_debrief", "meeting_unwaive_debrief",
+  // nexus-app v19 — מסך "מה לא ברור". הכתיבה כולה ב-nexus_verify_commit,
+  // שמזהה kind='gap' ומאציל ל-nexus_spine_commit: נקודת כניסה אחת בשרת,
+  // ולכן גם פעולה אחת כאן. verify_refresh מריץ nexus_verify_queue.
+  "verify_commit", "verify_refresh",
 ]);
 const sent = [...new Set([...js.matchAll(/action:\s*"([a-z_]+)"/g)].map(m => m[1]))];
 const unknown = sent.filter(a => !SERVER_ACTIONS.has(a));
