@@ -48,6 +48,9 @@ const SERVER_ACTIONS = new Set([
   // שמזהה kind='gap' ומאציל ל-nexus_spine_commit: נקודת כניסה אחת בשרת,
   // ולכן גם פעולה אחת כאן. verify_refresh מריץ nexus_verify_queue.
   "verify_commit", "verify_refresh",
+  // nexus-app v21 — מסך אלפא: אישור/עצירה/הצעת מנדטים דרך מנועי
+  // alpha_mandate_* ב-SQL. הממשק לא מחליט ולא כותב בעצמו.
+  "alpha_mandate_propose", "alpha_mandate_approve", "alpha_mandate_stop",
   // nexus-app v20 — "לחפור". איתי ראה את המסך ואמר שאי אפשר לענות: הכרטיס
   // הציג "יש 7 עובדות שטרם אומתו, וחלקן עשויות לסתור זו את זו" ואפס עובדות,
   // כי הוא חיפש context.samples ו-nexus_verify_queue כותבת מערך חשוף.
