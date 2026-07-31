@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="assets/nexus-logo.png">
+<meta name="referrer" content="no-referrer"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="assets/nexus-logo.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <title>Nexus · חדר מצב</title>
@@ -1354,7 +1354,7 @@ function openLessons(){ const L=(D.lessons||[]); const nL=L.length;
   openSheet(h); }
 async function openReports(){ let h=`<div class="grab"></div><h3>📋 דיווחים</h3><div class="sub2">מערכת הדיווח הדו-צדדית — ממתינים לאישורך, שקטים, נדנוד לצוות.</div><div id="repBody"><div class="mini-empty">טוען…</div></div>`; openSheet(h);
   if(!LIVE){ $("#repBody").innerHTML=`<div class="mini-empty">זמין במצב מחובר בלבד.</div>`; return; }
-  try{ const r=await fetch(REPORT+"?k="+encodeURIComponent(KEY),{cache:"no-store"}); const d=await r.json();
+  try{ const r=await fetch(REPORT,{cache:"no-store",headers:{"x-nexus-key":KEY}}); const d=await r.json();
     if(d.mode!=="owner"){ $("#repBody").innerHTML=`<div class="mini-empty">אין נתוני דיווחים.</div>`; return; }
     const p=d.pulse||{}; let b=`<div class="vitals" style="margin-bottom:12px">`+vt(p.pending?"c-warn":"",p.pending||0,"","ממתינים לאישורך")+vt(p.stuck?"c-crit":"",p.stuck||0,"","נתקעו")+vt(p.silent?"c-crit":"",p.silent||0,"","שקטים")+`</div>`;
     if((d.silent||[]).length){ b+=`<div class="blk"><h4>נשמע מזמן (מעל 5 ימים)</h4>`+(d.silent||[]).slice(0,8).map(s=>`<div class="li"><span>${esc(s.title||"")}${s.person?` <span class="dim">— ${esc(s.person)}</span>`:""}</span></div>`).join("")+`</div>`; }
