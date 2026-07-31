@@ -1292,7 +1292,7 @@ const ALPHA_OUT={pending:["ממתין","mut"],delivered:["נמסר","good"],fail
 function openAlpha(){
   const A=alphaD(); const prop=alphaProposed(); const act=(A.mandates||[]).filter(m=>m.status==="active");
   let h=`<div class="grab"></div><h3>🤖 אלפא · העוזר הדיגיטלי</h3>`;
-  h+=`<div class="sub2">משמרות היום: ${A.shifts_today}/3 (א'–ה' 07:45 · 13:00 · 17:30) · פועל רק בתוך מנדט שאישרת · תזכורות לצוות יוצאות בשמו, לא בשמך</div>`;
+  h+=`<div class="sub2">משמרות היום: ${A.shifts_today}/3 (א'–ה' 08:05 · 13:00 · 17:30) · פועל רק בתוך מנדט שאישרת · תזכורות לצוות יוצאות בשמו, לא בשמך</div>`;
   if(prop.length){ h+=`<div class="blk"><h4>ממתין לאישורך · ${prop.length}</h4>`+prop.map(m=>`<div class="li" style="flex-direction:column;align-items:stretch;gap:8px"><div><b>${esc(m.title)}</b><br><span class="dim" style="font-size:12px">${esc(m.goal||"")} · עד ${m.max_msgs_per_person_day} הודעות/אדם/יום · שעות 08:00–18:00 א'–ה'</span></div><div class="mini"><button class="go" onclick="alphaApprove('${m.id}')">✔ אשר ל-30 יום</button><button class="warn" onclick="alphaStop('${m.id}')">✖ דחה</button></div></div>`).join("")+`</div>`; }
   if(act.length){ h+=`<div class="blk"><h4>מנדטים פעילים · ${act.length}</h4>`+act.map(m=>{const dl=Math.max(0,Math.ceil((new Date(m.expires_at)-Date.now())/864e5));return `<div class="li"><span style="flex:1"><b>${esc(m.title)}</b><br><span class="dim" style="font-size:12px">${ALPHA_KIND[m.kind]||m.kind} · פג בעוד ${dl} ימים</span></span><button class="warn" style="font-size:12px" onclick="alphaStop('${m.id}')">עצור</button></div>`;}).join("")+`</div>`; }
   const missing=["overdue_tasks","open_commitments"].filter(k=>!(A.mandates||[]).some(m=>m.kind===k&&(m.status==="proposed"||m.status==="active")));
