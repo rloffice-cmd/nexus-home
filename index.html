@@ -527,7 +527,7 @@ function shell(){
     <button data-tab="arenas"><span class="ic">▤</span>זירות</button>
     <button data-tab="decisions"><span class="ic">✦</span>החלטות<span class="bdg"></span></button>
     <button data-tab="assets"><span class="ic">▦</span>נכסים</button>
-    <button data-tab="ask"><span class="ic">✱</span>שאל</button>
+    <button data-tab="ask"><span class="ic">α</span>אלפא</button>
   </nav>
   <button class="fab" id="fab" aria-label="לכידה">+</button>
   <div class="ov" id="ov"></div><div class="sheet" id="sheet"></div>
@@ -1001,17 +1001,43 @@ function openDecision(id){ const d=(D.decisions||[]).find(x=>x.id===id); if(!d)r
 async function decide(id,verdict,fromSheet){ const note=fromSheet?(($("#decNote")||{}).value||"").trim():""; const d=(D.decisions||[]).find(x=>x.id===id); if(d)d.status=verdict; if(fromSheet)closeSheet(); render(); toast(verdict==="decided"?"הוכרע ✓":"ירד מהפרק"); try{ await apiPost(ACT,{action:"decision_decide",id,verdict,note}); }catch(e){ toast("שמירה נכשלה — ינוסה ברענון"); } afterAct(); }
 
 /* ================= ASK ================= */
-let askHist=[]; const AK_SUG=["מה הכי דחוף להכרעה?","אילו זירות שקטות מדי?","כמה חוב על כל נכס?","מי מהצוות תקוע?","סכם לי את השדרה"];
-function vAsk(){ return `<div class="sec"><h2>✱ שאל את המוח</h2><span class="n dim">· ${LIVE?"מחובר":"הדגמה"}</span></div><div class="ask-wrap"><div class="ask-feed" id="askFeed"></div><div class="ask-bar"><input id="askIn" placeholder="שאל על עסקה, נכס, אדם, החלטה…" onkeydown="if(event.key==='Enter')askSend()"><button onclick="askSend()" aria-label="שלח">↑</button></div></div>`; }
+/* ============ אלפא — שיחה (nexus-app v22, command_preview kind=general) ============
+   הצ'אט הוא ממשק בלבד: שאלה ⟶ המוח עונה · הוראה ⟶ פעולות מוצעות + כפתור
+   בצע (command_apply) · ניסוח ⟶ טיוטה. אלפא לא מבצע כלום בלי הכפתור. */
+let askHist=[]; let AL_PEND=null;
+const AK_SUG=["מה תקוע אצל הצוות?","מה הכי דחוף להיום?","תוסיף משימה: …","נסח הודעה ל…","מה עשית היום?"];
+function vAsk(){ return `<div class="sec"><h2>α אלפא · העוזר הדיגיטלי</h2><span class="n dim">· ${LIVE?"מחובר":"הדגמה"}</span></div><div class="ask-wrap"><div class="ask-feed" id="askFeed"></div><div class="ask-bar"><input id="askIn" placeholder="דבר איתי — שאלה, משימה, בקשה…" onkeydown="if(event.key==='Enter')askSend()">${canVoiceInput()?`<button id="alMic" class="mic" style="position:static;flex:0 0 auto" aria-label="הכתבה" onclick="voiceToggle('#alMic','#askIn')">🎙</button>`:""}<button onclick="askSend()" aria-label="שלח">↑</button></div></div>`; }
 function renderAsk(){ const feed=$("#askFeed"); if(!feed)return;
-  if(!askHist.length){ feed.innerHTML=`<div class="a-bub">שלום איתי. אני ראש המטה של נקסוס — שאל על העסקאות, הנכסים, האנשים וההחלטות.${LIVE?"":"<br><br><b>הדגמה:</b> המוח מגיב רק במצב מחובר."}</div><div class="ak-sug">${AK_SUG.map(s=>`<span class="c" onclick="askChip(this)">${esc(s)}</span>`).join("")}</div>`; return; }
-  feed.innerHTML=askHist.map(m=>m.q!=null?`<div class="q-bub">${esc(m.q)}</div>`:`<div class="a-bub ${m.load?"load":""} md">${m.load?"חושב… (עד ~30 שנ׳)":fmtMd(m.a)}</div>`).join(""); feed.scrollTop=feed.scrollHeight;
+  if(!askHist.length){ const A=(D.alpha||{}); const act=(A.mandates||[]).filter(m=>m.status==="active").length;
+    feed.innerHTML=`<div class="a-bub">היי איתי, כאן אלפא 👋 העוזר הדיגיטלי שלך.<br>אפשר לשאול אותי, לתת לי משימות ("תוסיף משימה לשיר עד שלישי"), לבקש ניסוח, או לנהל את המנדטים שלי (☰ ⟵ אלפא).<br><span class="dim" style="font-size:12px">מנדטים פעילים: ${act} · משמרות היום: ${A.shifts_today??0}/3</span>${LIVE?"":"<br><br><b>הדגמה:</b> אני מגיב רק במצב מחובר."}</div><div class="ak-sug">${AK_SUG.map(s=>`<span class="c" onclick="askChip(this)">${esc(s)}</span>`).join("")}</div>`; return; }
+  feed.innerHTML=askHist.map((m,i)=>{
+    if(m.q!=null)return `<div class="q-bub">${esc(m.q)}</div>`;
+    if(m.load)return `<div class="a-bub load">חושב…</div>`;
+    if(m.ops)return `<div class="a-bub"><div style="font-weight:700;margin-bottom:6px">${esc(m.summary||"אלה הפעולות — מאשר?")}</div>${cmdOps(m.ops)}${m.question?`<div class="kv dim" style="margin-top:6px">❓ ${esc(m.question)}</div>`:""}${m.pending?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn good" style="flex:1" onclick="alApply(${i})">✅ בצע</button><button class="btn line" style="padding-inline:14px" onclick="alCancel(${i})">✖️ בטל</button></div><div class="dim" style="font-size:11.5px;margin-top:5px">אפשר גם פשוט לכתוב לי תיקון</div>`:m.done?`<div class="chip good" style="margin-top:8px">${esc(m.done)}</div>`:`<div class="chip mut" style="margin-top:8px">בוטל</div>`}</div>`;
+    if(m.draft)return `<div class="a-bub"><div style="font-weight:700;margin-bottom:6px">✍️ טיוטה ל${esc(m.draft.to_name||"?")}</div><div style="white-space:pre-wrap">${esc(m.draft.body||"")}</div><button class="btn line" style="margin-top:8px" onclick="copyTxt(askHist[${i}].draft.body,this)">📋 העתק</button></div>`;
+    return `<div class="a-bub md">${fmtMd(m.a)}</div>`;
+  }).join(""); feed.scrollTop=feed.scrollHeight;
 }
+async function alApply(i){ const m=askHist[i]; if(!m||!m.ops||!m.pending)return; m.pending=false; renderAsk();
+  try{ const r=await apiPost(API,{action:"command_apply",ops:m.ops}); const n=r.applied||0,errs=r.errors||[];
+    m.done=errs.length?`בוצעו ${n} · ${errs.length} נכשלו`:(n===1?"בוצע ✓":`בוצעו ${n} ✓`);
+    if(errs.length)askHist.push({a:"מה שנכשל: "+errs.map(e=>e.error||"שגיאה").join(" · ")});
+    AL_PEND=null; renderAsk(); if(LIVE)load(true);
+  }catch(e){ m.pending=true; renderAsk(); toast("הביצוע נכשל — נסה שוב"); } }
+function alCancel(i){ const m=askHist[i]; if(m){ m.pending=false; m.done=null; } AL_PEND=null; renderAsk(); }
 function askChip(el){ $("#askIn").value=el.textContent; askSend(); }
 async function askSend(){ const inp=$("#askIn"); const q=(inp.value||"").trim(); if(!q)return; inp.value=""; askHist.push({q}); askHist.push({load:true}); renderAsk();
-  if(!LIVE){ askHist[askHist.length-1]={a:"במצב הדגמה אין גישה למוח החי. במכשיר שלך, עם המפתח — תשובה מלאה עם נתוני אמת."}; renderAsk(); return; }
-  const history=[]; for(let i=0;i<askHist.length-1;i++){ const m=askHist[i]; if(m.q!=null)history.push({q:m.q}); else if(m.a!=null&&!m.load&&history.length)history[history.length-1].a=m.a; }
-  try{ const r=await fetch(ASK,{method:"POST",headers:{"content-type":"application/json","x-nexus-key":KEY},body:JSON.stringify({q,history:history.slice(-6)})}); const j=await r.json(); askHist[askHist.length-1]={a:j.reply||"לא הצלחתי לענות על זה כרגע."}; }catch(e){ askHist[askHist.length-1]={a:"שגיאה בגישה למוח. נסה שוב."}; } renderAsk();
+  if(!LIVE){ askHist[askHist.length-1]={a:"במצב הדגמה אין גישה חיה. במכשיר שלך, עם המפתח — אלפא עונה עם נתוני אמת."}; renderAsk(); return; }
+  const payload={action:"command_preview",kind:"general",id:null,text:q};
+  // תיקון על הצעה פתוחה: ההצעה הקודמת נוסעת עם הבקשה (v12 — התיקון נושא את מה שהוא מתקן)
+  if(AL_PEND)payload.prior=AL_PEND;
+  try{ const r=await apiPost(API,payload); const slot=askHist.length-1;
+    if(r.route==="ask"){ askHist[slot]={a:r.answer||"לא הצלחתי לענות על זה כרגע."}; AL_PEND=null; }
+    else if(r.route==="draft"&&r.draft){ askHist[slot]={draft:r.draft}; AL_PEND=null; }
+    else if((r.ops||[]).length){ if(AL_PEND){ const prev=askHist.findLast?askHist.findLast(m=>m.ops&&m.pending):null; if(prev){prev.pending=false;prev.done=null;} }
+      askHist[slot]={ops:r.ops,summary:r.summary,question:r.question,pending:true}; AL_PEND={text:q,summary:r.summary||null,ops:r.ops}; }
+    else askHist[slot]={a:r.question||"לא זיהיתי פעולה — נסח אחרת, או שאל אותי."};
+  }catch(e){ askHist[askHist.length-1]={a:"שגיאה בתקשורת — נסה שוב."}; } renderAsk();
 }
 function fmtMd(t){ t=esc(t); const lines=t.split("\n"); let out="",inUl=false; const flush=()=>{if(inUl){out+="</ul>";inUl=false;}};
   for(let ln of lines){ if(/^\s*[-•]\s+/.test(ln)){ if(!inUl){out+="<ul>";inUl=true;} out+="<li>"+ln.replace(/^\s*[-•]\s+/,"")+"</li>"; continue; } flush(); if(/^#{1,4}\s/.test(ln))out+='<div class="h">'+ln.replace(/^#+\s/,"")+"</div>"; else if(ln.trim()==="")out+="<br>"; else out+="<div>"+ln+"</div>"; }
@@ -1266,7 +1292,7 @@ const ALPHA_OUT={pending:["ממתין","mut"],delivered:["נמסר","good"],fail
 function openAlpha(){
   const A=alphaD(); const prop=alphaProposed(); const act=(A.mandates||[]).filter(m=>m.status==="active");
   let h=`<div class="grab"></div><h3>🤖 אלפא · העוזר הדיגיטלי</h3>`;
-  h+=`<div class="sub2">משמרות היום: ${A.shifts_today}/3 (א'–ה' 07:45 · 13:00 · 17:30) · פועל רק בתוך מנדט שאישרת · תזכורות לצוות יוצאות בשמו, לא בשמך</div>`;
+  h+=`<div class="sub2">משמרות היום: ${A.shifts_today}/3 (א'–ה' 08:05 · 13:00 · 17:30) · פועל רק בתוך מנדט שאישרת · תזכורות לצוות יוצאות בשמו, לא בשמך</div>`;
   if(prop.length){ h+=`<div class="blk"><h4>ממתין לאישורך · ${prop.length}</h4>`+prop.map(m=>`<div class="li" style="flex-direction:column;align-items:stretch;gap:8px"><div><b>${esc(m.title)}</b><br><span class="dim" style="font-size:12px">${esc(m.goal||"")} · עד ${m.max_msgs_per_person_day} הודעות/אדם/יום · שעות 08:00–18:00 א'–ה'</span></div><div class="mini"><button class="go" onclick="alphaApprove('${m.id}')">✔ אשר ל-30 יום</button><button class="warn" onclick="alphaStop('${m.id}')">✖ דחה</button></div></div>`).join("")+`</div>`; }
   if(act.length){ h+=`<div class="blk"><h4>מנדטים פעילים · ${act.length}</h4>`+act.map(m=>{const dl=Math.max(0,Math.ceil((new Date(m.expires_at)-Date.now())/864e5));return `<div class="li"><span style="flex:1"><b>${esc(m.title)}</b><br><span class="dim" style="font-size:12px">${ALPHA_KIND[m.kind]||m.kind} · פג בעוד ${dl} ימים</span></span><button class="warn" style="font-size:12px" onclick="alphaStop('${m.id}')">עצור</button></div>`;}).join("")+`</div>`; }
   const missing=["overdue_tasks","open_commitments"].filter(k=>!(A.mandates||[]).some(m=>m.kind===k&&(m.status==="proposed"||m.status==="active")));
