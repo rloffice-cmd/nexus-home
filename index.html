@@ -1372,7 +1372,10 @@ function openAlpha(){
   const missing=["overdue_tasks","open_commitments"].filter(k=>!(A.mandates||[]).some(m=>m.kind===k&&(m.status==="proposed"||m.status==="active")));
   if(missing.length){ h+=`<div class="blk"><h4>פתיחת מנדט</h4><div class="mini">`+missing.map(k=>`<button onclick="alphaPropose('${k}')">+ ${ALPHA_KIND[k]}</button>`).join("")+`</div><div class="sub2">נפתח כהצעה — האישור בכפתור נפרד, כדי שתראה בדיוק מה אושר.</div></div>`; }
   const ra=A.recent_actions||[];
-  h+=`<div class="blk"><h4>מה אלפא עשה${ra.length?` · ${ra.length} אחרונות`:""}</h4>`+(ra.length?ra.slice(0,15).map(a=>{const o=ALPHA_OUT[a.outcome]||[a.outcome,"mut"];return `<div class="li"><span style="flex:1">${ALPHA_ACT[a.action]||a.action} ל-<b>${esc(personName(a.recipient_id)||"?")}</b><br><span class="dim" style="font-size:12px">${esc(a.body||"")}</span></span><span class="chip ${o[1]}">${o[0]}</span></div>`;}).join(""):`<div class="sub2">אין עדיין פעולות — אלפא ממתין למנדט הראשון שלך.</div>`)+`</div>`;
+  // ביומן הפעולות חייבת להופיע שעת השליחה עצמה — "(עד 02.08)" בגוף ההודעה הוא
+  // יעד המשימה, לא מתי אלפא פעל, ואיתי לא יכול היה לדעת מתי יצאה תזכורת (6.8).
+  const actWhen=t=>{ const x=ts(t); return isNaN(x)?"":fmtDay(new Date(x).toLocaleDateString("en-CA",{timeZone:"Asia/Jerusalem"}))+" "+new Date(x).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Jerusalem"}); };
+  h+=`<div class="blk"><h4>מה אלפא עשה${ra.length?` · ${ra.length} אחרונות`:""}</h4>`+(ra.length?ra.slice(0,15).map(a=>{const o=ALPHA_OUT[a.outcome]||[a.outcome,"mut"];const w=actWhen(a.sent_at);return `<div class="li"><span style="flex:1">${ALPHA_ACT[a.action]||a.action} ל-<b>${esc(personName(a.recipient_id)||"?")}</b>${w?` <span class="chip mut num" style="font-size:11px">${w}</span>`:""}<br><span class="dim" style="font-size:12px">${esc(a.body||"")}</span></span><span class="chip ${o[1]}">${o[0]}</span></div>`;}).join(""):`<div class="sub2">אין עדיין פעולות — אלפא ממתין למנדט הראשון שלך.</div>`)+`</div>`;
   openSheet(h);
 }
 async function alphaApprove(id){ try{ await apiPost(API,{action:"alpha_mandate_approve",id}); toast("המנדט אושר — אלפא יוצא לדרך מהמשמרת הבאה"); if(LIVE)await load(true); openAlpha(); }catch(e){ toast("שגיאה: "+e.message); } }
