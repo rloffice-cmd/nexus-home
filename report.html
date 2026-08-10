@@ -71,6 +71,15 @@
   .silentrow:first-of-type{border-top:0}
   .silentrow .sn{font-weight:700; font-size:14px}
   .silentrow .sm{color:var(--bad); font-size:12px; white-space:nowrap}
+  .chip.wait{background:rgba(245,184,65,.18); color:var(--amber-ink)}
+  .stepsline{font-size:12.5px; color:var(--good); font-weight:700; margin-bottom:6px}
+  .step{background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:9px 11px; margin:7px 0 0 18px}
+  .step .title{font-size:13.5px; margin-bottom:5px}
+  .step .b{padding:8px 0; font-size:12.5px}
+  .bdbtn{background:none; border:1px dashed var(--line); border-radius:10px; color:var(--ink2); font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; padding:7px 12px; margin-top:8px; width:100%}
+  .bdbox{display:none; margin-top:8px}
+  .bdbox.open{display:block}
+  .bdgo{border:0; border-radius:10px; padding:9px 14px; background:var(--blue); color:#0c1428; font-weight:800; font-size:13px; cursor:pointer; font-family:inherit; margin-top:6px}
   .histbtn{background:none; border:0; color:var(--blue); font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; padding:4px 0 2px}
   .histbox{margin-top:6px; border-top:1px solid var(--line); padding-top:6px; display:none}
   .histbox.open{display:block}
@@ -121,47 +130,89 @@ function statusMeta(st){
 }
 
 /* ---------- EMPLOYEE ---------- */
+/* 10.8 (משוב אהרון): רשימה אחת. משימה שדווחה "בתהליך" נשארת במקומה עם תג
+   הסטטוס — לא יורדת לקטע "כבר עדכנת" שנראה כמו ארכיון. נעלמת רק כשבוצעה.
+   משימה מורכבת: "פירוק לצעדים" — כל צעד הוא משימה מקוננת עם כפתורים משלה. */
 function renderEmployee(d){
   const tasks = d.tasks||[];
-  const pending = tasks.filter(t=>!t.last_report_at);
-  const reported = tasks.filter(t=>t.last_report_at);
-  pending.sort((a,b)=>urgencyRank(a.urgency)-urgencyRank(b.urgency));
-  reported.sort((a,b)=> new Date(b.last_report_at)-new Date(a.last_report_at));
+  const byId = new Map(tasks.map(t=>[t.id,t]));
+  const stepsByParent = new Map();
+  tasks.forEach(t=>{
+    if(t.parent_id && byId.has(t.parent_id)){
+      const a = stepsByParent.get(t.parent_id)||[]; a.push(t); stepsByParent.set(t.parent_id,a);
+    }
+  });
+  const top = tasks.filter(t=>!(t.parent_id && byId.has(t.parent_id)));
+  top.sort((a,b)=>{
+    const ar=a.last_report_at?1:0, br=b.last_report_at?1:0;
+    if(ar!==br) return ar-br;                       // ממתין-לעדכון קודם
+    return urgencyRank(a.urgency)-urgencyRank(b.urgency);
+  });
+  const waiting = top.filter(t=>!t.last_report_at).length;
   let h = `<h1>היי ${esc(d.name.split(" ")[0]||d.name)} 👋</h1>
-    <div class="sub">${tasks.length} משימות פתוחות · ${pending.length} מחכות לעדכון</div>`;
+    <div class="sub">${top.length} משימות פתוחות${waiting?` · ${waiting} מחכות לעדכון ראשון`:""} · משימה נשארת כאן עד שהיא בוצעה</div>`;
   if(!tasks.length){
     h += `<div class="empty"><div class="big">✅</div>אין משימות פתוחות כרגע. כל הכבוד.</div>`;
     app.innerHTML=h; return;
   }
-  if(pending.length){
-    h += `<div class="sectitle">מחכה לעדכון</div>`;
-    pending.forEach(t=> h += taskCard(t,false));
-  }
-  if(reported.length){
-    h += `<div class="sectitle">כבר עדכנת</div>`;
-    reported.forEach(t=> h += taskCard(t,true));
-  }
+  h += `<div class="sectitle">המשימות שלך</div>`;
+  top.forEach(t=> h += taskCard(t, stepsByParent.get(t.id)||[]));
   app.innerHTML=h;
 }
-function taskCard(t, reported){
-  let chips = "";
-  if(t.arena) chips += `<span class="chip arena">${esc(t.arena)}</span>`;
-  if(t.front) chips += `<span class="chip">${esc(t.front)}</span>`;
-  if(t.urgency) chips += `<span class="chip ${t.urgency==="week"?"week":t.urgency==="month"?"month":""}">${t.urgency==="week"?"השבוע":t.urgency==="month"?"החודש":esc(t.urgency)}</span>`;
-  let body = `<div class="title">${esc(t.title)}</div><div class="chips">${chips}</div>`;
-  if(reported){
-    const sm = statusMeta(t.status);
-    body += `<div class="status ${sm.cls}">הדיווח האחרון: ${sm.txt} · ${timeAgo(t.last_report_at)}</div>`;
-    if(t.reply) body += `<div class="reply"><b>איתי:</b> ${esc(t.reply)}</div>`;
-    else if(t.acked) body += `<div class="ack">✓ איתי ראה</div>`;
-  }
-  body += `<textarea class="note" id="n_${t.id}" placeholder="הערה (לא חובה)…"></textarea>
+function reportButtons(t, small){
+  return `<textarea class="note" id="n_${t.id}" placeholder="הערה (לא חובה)…"></textarea>
     <div class="btnrow">
       <button class="b done" onclick="sendReport('${t.id}','done')">בוצע</button>
       <button class="b prog" onclick="sendReport('${t.id}','progress')">בתהליך</button>
       <button class="b stuck" onclick="sendReport('${t.id}','stuck')">נתקע</button>
     </div>`;
+}
+function statusLine(t){
+  if(!t.last_report_at) return "";
+  const sm = statusMeta(t.status);
+  let s = `<div class="status ${sm.cls}">העדכון האחרון שלך: ${sm.txt} · ${timeAgo(t.last_report_at)}</div>`;
+  if(t.reply) s += `<div class="reply"><b>איתי:</b> ${esc(t.reply)}</div>`;
+  else if(t.acked) s += `<div class="ack">✓ איתי ראה</div>`;
+  return s;
+}
+function taskCard(t, steps){
+  let chips = "";
+  if(!t.last_report_at) chips += `<span class="chip wait">ממתין לעדכון שלך</span>`;
+  if(t.arena) chips += `<span class="chip arena">${esc(t.arena)}</span>`;
+  if(t.front) chips += `<span class="chip">${esc(t.front)}</span>`;
+  if(t.urgency) chips += `<span class="chip ${t.urgency==="week"?"week":t.urgency==="month"?"month":""}">${t.urgency==="week"?"השבוע":t.urgency==="month"?"החודש":esc(t.urgency)}</span>`;
+  let body = `<div class="title">${esc(t.title)}</div><div class="chips">${chips}</div>`;
+  body += statusLine(t);
+  if(t.steps_total) body += `<div class="stepsline">צעדים: ${t.steps_done}/${t.steps_total} הושלמו</div>`;
+  body += reportButtons(t);
+  steps.forEach(s=> body += stepCard(s));
+  body += `<button class="bdbtn" onclick="toggleBreakdown('${t.id}')">➕ פירוק לצעדים (משימה מורכבת)</button>
+    <div class="bdbox" id="bd_${t.id}">
+      <textarea class="note" id="bdt_${t.id}" placeholder="צעד אחד בכל שורה…" style="min-height:70px"></textarea>
+      <button class="bdgo" onclick="sendBreakdown('${t.id}')">צור את הצעדים</button>
+    </div>`;
   return `<div class="card" id="c_${t.id}">${body}</div>`;
+}
+function stepCard(s){
+  let body = `<div class="title">↳ ${esc(s.title)}</div>`;
+  body += statusLine(s);
+  body += reportButtons(s, true);
+  return `<div class="step" id="c_${s.id}">${body}</div>`;
+}
+function toggleBreakdown(id){
+  const el=document.getElementById("bd_"+id);
+  if(el) el.classList.toggle("open");
+}
+async function sendBreakdown(id){
+  const ta=document.getElementById("bdt_"+id);
+  const steps=(ta&&ta.value||"").split("\n").map(s=>s.trim()).filter(s=>s.length>=2);
+  if(!steps.length){ toast("כתוב צעד אחד בכל שורה"); return; }
+  if(steps.length>8){ toast("עד 8 צעדים בפעם אחת"); return; }
+  try{
+    await api("POST",{action:"breakdown", task_id:id, steps});
+    toast("הצעדים נוצרו ✓");
+    setTimeout(load, 500);
+  }catch(e){ toast("שגיאה: "+e.message); }
 }
 async function sendReport(id, btn){
   const el=document.getElementById("n_"+id);
