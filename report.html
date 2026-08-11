@@ -24,7 +24,7 @@
   h1{font-size:19px; margin:2px 0 2px; font-weight:800}
   .sub{color:var(--ink2); font-size:13.5px; margin-bottom:16px}
   .sectitle{font-size:13px; color:var(--amber-ink); font-weight:700; margin:20px 4px 8px; letter-spacing:.2px}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 4px 16px rgba(0,0,0,.22)}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; box-shadow:0 4px 16px rgba(0,0,0,.22); overflow-wrap:anywhere}
   .title{font-weight:700; font-size:15px; margin-bottom:7px}
   .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:9px}
   .chip{display:inline-block; background:var(--chip); color:var(--ink2); border-radius:20px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap}
@@ -35,7 +35,7 @@
   .b{flex:1; border:0; border-radius:11px; padding:11px 0; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; color:#0c1428}
   .b.done{background:var(--good)} .b.prog{background:var(--blue)} .b.stuck{background:var(--amber)}
   .b:active{transform:scale(.97)}
-  .note{width:100%; margin-top:9px; background:var(--card2); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-family:inherit; font-size:14px; padding:9px 11px; resize:vertical; min-height:38px}
+  .note{width:100%; margin-top:9px; background:var(--card2); border:1px solid var(--line); border-radius:10px; color:var(--ink); font-family:inherit; font-size:16px; padding:9px 11px; resize:vertical; min-height:38px}
   .note::placeholder{color:#6b7b9c}
   .status{font-size:12.5px; font-weight:700; margin-bottom:7px}
   .s-done{color:var(--good)} .s-prog{color:var(--blue)} .s-stuck{color:var(--bad)}
@@ -73,8 +73,8 @@
   .silentrow .sm{color:var(--bad); font-size:12px; white-space:nowrap}
   .chip.wait{background:rgba(245,184,65,.18); color:var(--amber-ink)}
   .stepsline{font-size:12.5px; color:var(--good); font-weight:700; margin-bottom:6px}
-  .step{background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:9px 11px; margin:7px 0 0 18px}
-  .step .title{font-size:13.5px; margin-bottom:5px}
+  .step{background:var(--card2); border:1px solid var(--line); border-radius:11px; padding:9px 11px; margin:7px 0 0; margin-inline-start:18px}
+  .step .title{font-size:13.5px; margin-bottom:5px}\n  .step,.reply{overflow-wrap:anywhere}
   .step .b{padding:8px 0; font-size:12.5px}
   .bdbtn{background:none; border:1px dashed var(--line); border-radius:10px; color:var(--ink2); font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; padding:7px 12px; margin-top:8px; width:100%}
   .bdbox{display:none; margin-top:8px}
@@ -96,11 +96,13 @@ const FN = "https://eygeouunxwsrdsijkczh.supabase.co/functions/v1/report";
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Z2VvdXVueHdzcmRzaWprY3poIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMjMxNTAsImV4cCI6MjA5OTY5OTE1MH0.m5gTz6326a6yzLZ9vbOsCFPvSJEFAcQUB-o8CFEiZdc";
 const params = new URLSearchParams(location.search);
 const TOKEN = params.get("t") || "";
-const KEY = params.get("k") || "";
-const AUTH = TOKEN ? ("t="+encodeURIComponent(TOKEN)) : ("k="+encodeURIComponent(KEY));
+/* מסלול ?k= בוטל (חוק 16 — סוד לא בכתובת): איתי מגיע ללוח דרך האפליקציה,
+   שמעבירה את המפתח ב-header. הדף הזה משרת עובדים עם טוקן בלבד. */
+const AUTH = "t="+encodeURIComponent(TOKEN);
 const app = document.getElementById("app");
 const HEADERS = {"content-type":"application/json","apikey":ANON,"authorization":"Bearer "+ANON};
-if(KEY) HEADERS["x-nexus-key"]=KEY;
+/* קישור חתוך (קורה בהעתקה מהמייל) — אמת בעברית במקום "no token" */
+const UUID_OK = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(TOKEN);
 
 function esc(s){return (s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800);}
@@ -203,30 +205,37 @@ function toggleBreakdown(id){
   const el=document.getElementById("bd_"+id);
   if(el) el.classList.toggle("open");
 }
+const INFLIGHT = new Set(); /* טאפ כפול על רשת איטית שכפל דיווחים וצעדים — נעילה פר-משימה */
 async function sendBreakdown(id){
   const ta=document.getElementById("bdt_"+id);
   const steps=(ta&&ta.value||"").split("\n").map(s=>s.trim()).filter(s=>s.length>=2);
   if(!steps.length){ toast("כתוב צעד אחד בכל שורה"); return; }
   if(steps.length>8){ toast("עד 8 צעדים בפעם אחת"); return; }
+  if(INFLIGHT.has("bd"+id)) return;
+  INFLIGHT.add("bd"+id);
   try{
     await api("POST",{action:"breakdown", task_id:id, steps});
     toast("הצעדים נוצרו ✓");
     setTimeout(load, 500);
   }catch(e){ toast("שגיאה: "+e.message); }
+  finally{ INFLIGHT.delete("bd"+id); }
 }
 async function sendReport(id, btn){
+  if(INFLIGHT.has(id)) return;
+  INFLIGHT.add(id);
   const el=document.getElementById("n_"+id);
   const note = el?el.value:"";
   const card=document.getElementById("c_"+id);
-  if(card) card.classList.add("fade");
+  if(card){ card.classList.add("fade"); card.querySelectorAll("button").forEach(b=>b.disabled=true); }
   try{
     await api("POST",{action:"report", task_id:id, btn, note});
     toast("נשלח ✓");
     setTimeout(load, 500);
   }catch(e){
-    if(card) card.classList.remove("fade");
-    toast("שגיאה: "+e.message);
+    if(card){ card.classList.remove("fade"); card.querySelectorAll("button").forEach(b=>b.disabled=false); }
+    toast(e.message||"שגיאה — נסה שוב");
   }
+  finally{ INFLIGHT.delete(id); }
 }
 
 /* ---------- OWNER ---------- */
@@ -280,14 +289,14 @@ function renderOwner(d){
 function reportCard(r){
   const sm = statusMeta(r.status);
   let body = `<div class="title">${esc(r.title)} <span class="time">${timeAgo(r.at)}</span></div>
-    <div class="status ${sm.cls}">${sm.txt}</div>
+    <div class="status ${sm.cls}">${sm.txt}${r.person?` · ${esc(r.person)}`:""}</div>
     <div style="font-size:13.5px;color:#cdd8ef;margin-bottom:8px">${esc(r.note)}</div>`;
   if(r.reply){
     body += `<div class="reply"><b>הגבת:</b> ${esc(r.reply)}</div>`;
   } else if(r.acked){
     body += `<div class="owner-actions"><span class="seen">✓ ראית</span></div>`;
   } else {
-    body += `<textarea class="note" id="rp_${r.task_id}" placeholder="תגובה לאהרון (לא חובה)…"></textarea>
+    body += `<textarea class="note" id="rp_${r.task_id}" placeholder="תגובה ל${esc(r.person||"עובד")} (לא חובה)…"></textarea>
       <div class="owner-actions">
         <button class="oa ack" onclick="ackReport('${r.task_id}')">ראיתי ✓</button>
         <button class="oa reply" onclick="replyReport('${r.task_id}')">שלח תגובה</button>
@@ -327,10 +336,16 @@ async function replyReport(id){
 
 /* ---------- BOOT ---------- */
 async function load(){
-  if(!TOKEN && !KEY){ app.innerHTML=`<div class="err">חסר טוקן גישה בכתובת. הלינק צריך להסתיים ב-?t=…</div>`; return; }
+  if(!TOKEN){ app.innerHTML=`<div class="err">חסר קישור גישה. בקש מאיתי את הקישור האישי שלך (מסתיים ב-?t=…).</div>`; return; }
+  if(!UUID_OK){ app.innerHTML=`<div class="err">הקישור חתוך או לא שלם — קורה בהעתקה מהמייל. בקש מאיתי את הקישור המלא.</div>`; return; }
+  /* שמירת טקסט שהוקלד וטרם נשלח — load() מרנדר הכול מחדש אחרי כל שליחה,
+     ומי שכתב הערות בכמה כרטיסים היה מאבד אותן (נמדד בביקורת 11.8) */
+  const saved={};
+  document.querySelectorAll("textarea[id]").forEach(t=>{ if(t.value) saved[t.id]=t.value; });
   try{
     const d = await api("GET");
     if(d.mode==="owner") renderOwner(d); else renderEmployee(d);
+    Object.entries(saved).forEach(([id,v])=>{ const t=document.getElementById(id); if(t&&!t.value) t.value=v; });
   }catch(e){
     app.innerHTML=`<div class="err"><b>לא הצלחתי לטעון.</b><br>${esc(e.message)}</div>`;
   }
