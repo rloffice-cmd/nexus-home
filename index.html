@@ -1114,27 +1114,35 @@ async function alApply(i){ const m=askHist[i]; if(!m||!m.ops||!m.pending)return;
     m.done=errs.length?`בוצעו ${n} · ${errs.length} נכשלו`:(n===1?"בוצע ✓":`בוצעו ${n} ✓`);
     if(errs.length)askHist.push({a:"מה שנכשל: "+errs.map(e=>e.error||"שגיאה").join(" · ")});
     AL_PEND=null; renderAsk(); if(LIVE)load(true);
-  }catch(e){ m.pending=true; renderAsk(); toast("הביצוע נכשל — נסה שוב"); } }
+  }catch(e){ m.pending=true; renderAsk(); toast("הביצוע נכשל: "+(e&&e.message?e.message:"נסה שוב")); } }
 function alCancel(i){ const m=askHist[i]; if(m){ m.pending=false; m.done=null; } AL_PEND=null; renderAsk(); }
 function askChip(el){ $("#askIn").value=el.textContent; askSend(); }
 async function askSend(){ const inp=$("#askIn"); const q=(inp.value||"").trim(); if(!q)return; inp.value=""; askHist.push({q}); askHist.push({load:true}); renderAsk();
-  if(!LIVE){ askHist[askHist.length-1]={a:"במצב הדגמה אין גישה חיה. במכשיר שלך, עם המפתח — אלפא עונה עם נתוני אמת."}; renderAsk(); return; }
+  /* ה-slot נלכד ברגע הדחיפה, לא אחרי ה-await — שאלה שנייה בזמן שהראשונה
+     בטיסה הייתה גורמת לתשובה 1 להיכתב על ה-slot של שאלה 2, ל"חושב…" נצחי,
+     ולזיווג היסטוריה שגוי (נמדד בביקורת 11.8). */
+  const slot=askHist.length-1;
+  if(!LIVE){ askHist[slot]={a:"במצב הדגמה אין גישה חיה. במכשיר שלך, עם המפתח — אלפא עונה עם נתוני אמת."}; renderAsk(); return; }
   const payload={action:"command_preview",kind:"general",id:null,text:q};
   // תיקון על הצעה פתוחה: ההצעה הקודמת נוסעת עם הבקשה (v12 — התיקון נושא את מה שהוא מתקן)
   if(AL_PEND)payload.prior=AL_PEND;
   // v14: ההיסטוריה נוסעת עם השאלה — בלעדיה "הפוליסה הזאת" הגיעה לשרת בלי
   // ההקשר, והמסווג ענה "אין לי גישה למסמכים" במקום לשאול את המוח (11.8).
   // אותו חוזה {q,a} כמו הזיכרון של אלפא בטלגרם ובוואטסאפ; עד 4 זוגות.
+  // תשובות שגיאה (err) לא נכנסות להיסטוריה — דיאלוג מפוברק מטעה את המוח.
   const hist=[]; for(let i=0;i<askHist.length-2;i++){ const m=askHist[i];
-    if(m.q){ const nx=askHist[i+1]; if(nx&&nx.a)hist.push({q:m.q,a:nx.a}); } }
+    if(m.q){ const nx=askHist[i+1]; if(nx&&nx.a&&!nx.err)hist.push({q:m.q,a:nx.a}); } }
   if(hist.length)payload.history=hist.slice(-4);
-  try{ const r=await apiPost(API,payload); const slot=askHist.length-1;
+  try{ const r=await apiPost(API,payload);
     if(r.route==="ask"){ askHist[slot]={a:r.answer||"לא הצלחתי לענות על זה כרגע."}; AL_PEND=null; }
     else if(r.route==="draft"&&r.draft){ askHist[slot]={draft:r.draft}; AL_PEND=null; }
-    else if((r.ops||[]).length){ if(AL_PEND){ const prev=askHist.findLast?askHist.findLast(m=>m.ops&&m.pending):null; if(prev){prev.pending=false;prev.done=null;} }
+    else if((r.ops||[]).length){ if(AL_PEND){ const prev=(askHist.findLast?askHist.findLast(m=>m.ops&&m.pending):[...askHist].reverse().find(m=>m.ops&&m.pending))||null; if(prev){prev.pending=false;prev.done=null;} }
       askHist[slot]={ops:r.ops,summary:r.summary,question:r.question,pending:true}; AL_PEND={text:q,summary:r.summary||null,ops:r.ops}; }
     else askHist[slot]={a:r.question||"לא זיהיתי פעולה — נסח אחרת, או שאל אותי."};
-  }catch(e){ askHist[askHist.length-1]={a:"שגיאה בתקשורת — נסה שוב."}; } renderAsk();
+  }catch(e){
+    /* השרת בונה הודעות כשל אמיתיות (קרדיט נגמר · תשובה נקטעה) — לא מסתירים אותן */
+    askHist[slot]={a:"⚠️ "+(e&&e.message?e.message:"שגיאה בתקשורת — נסה שוב."),err:true};
+  } renderAsk();
 }
 function fmtMd(t){ t=esc(t); const lines=t.split("\n"); let out="",inUl=false; const flush=()=>{if(inUl){out+="</ul>";inUl=false;}};
   for(let ln of lines){ if(/^\s*[-•]\s+/.test(ln)){ if(!inUl){out+="<ul>";inUl=true;} out+="<li>"+ln.replace(/^\s*[-•]\s+/,"")+"</li>"; continue; } flush(); if(/^#{1,4}\s/.test(ln))out+='<div class="h">'+ln.replace(/^#+\s/,"")+"</div>"; else if(ln.trim()==="")out+="<br>"; else out+="<div>"+ln+"</div>"; }
@@ -1142,8 +1150,8 @@ function fmtMd(t){ t=esc(t); const lines=t.split("\n"); let out="",inUl=false; c
 }
 
 /* ================= focus / tasks / capture / triage ================= */
-async function focusApprove(){ if(D.focus)D.focus.approved=true; render(); toast("אושר ⭐"); try{await apiPost(API,{action:"focus_approve"});}catch(e){} afterAct(); }
-async function focusDone(){ if(D.focus)D.focus.done=true; render(); toast("בוצע 🎯"); try{await apiPost(API,{action:"focus_done"});}catch(e){} afterAct(); }
+async function focusApprove(){ if(D.focus)D.focus.approved=true; render(); toast("אושר ⭐"); try{await apiPost(API,{action:"focus_approve"});}catch(e){ if(D.focus)D.focus.approved=false; render(); toast("לא נשמר — נסה שוב"); } afterAct(); }
+async function focusDone(){ if(D.focus)D.focus.done=true; render(); toast("בוצע 🎯"); try{await apiPost(API,{action:"focus_done"});}catch(e){ if(D.focus)D.focus.done=false; render(); toast("לא נשמר — נסה שוב"); } afterAct(); }
 function focusPick(){ const open=(D.tasks||[]).filter(t=>t.status==="open"||t.status==="waiting");
   let h=`<div class="grab"></div><h3>קבע את הדבר האחד</h3><div class="sub2">הכי מוזנח שנדחה שוב ושוב — לא בהכרח הכי חשוב. דדליין שמסכן עסקה גובר.</div><div class="field"><input id="focusTxt" placeholder="נסח בעצמך…" onkeydown="if(event.key==='Enter')focusSetText()"></div><button class="btn brand block" onclick="focusSetText()">קבע כדבר האחד</button><div class="blk"><h4>או בחר מהוותיקות ביותר</h4>`;
   const old=[...open].sort((a,b)=>(ts(a.created_at)||0)-(ts(b.created_at)||0)).slice(0,8);
