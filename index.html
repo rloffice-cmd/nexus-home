@@ -1122,6 +1122,12 @@ async function askSend(){ const inp=$("#askIn"); const q=(inp.value||"").trim();
   const payload={action:"command_preview",kind:"general",id:null,text:q};
   // תיקון על הצעה פתוחה: ההצעה הקודמת נוסעת עם הבקשה (v12 — התיקון נושא את מה שהוא מתקן)
   if(AL_PEND)payload.prior=AL_PEND;
+  // v14: ההיסטוריה נוסעת עם השאלה — בלעדיה "הפוליסה הזאת" הגיעה לשרת בלי
+  // ההקשר, והמסווג ענה "אין לי גישה למסמכים" במקום לשאול את המוח (11.8).
+  // אותו חוזה {q,a} כמו הזיכרון של אלפא בטלגרם ובוואטסאפ; עד 4 זוגות.
+  const hist=[]; for(let i=0;i<askHist.length-2;i++){ const m=askHist[i];
+    if(m.q){ const nx=askHist[i+1]; if(nx&&nx.a)hist.push({q:m.q,a:nx.a}); } }
+  if(hist.length)payload.history=hist.slice(-4);
   try{ const r=await apiPost(API,payload); const slot=askHist.length-1;
     if(r.route==="ask"){ askHist[slot]={a:r.answer||"לא הצלחתי לענות על זה כרגע."}; AL_PEND=null; }
     else if(r.route==="draft"&&r.draft){ askHist[slot]={draft:r.draft}; AL_PEND=null; }
