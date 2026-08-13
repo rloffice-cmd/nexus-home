@@ -1103,7 +1103,7 @@ function renderAsk(){ const feed=$("#askFeed"); if(!feed)return;
     feed.innerHTML=`<div class="a-bub"><div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">${alphaMark(19,"tile")}<b>אלפא</b><span class="dim" style="font-size:12px">העוזר הדיגיטלי שלך</span></div>היי איתי!<br>אפשר לשאול אותי, לתת לי משימות ("תוסיף משימה לשיר עד שלישי"), לבקש ניסוח, או לנהל את המנדטים שלי (☰ ⟵ אלפא).<br><span class="dim" style="font-size:12px">מנדטים פעילים: ${act} · משמרות היום: ${A.shifts_today??0}/3</span>${LIVE?"":"<br><br><b>הדגמה:</b> אני מגיב רק במצב מחובר."}</div><div class="ak-sug">${AK_SUG.map(s=>`<span class="c" onclick="askChip(this)">${esc(s)}</span>`).join("")}</div>`; return; }
   feed.innerHTML=askHist.map((m,i)=>{
     if(m.q!=null)return `<div class="q-bub">${esc(m.q)}</div>`;
-    if(m.load)return `<div class="a-bub load">חושב…</div>`;
+    if(m.load)return `<div class="a-bub load">${m.deep?"🧠 בודק לעומק — עד שתי דקות, שווה את זה…":"חושב…"}</div>`;
     if(m.ops)return `<div class="a-bub"><div style="font-weight:700;margin-bottom:6px">${esc(m.summary||"אלה הפעולות — מאשר?")}</div>${cmdOps(m.ops)}${m.question?`<div class="kv dim" style="margin-top:6px">❓ ${esc(m.question)}</div>`:""}${m.pending?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn good" style="flex:1" onclick="alApply(${i})">✅ בצע</button><button class="btn line" style="padding-inline:14px" onclick="alCancel(${i})">✖️ בטל</button></div><div class="dim" style="font-size:11.5px;margin-top:5px">אפשר גם פשוט לכתוב לי תיקון</div>`:m.done?`<div class="chip good" style="margin-top:8px">${esc(m.done)}</div>`:`<div class="chip mut" style="margin-top:8px">בוטל</div>`}</div>`;
     if(m.draft)return `<div class="a-bub"><div style="font-weight:700;margin-bottom:6px">✍️ טיוטה ל${esc(m.draft.to_name||"?")}</div><div style="white-space:pre-wrap">${esc(m.draft.body||"")}</div><button class="btn line" style="margin-top:8px" onclick="copyTxt(askHist[${i}].draft.body,this)">📋 העתק</button></div>`;
     return `<div class="a-bub md">${fmtMd(m.a)}</div>`;
@@ -1123,15 +1123,40 @@ async function askSend(){ const inp=$("#askIn"); const q=(inp.value||"").trim();
      ולזיווג היסטוריה שגוי (נמדד בביקורת 11.8). */
   const slot=askHist.length-1;
   if(!LIVE){ askHist[slot]={a:"במצב הדגמה אין גישה חיה. במכשיר שלך, עם המפתח — אלפא עונה עם נתוני אמת."}; renderAsk(); return; }
-  const payload={action:"command_preview",kind:"general",id:null,text:q};
-  // תיקון על הצעה פתוחה: ההצעה הקודמת נוסעת עם הבקשה (v12 — התיקון נושא את מה שהוא מתקן)
-  if(AL_PEND)payload.prior=AL_PEND;
   // v14: ההיסטוריה נוסעת עם השאלה — בלעדיה "הפוליסה הזאת" הגיעה לשרת בלי
   // ההקשר, והמסווג ענה "אין לי גישה למסמכים" במקום לשאול את המוח (11.8).
   // אותו חוזה {q,a} כמו הזיכרון של אלפא בטלגרם ובוואטסאפ; עד 4 זוגות.
   // תשובות שגיאה (err) לא נכנסות להיסטוריה — דיאלוג מפוברק מטעה את המוח.
   const hist=[]; for(let i=0;i<askHist.length-2;i++){ const m=askHist[i];
     if(m.q){ const nx=askHist[i+1]; if(nx&&nx.a&&!nx.err)hist.push({q:m.q,a:nx.a}); } }
+  /* 13.8: המוח העמוק — שאלה (אותה היוריסטיקה כמו הבוטים: מסתיימת ב-? או
+     נפתחת במילת שאלה) משוגרת ל-nx-ask deep: אישור קבלה מיידי, לופ סוכן
+     ברקע, והאפליקציה מתשאלת עד שהתשובה מוכנה. כל נפילה בדרך ⟶ המסלול
+     הסינכרוני הרגיל (command_preview) — שאלה לעולם לא נופלת על שדרוג.
+     תיקון על הצעה פתוחה (AL_PEND) אינו שאלה למוח — נשאר במסלול הרגיל. */
+  const isDeepQ=!AL_PEND&&(/[?？]\s*$/.test(q)||/^(?:מה|מהו|מהי|מהם|מי|כמה|איזה|איזו|אילו|מתי|היכן|איפה|למה|מדוע|האם)(?=\s)/u.test(q))&&q.length>=8;
+  if(isDeepQ){
+    let deepDone=false;
+    try{
+      const r=await apiPost(ASK,{q,deep:true,history:hist.slice(-4)});
+      if(r&&r.mode==="deep"&&r.log_id){
+        askHist[slot]={load:true,deep:true}; renderAsk();
+        const t0=Date.now();
+        while(Date.now()-t0<200000){
+          await new Promise(rs=>setTimeout(rs,4000));
+          let p=null; try{ p=await apiPost(ASK,{poll:r.log_id}); }catch(_e){}
+          if(p&&p.status==="done"){ askHist[slot]={a:p.answer||"לא הצלחתי לגבש תשובה."}; AL_PEND=null; deepDone=true; break; }
+          if(p&&p.status==="failed"){ askHist[slot]={a:"⚠️ הבדיקה לעומק נכשלה — נסה שוב, ואם זה חוזר שאל בטלגרם.",err:true}; deepDone=true; break; }
+        }
+        if(!deepDone)askHist[slot]={a:"⚠️ הבדיקה לעומק לא הסתיימה בזמן — התשובה תישמר ביומן המוח; נסה שוב בעוד רגע.",err:true};
+        renderAsk(); return;
+      }
+      if(r&&r.reply){ askHist[slot]={a:r.reply}; AL_PEND=null; renderAsk(); return; } /* fallback סינכרוני שחזר מהשרת */
+    }catch(_e){ /* ממשיכים למסלול הרגיל */ }
+  }
+  const payload={action:"command_preview",kind:"general",id:null,text:q};
+  // תיקון על הצעה פתוחה: ההצעה הקודמת נוסעת עם הבקשה (v12 — התיקון נושא את מה שהוא מתקן)
+  if(AL_PEND)payload.prior=AL_PEND;
   if(hist.length)payload.history=hist.slice(-4);
   try{ const r=await apiPost(API,payload);
     if(r.route==="ask"){ askHist[slot]={a:r.answer||"לא הצלחתי לענות על זה כרגע."}; AL_PEND=null; }
