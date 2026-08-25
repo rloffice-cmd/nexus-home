@@ -56,7 +56,7 @@ export function Ask({ think, onThink }: { think: boolean; onThink: (v: boolean) 
         {msgs.map((m, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}
             style={m.q
-              ? { alignSelf: "flex-start", maxWidth: "85%", background: "linear-gradient(150deg,#efd6a5,#d9a85c 60%,#a06e22)", color: "#1a1204", borderRadius: "16px 5px 16px 16px", padding: "10px 14px", fontSize: 14, fontWeight: 700 }
+              ? { alignSelf: "flex-start", maxWidth: "85%", background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 60%,var(--acc-lo))", color: "var(--acc-ink)", borderRadius: "16px 5px 16px 16px", padding: "10px 14px", fontSize: 14, fontWeight: 700 }
               : { alignSelf: "flex-end", maxWidth: "92%", background: "var(--surface2)", border: "1px solid var(--hair)", borderRadius: "5px 16px 16px 16px", padding: "11px 15px", fontSize: 14, lineHeight: 1.55 }}>
             {m.q || m.a}
           </motion.div>
@@ -75,7 +75,7 @@ export function Ask({ think, onThink }: { think: boolean; onThink: (v: boolean) 
           placeholder="דבר איתי — שאלה, משימה, בקשה…"
           style={{ flex: 1, background: "var(--surface2)", border: "1px solid var(--hair)", color: "var(--ink)", borderRadius: 14, padding: "13px 15px", fontSize: 15, fontFamily: "inherit", outline: "none" }} />
         <motion.button whileTap={{ scale: 0.9 }} onClick={send} aria-label="שלח"
-          style={{ width: 50, borderRadius: 14, background: "linear-gradient(150deg,#efd6a5,#d9a85c 55%,#a06e22)", color: "#1a1204", fontSize: 18, fontWeight: 800 }}>↑</motion.button>
+          style={{ width: 50, borderRadius: 14, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)", fontSize: 18, fontWeight: 800 }}>↑</motion.button>
       </div>
     </div>
   );

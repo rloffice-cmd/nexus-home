@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
    ‏הכהה של ה-CSS נשאר). reduced-motion ⟶ פריים סטטי אחד. */
 const FRAG = `
 precision mediump float;
-uniform vec2 u_res; uniform float u_t;
+uniform vec2 u_res; uniform float u_t; uniform vec3 u_c1; uniform vec3 u_c2;
 float hash(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123); }
 float noise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);
   return mix(mix(hash(i),hash(i+vec2(1.,0.)),u.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),u.x),u.y); }
@@ -19,16 +19,14 @@ void main(){
   /* ‏מוקד אור עליון-שמאלי (ימין ויזואלי ב-RTL) שנודד לאט */
   vec2 focus = vec2(.15+.06*sin(t*.9), 1.05);
   float halo = 1.0 - smoothstep(0.0, 1.15, distance(vec2(uv.x, uv.y), focus));
-  vec3 bronze = vec3(0.85,0.66,0.36);
-  vec3 deep   = vec3(0.56,0.35,0.08);
-  vec3 col = bronze*glow*halo*.34 + deep*glow*.10 + bronze*halo*.055;
+  vec3 col = u_c1*glow*halo*.34 + u_c2*glow*.10 + u_c1*halo*.055;
   /* ‏נשימה כללית עדינה */
   col *= .9 + .1*sin(u_t*.35);
   gl_FragColor = vec4(col, 1.0);
 }`;
 const VERT = `attribute vec2 a; void main(){ gl_Position=vec4(a,0.,1.); }`;
 
-export default function Aurora() {
+export default function Aurora({ c1 = [0.85, 0.66, 0.36], c2 = [0.56, 0.35, 0.08] }: { c1?: number[]; c2?: number[] }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const cv = ref.current!; let raf = 0, dead = false;
@@ -48,6 +46,8 @@ export default function Aurora() {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     const uRes = gl.getUniformLocation(pr, "u_res"), uT = gl.getUniformLocation(pr, "u_t");
+    gl.uniform3f(gl.getUniformLocation(pr, "u_c1"), c1[0], c1[1], c1[2]);
+    gl.uniform3f(gl.getUniformLocation(pr, "u_c2"), c2[0], c2[1], c2[2]);
     const size = () => { const d = Math.min(devicePixelRatio, 1.5) * .5; /* ‏חצי רזולוציה — ערפל ממילא, וסוללה חשובה */
       cv.width = innerWidth * d; cv.height = innerHeight * d; gl.viewport(0, 0, cv.width, cv.height); };
     size(); addEventListener("resize", size);
@@ -60,6 +60,6 @@ export default function Aurora() {
       if (!still) raf = requestAnimationFrame(frame); };
     frame();
     return () => { dead = true; cancelAnimationFrame(raf); removeEventListener("resize", size); };
-  }, []);
+  }, [c1, c2]);
   return <canvas ref={ref} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: -1 }} aria-hidden />;
 }

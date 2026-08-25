@@ -34,10 +34,11 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
 
       {/* ── הדבר האחד: טבעת אור חיה ── */}
       {D.focus && (
-        <motion.section {...rise(1)} style={{ position: "relative", marginTop: 16, borderRadius: 24, padding: "24px 22px 20px", overflow: "hidden", background: "linear-gradient(160deg,#181206,#0d0b06 70%)", boxShadow: "inset 0 0 0 1px rgba(217,168,92,.35), inset 0 0 46px rgba(217,168,92,.06), 0 22px 48px rgba(0,0,0,.55)" }}>
-          <motion.span aria-hidden animate={{ rotate: 360 }} transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
-            style={{ position: "absolute", inset: -110, background: "conic-gradient(transparent 0 76%, rgba(240,217,174,.5) 88%, transparent 96%)", mixBlendMode: "screen", pointerEvents: "none" }} />
-          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".22em", marginBottom: 10, background: "linear-gradient(90deg,#f0d9ae,#d9a85c 60%,#a06e22)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
+        <motion.section {...rise(1)} style={{ position: "relative", marginTop: 16, borderRadius: 24, padding: "24px 22px 20px", overflow: "hidden", background: "linear-gradient(160deg,color-mix(in srgb,var(--acc) 12%,var(--bg)),color-mix(in srgb,var(--bg) 96%,#000) 70%)", boxShadow: "inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent), inset 0 0 46px color-mix(in srgb,var(--acc) 6%,transparent), 0 22px 48px rgba(0,0,0,.55)" }}>
+          <motion.span aria-hidden initial={{ rotate: 0, opacity: 1 }} animate={{ rotate: 360, opacity: 0 }}
+            transition={{ rotate: { duration: 1.5, ease: [0.23, 1, 0.32, 1] }, opacity: { delay: 1.15, duration: 0.45 } }}
+            style={{ position: "absolute", inset: -110, background: "conic-gradient(transparent 0 76%, color-mix(in srgb,var(--acc-hi) 50%,transparent) 88%, transparent 96%)", mixBlendMode: "screen", pointerEvents: "none" }} />
+          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".22em", marginBottom: 10, background: "linear-gradient(90deg,var(--acc-hi),var(--acc) 60%,var(--acc-lo))", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
             ⭐ הדבר האחד של היום
           </div>
           <h1 style={{ margin: 0, fontFamily: "var(--serif)", fontSize: 27, fontWeight: 900, lineHeight: 1.2, letterSpacing: "-.015em", textWrap: "balance" }}>{D.focus.title}</h1>
@@ -47,11 +48,11 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
           </p>
           <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => toast.success("סומן כבוצע — נרשם במערכת")}
-              style={{ flex: 1, borderRadius: 13, padding: "12px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,#efd6a5,#d9a85c 55%,#a06e22)", color: "#1a1204", boxShadow: "0 8px 20px rgba(217,168,92,.3)" }}>
+              style={{ flex: 1, borderRadius: 13, padding: "12px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)", boxShadow: "0 8px 20px color-mix(in srgb,var(--acc) 30%,transparent)" }}>
               בוצע ✓
             </motion.button>
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => toast("אבקש מהמוח הצעה חדשה")}
-              style={{ flex: 1, borderRadius: 13, padding: "12px 0", fontSize: 13.5, fontWeight: 700, color: "#e6d6b2", border: "1px solid rgba(217,168,92,.35)" }}>
+              style={{ flex: 1, borderRadius: 13, padding: "12px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>
               החלף
             </motion.button>
           </div>
@@ -109,25 +110,25 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
       <Drawer.Root open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
         <Drawer.Portal>
           <Drawer.Overlay style={{ position: "fixed", inset: 0, background: "rgba(5,4,2,.6)", zIndex: 50 }} />
-          <Drawer.Content style={{ position: "fixed", insetInline: 0, bottom: 0, zIndex: 51, borderRadius: "26px 26px 0 0", background: "#14100a", border: "1px solid rgba(217,168,92,.25)", borderBottom: 0, padding: "0 20px calc(24px + env(safe-area-inset-bottom))", maxWidth: 660, margin: "0 auto", color: "var(--ink)" }}>
-            <div aria-hidden style={{ width: 44, height: 5, borderRadius: 5, background: "rgba(217,168,92,.35)", margin: "12px auto 14px" }} />
+          <Drawer.Content style={{ position: "fixed", insetInline: 0, bottom: 0, zIndex: 51, borderRadius: "26px 26px 0 0", background: "color-mix(in srgb,var(--acc) 7%,var(--bg))", border: "1px solid color-mix(in srgb,var(--acc) 25%,transparent)", borderBottom: 0, padding: "0 20px calc(24px + env(safe-area-inset-bottom))", maxWidth: 660, margin: "0 auto", color: "var(--ink)" }}>
+            <div aria-hidden style={{ width: 44, height: 5, borderRadius: 5, background: "color-mix(in srgb,var(--acc) 35%,transparent)", margin: "12px auto 14px" }} />
             {open && (<>
               <span className={"chip " + (open.kind === "החלטה" ? "warn" : "crit")}>{open.kind}</span>
               <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 21, fontWeight: 900, lineHeight: 1.25, margin: "10px 0 6px" }}>{open.title}</Drawer.Title>
               <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 14px" }}>{open.meta}</p>
               {open.recommendation && (
-                <div style={{ background: "rgba(217,168,92,.1)", border: "1px solid rgba(217,168,92,.3)", borderRadius: 14, padding: "12px 14px", marginBottom: 16 }}>
+                <div style={{ background: "color-mix(in srgb,var(--acc) 10%,transparent)", border: "1px solid color-mix(in srgb,var(--acc) 30%,transparent)", borderRadius: 14, padding: "12px 14px", marginBottom: 16 }}>
                   <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".14em", color: "var(--gold)", marginBottom: 5 }}>המלצת המערכת</div>
                   <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.5 }}>{open.recommendation}</div>
                 </div>
               )}
               <div style={{ display: "flex", gap: 9 }}>
                 <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setOpen(null); toast.success("נרשם — עובר דרך המנוע"); }}
-                  style={{ flex: 1, borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,#efd6a5,#d9a85c 55%,#a06e22)", color: "#1a1204" }}>
+                  style={{ flex: 1, borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>
                   {open.kind === "החלטה" ? "הוכרע ✓" : "טופל ✓"}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.96 }} onClick={() => setOpen(null)}
-                  style={{ flex: 1, borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "#e6d6b2", border: "1px solid rgba(217,168,92,.35)" }}>
+                  style={{ flex: 1, borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>
                   אחר כך
                 </motion.button>
               </div>

@@ -3,15 +3,29 @@
    כהה במוצהר — כל צבע נצבע במפורש, אין תלות בערכת המארח.
    ============================================================ */
 :root{
+  /* ‏אובסידיאן — ברירת המחדל. הפלטות מתחלפות ב-data-pal על html. */
   --bg:#0a0908; --surface:rgba(255,255,255,.028); --surface2:rgba(255,255,255,.05);
   --hair:rgba(217,168,92,.16); --hair2:rgba(217,168,92,.3);
   --ink:#f0e9d8; --ink2:#b3a88e; --mut:#8d7f63;
-  --gold:#d9a85c; --gold-hi:#f0d9ae; --gold-lo:#8e5a14;
+  --acc:#d9a85c; --acc-hi:#f0d9ae; --acc-lo:#8e5a14; --acc-ink:#1a1204;
+  --gold:var(--acc); --gold-hi:var(--acc-hi); --gold-lo:var(--acc-lo);
   --crit:#e57b6f; --warn:#e0ab4c; --good:#5ec48c; --info:#7ba6df;
   --serif:"Frank Ruhl Libre",Georgia,serif;
   --sans:"Assistant",-apple-system,system-ui,sans-serif;
   --eo:cubic-bezier(.23,1,.32,1);
   --nav-h:62px;
+}
+/* ‏מגדלור — ענבר חשמלי על כחול לילה */
+html[data-pal=migdalor]{
+  --bg:#0b1020; --hair:rgba(255,180,84,.15); --hair2:rgba(255,180,84,.3);
+  --ink:#ecf1fb; --ink2:#aeb9d2; --mut:#8d99b5;
+  --acc:#ffb454; --acc-hi:#ffcf8a; --acc-lo:#e08b1f; --acc-ink:#231502;
+}
+/* ‏קרח — גרפיט קר עם תכלת קרח */
+html[data-pal=ice]{
+  --bg:#0b0d11; --hair:rgba(140,200,230,.14); --hair2:rgba(140,200,230,.28);
+  --ink:#e9f1f6; --ink2:#a9bcc8; --mut:#7e929f;
+  --acc:#6fc3e8; --acc-hi:#c9ecfa; --acc-lo:#2e7ea8; --acc-ink:#06222e;
 }
 *{box-sizing:border-box}
 html{direction:rtl}
