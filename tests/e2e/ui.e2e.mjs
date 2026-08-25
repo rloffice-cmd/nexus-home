@@ -92,6 +92,13 @@ await pg.evaluate(() => setAssetF('all'));
 await pg.evaluate(() => go('ask')); await pg.waitForTimeout(400);
 t('ask: פיד עם פתיח והצעות', await pg.locator('.ask-feed .a-bub').count() && await pg.locator('.ak-sug .c').first().count());
 
+await pg.evaluate(() => go('home')); await pg.waitForTimeout(400);
+t('orb: האורב חי בבית', await pg.locator('#orb').count()===1);
+t('orb: לחיצה פותחת את אלפא', await pg.evaluate(() => { document.querySelector('.orbwrap').click(); return TAB==='ask'; }));
+await pg.waitForTimeout(300);
+t('orb: קיים גם במסך אלפא', await pg.locator('#orb').count()===1);
+await pg.evaluate(() => go('home')); await pg.waitForTimeout(900);
+t('countup: מספר טהור נספר לערכו', await pg.evaluate(() => { const el=[...document.querySelectorAll('[data-cnt]')].find(e=>/^\d+$/.test(e.childNodes[0].textContent.trim())); return !!el; }));
 t('mobile: אפס שגיאות דף', pg._errs.length===0, pg._errs[0]||'');
 await pg.close();
 
