@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v7";
+const CACHE = "nexus-hq-v8";
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
