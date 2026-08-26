@@ -21,21 +21,6 @@ export function Decisions({ D }: { D: Snapshot }) {
   );
 }
 
-export function Tasks({ D }: { D: Snapshot }) {
-  return (
-    <div className="page">
-      <div className="sec" style={{ marginTop: 12 }}>משימות פתוחות · <b className="num">{D.k.openTotal}</b></div>
-      {D.tasks.map((t, i) => (
-        <motion.div key={t.id} {...rise(i)} className="glass" style={{ display: "flex", gap: 11, alignItems: "center", padding: "13px 16px", borderRadius: 16, marginBottom: 8 }}>
-          <span className={"chip " + (t.urgency === "היום" ? "crit" : "mut")}>{t.urgency || "—"}</span>
-          <span style={{ fontSize: 13.5, fontWeight: 700 }}>{t.title}</span>
-          {t.owner && <span style={{ marginInlineStart: "auto", fontSize: 11, color: "var(--mut)" }}>{t.owner}</span>}
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 export function Ask({ think, onThink }: { think: boolean; onThink: (v: boolean) => void }) {
   const [msgs, setMsgs] = useState<{ q?: string; a?: string }[]>([
     { a: "היי איתי! אני כאן — שאלה, משימה, בקשה. הכול עובר דרך המנועים של נקסוס." },
