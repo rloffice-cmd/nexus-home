@@ -4,7 +4,8 @@ import { Toaster } from "sonner";
 import Aurora from "./gl/Aurora";
 import Dock, { type Tab } from "./ui/Dock";
 import Home from "./screens/Home";
-import { Decisions, Tasks, Ask } from "./screens/Simple";
+import { Decisions, Ask } from "./screens/Simple";
+import Tasks from "./screens/Tasks";
 import { loadSnapshot, DEMO, type Snapshot } from "./lib/data";
 import { PALS, applyPal, savedPal, type Pal } from "./lib/palettes";
 import { toast } from "sonner";
@@ -53,7 +54,7 @@ export default function App() {
           transition={{ type: "spring", duration: 0.45, bounce: 0 }}>
           {tab === "home" && <Home D={D} onAsk={() => setTab("ask")} think={think} />}
           {tab === "decisions" && <Decisions D={D} />}
-          {tab === "tasks" && <Tasks D={D} />}
+          {tab === "tasks" && <Tasks />}
           {tab === "ask" && <Ask think={think} onThink={setThink} />}
         </motion.main>
       </AnimatePresence>
