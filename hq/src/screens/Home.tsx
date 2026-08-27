@@ -2,9 +2,14 @@ import { motion } from "motion/react";
 import { Drawer } from "vaul";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Snapshot } from "../lib/data";
+import type { Snapshot, Uncovered } from "../lib/data";
 import Orb from "../ui/Orb";
 import Num from "../ui/Num";
+
+/* ‏הבית של איתי — התמונה המלאה, לא "הדבר האחד" (הכרעתו 27.8):
+   ‏"אני תמיד חייב לראות את כל התמונה… הרעיון הוא שהכל!!! יטופל —
+   ‏על ידי, על ידי הצוות או יניב." ולכן הבית עונה על שאלה אחת:
+   ‏האם כל משימה מוחזקת בידי מישהו עם אות-חיים? מה שלא — אדום, למעלה. */
 
 const spring = { type: "spring" as const, duration: 0.7, bounce: 0.18 };
 const rise = (i: number) => ({
@@ -13,8 +18,40 @@ const rise = (i: number) => ({
   transition: { ...spring, delay: 0.05 * i },
 });
 
+/* ‏טבעת הכיסוי — נמלאת פעם אחת בכניסה, בלי לולאה אין-סופית */
+function Ring({ pct }: { pct: number }) {
+  const R = 31, C = 2 * Math.PI * R;
+  return (
+    <div style={{ position: "relative", width: 88, height: 88, flex: "none" }}>
+      <svg width="88" height="88" viewBox="0 0 88 88" style={{ transform: "rotate(-90deg)" }} aria-hidden>
+        <circle cx="44" cy="44" r={R} fill="none" stroke="var(--surface2)" strokeWidth="7.5" />
+        <defs>
+          <linearGradient id="covg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="var(--acc-hi)" /><stop offset="1" stopColor="var(--acc-lo)" />
+          </linearGradient>
+        </defs>
+        <motion.circle cx="44" cy="44" r={R} fill="none" stroke="url(#covg)" strokeWidth="7.5" strokeLinecap="round"
+          strokeDasharray={C} initial={{ strokeDashoffset: C }} animate={{ strokeDashoffset: C * (1 - pct) }}
+          transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1], delay: 0.25 }} />
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+        <div style={{ textAlign: "center", lineHeight: 1 }}>
+          <div style={{ fontFamily: "var(--serif)", fontSize: 21, fontWeight: 800 }}><Num value={Math.round(pct * 100)} />%</div>
+          <div style={{ fontSize: 8.5, color: "var(--mut)", fontWeight: 700, letterSpacing: ".08em", marginTop: 3 }}>בטיפול</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => void; think: boolean }) {
   const [open, setOpen] = useState<null | (typeof D.needsYou)[number]>(null);
+  const [openU, setOpenU] = useState<Uncovered | null>(null);
+  const cov = D.coverage;
+  const allGood = cov.uncovered.length === 0;
+  const pct = cov.total ? cov.covered / cov.total : 1;
+  const act = (msg: string) => { setOpenU(null); toast.success(msg); };
+
   return (
     <div className="page">
       {/* ── רצועת המוח ── */}
@@ -32,55 +69,74 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
         </span>
       </motion.button>
 
-      {/* ── הדבר האחד: טבעת אור חיה ── */}
-      {D.focus && (
-        <motion.section {...rise(1)} style={{ position: "relative", marginTop: 16, borderRadius: 24, padding: "24px 22px 20px", overflow: "hidden", background: "linear-gradient(160deg,color-mix(in srgb,var(--acc) 12%,var(--bg)),color-mix(in srgb,var(--bg) 96%,#000) 70%)", boxShadow: "inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,transparent), inset 0 0 46px color-mix(in srgb,var(--acc) 6%,transparent), 0 22px 48px rgba(0,0,0,.55)" }}>
-          <motion.span aria-hidden initial={{ rotate: 0, opacity: 1 }} animate={{ rotate: 360, opacity: 0 }}
-            transition={{ rotate: { duration: 1.5, ease: [0.23, 1, 0.32, 1] }, opacity: { delay: 1.15, duration: 0.45 } }}
-            style={{ position: "absolute", inset: -110, background: "conic-gradient(transparent 0 76%, color-mix(in srgb,var(--acc-hi) 50%,transparent) 88%, transparent 96%)", mixBlendMode: "screen", pointerEvents: "none" }} />
-          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".22em", marginBottom: 10, background: "linear-gradient(90deg,var(--acc-hi),var(--acc) 60%,var(--acc-lo))", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
-            ⭐ הדבר האחד של היום
+      {/* ── התמונה המלאה: הכל גלוי, הכל מוחזק ── */}
+      <motion.section {...rise(1)} style={{ position: "relative", marginTop: 16, borderRadius: 24, padding: "20px 20px 16px", overflow: "hidden", background: "linear-gradient(160deg,color-mix(in srgb,var(--acc) 11%,var(--bg)),color-mix(in srgb,var(--bg) 96%,#000) 70%)", boxShadow: "inset 0 0 0 1px color-mix(in srgb,var(--acc) 32%,transparent), inset 0 0 46px color-mix(in srgb,var(--acc) 6%,transparent), 0 22px 48px rgba(0,0,0,.55)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Ring pct={pct} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".2em", marginBottom: 7, background: "linear-gradient(90deg,var(--acc-hi),var(--acc) 60%,var(--acc-lo))", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
+              התמונה המלאה
+            </div>
+            <h1 style={{ margin: 0, fontFamily: "var(--serif)", fontSize: 23, fontWeight: 900, lineHeight: 1.18, letterSpacing: "-.015em", textWrap: "balance" }}>
+              {allGood ? "הכל בטיפול ✓" : <>‏<span style={{ color: "var(--crit)", textShadow: "0 0 18px color-mix(in srgb,var(--crit) 45%,transparent)" }}><Num value={cov.uncovered.length} /></span> בלי טיפול חי</>}
+            </h1>
+            <p style={{ margin: "7px 0 0", fontSize: 11.5, color: "var(--ink2)", lineHeight: 1.5 }}>
+              <b className="num">{cov.covered}</b> מתוך <b className="num">{cov.total}</b> מוחזקות — בעלים + תנועה או הבטחה עתידית
+            </p>
           </div>
-          <h1 style={{ margin: 0, fontFamily: "var(--serif)", fontSize: 27, fontWeight: 900, lineHeight: 1.2, letterSpacing: "-.015em", textWrap: "balance" }}>{D.focus.title}</h1>
-          <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--ink2)" }}>
-            {D.focus.days > 0 && <span className="chip crit" style={{ marginInlineEnd: 8 }}>{D.focus.days} ימים בלי תנועה</span>}
-            {D.focus.sub}
-          </p>
-          <div style={{ display: "flex", gap: 9, marginTop: 18 }}>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={() => toast.success("סומן כבוצע — נרשם במערכת")}
-              style={{ flex: 1, borderRadius: 13, padding: "12px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)", boxShadow: "0 8px 20px color-mix(in srgb,var(--acc) 30%,transparent)" }}>
-              בוצע ✓
-            </motion.button>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={() => toast("אבקש מהמוח הצעה חדשה")}
-              style={{ flex: 1, borderRadius: 13, padding: "12px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>
-              החלף
-            </motion.button>
-          </div>
-        </motion.section>
-      )}
+        </div>
 
-      {/* ── שלושת המספרים ── */}
-      <motion.div {...rise(2)} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginTop: 12 }}>
-        {[
-          { n: D.k.needsYou, t: "דורש אותך", c: "var(--crit)" },
-          { n: D.k.waitingOthers, t: "אצל אחרים", c: "var(--gold)" },
-          { n: D.k.closedToday, t: "נסגרו היום", c: "var(--good)" },
-        ].map((k) => (
-          <div key={k.t} className="glass" style={{ padding: "14px 15px 12px", borderRadius: 18 }}>
-            <div style={{ fontFamily: "var(--serif)", fontSize: 30, fontWeight: 700, lineHeight: 1, color: k.c }}><Num value={k.n} /></div>
-            <div style={{ fontSize: 10.5, color: "var(--mut)", fontWeight: 700, marginTop: 6 }}>{k.t}</div>
+        {/* ‏מי מחזיק מה — כל הידיים על השולחן */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 15 }}>
+          {cov.handlers.map((h) => (
+            <span key={h.name} style={{
+              display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 18, fontSize: 11.5, fontWeight: 700,
+              background: h.me ? "color-mix(in srgb,var(--acc) 14%,transparent)" : "var(--surface2)",
+              border: `1px solid ${h.me ? "color-mix(in srgb,var(--acc) 40%,transparent)" : "var(--hair)"}`,
+              color: h.me ? "var(--acc-hi)" : "var(--ink2)",
+            }}>
+              <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", background: h.stuck ? "var(--crit)" : "var(--good)", boxShadow: h.stuck ? "0 0 8px var(--crit)" : "none" }} />
+              {h.me ? "אצלי" : h.name}
+              <b className="num" style={{ fontWeight: 600, opacity: 0.75 }}>{h.open}</b>
+            </span>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ── החריגים: מה שאין לו אות-חיים ── */}
+      <motion.div {...rise(2)}>
+        {allGood ? (
+          <div className="glass" style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderRadius: 17, marginTop: 12, color: "var(--good)", fontSize: 13, fontWeight: 700 }}>
+            ✓ כל משימה פתוחה מוחזקת — אין חריגים כרגע
           </div>
-        ))}
+        ) : (<>
+          <div className="sec">בלי טיפול חי — כאן נכנסים · <b className="num">{cov.uncovered.length}</b></div>
+          {cov.uncovered.map((u, i) => (
+            <motion.button key={u.id} {...rise(2 + i * 0.5)} whileTap={{ scale: 0.985 }} onClick={() => setOpenU(u)}
+              className="glass"
+              style={{ display: "block", width: "100%", textAlign: "start", padding: "13px 16px 11px", borderRadius: 17, marginBottom: 9, WebkitTapHighlightColor: "transparent", borderColor: "color-mix(in srgb,var(--crit) 26%,transparent)" }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 700, lineHeight: 1.35 }}>{u.title}</span>
+              <span style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 7, fontSize: 11 }}>
+                <span className="chip crit">{u.reason}</span>
+                <span style={{ color: "var(--mut)", fontWeight: 600 }}>{u.arena}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--ink2)", fontWeight: 700 }}>
+                  <span style={{ width: 17, height: 17, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--hair)", display: "grid", placeItems: "center", fontSize: 9.5 }}>{u.owner[0]}</span>
+                  {u.mine ? "אצלך" : u.owner}
+                </span>
+              </span>
+            </motion.button>
+          ))}
+        </>)}
       </motion.div>
 
-      {/* ── דורש אותך עכשיו ── */}
-      <motion.div {...rise(3)}>
-        <div className="sec">דורש אותך עכשיו · <b className="num">{D.k.needsYou}</b></div>
+      {/* ── המגרש שלך: מה שרק אתה יכול ── */}
+      <motion.div {...rise(4)}>
+        <div className="sec">רק אתה — הכרעות וקריטי · <b className="num">{D.needsYou.length}</b></div>
         {D.needsYou.map((x, i) => (
-          <motion.button key={x.id} {...rise(3 + i * 0.6)} whileTap={{ scale: 0.985 }} onClick={() => setOpen(x)}
+          <motion.button key={x.id} {...rise(4 + i * 0.5)} whileTap={{ scale: 0.985 }} onClick={() => setOpen(x)}
             className="glass"
             style={{ display: "flex", gap: 12, alignItems: "center", width: "100%", textAlign: "start", padding: "14px 16px", borderRadius: 17, marginBottom: 9, WebkitTapHighlightColor: "transparent" }}>
-            <span className={"chip " + (x.kind === "החלטה" ? "warn" : x.kind === "קריטי" ? "crit" : "crit")}>{x.kind}</span>
+            <span className={"chip " + (x.kind === "החלטה" ? "warn" : "crit")}>{x.kind}</span>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 14, fontWeight: 700, lineHeight: 1.35 }}>{x.title}</span>
               {x.meta && <span style={{ display: "block", fontSize: 11, color: "var(--mut)", marginTop: 2 }}>{x.meta}</span>}
@@ -91,7 +147,7 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
       </motion.div>
 
       {/* ── זירות ── */}
-      <motion.div {...rise(5)}>
+      <motion.div {...rise(6)}>
         <div className="sec">מצב הזירות</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {D.arenas.map((a) => (
@@ -106,7 +162,38 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
         </div>
       </motion.div>
 
-      {/* ── מגירת פריט (Vaul — הפיזיקה של אמיל) ── */}
+      {/* ── מגירת חריג: להחזיר לו אות-חיים ── */}
+      <Drawer.Root open={!!openU} onOpenChange={(o) => !o && setOpenU(null)}>
+        <Drawer.Portal>
+          <Drawer.Overlay style={{ position: "fixed", inset: 0, background: "rgba(5,4,2,.6)", zIndex: 50 }} />
+          <Drawer.Content style={{ position: "fixed", insetInline: 0, bottom: 0, zIndex: 51, borderRadius: "26px 26px 0 0", background: "color-mix(in srgb,var(--acc) 7%,var(--bg))", border: "1px solid color-mix(in srgb,var(--acc) 25%,transparent)", borderBottom: 0, padding: "0 20px calc(24px + env(safe-area-inset-bottom))", maxWidth: 660, margin: "0 auto", color: "var(--ink)" }}>
+            <div aria-hidden style={{ width: 44, height: 5, borderRadius: 5, background: "color-mix(in srgb,var(--acc) 35%,transparent)", margin: "12px auto 14px" }} />
+            {openU && (<>
+              <span className="chip crit">{openU.reason}</span>
+              <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 900, lineHeight: 1.28, margin: "10px 0 4px" }}>{openU.title}</Drawer.Title>
+              <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 16px" }}>{openU.arena} · {openU.mine ? "אצלך" : openU.owner}</p>
+              <div style={{ display: "grid", gridTemplateColumns: openU.mine ? "1fr 1fr" : "1fr 1fr 1fr", gap: 8 }}>
+                {openU.mine ? (<>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("בוצע — נרשם דרך המנוע")}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("נקבע יעד חדש — חזר לטיפול חי")}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>קבע יעד</motion.button>
+                </>) : (<>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act(`אלפא תנדנד את ${openU.owner} עכשיו`)}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>🔔 נדנד</motion.button>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("בוצע — נרשם")}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>בוצע ✓</motion.button>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("עבר אליך")}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>קח אליי</motion.button>
+                </>)}
+              </div>
+              <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>בהדגמה הפעולות מדומות · במצב חי הכול עובר דרך nexus_command_apply</p>
+            </>)}
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+
+      {/* ── מגירת פריט "רק אתה" ── */}
       <Drawer.Root open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
         <Drawer.Portal>
           <Drawer.Overlay style={{ position: "fixed", inset: 0, background: "rgba(5,4,2,.6)", zIndex: 50 }} />
