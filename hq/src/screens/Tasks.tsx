@@ -7,29 +7,9 @@ import Num from "../ui/Num";
 /* ‏עמוד המשימות של איתי — לפי מה שהמערכת מדדה עליו:
    ‏משקל לפני דחיפות (מה על הכף) · "שלי" נפרד מ"ממתין לאחרים" · הבטחה חיה
    ‏שקטה, הבטחה שחלפה צועקת · קפואות כבדות למעלה, לא קבורות · פעולות אצבע.
-   ‏בהדגמה הפעולות מציגות טוסט; בלילה 2 הן נקשרות ל-nexus_command_apply. */
-
-export type T = {
-  id: string; title: string; arena: string; owner: string; mine?: boolean;
-  weight: "critical" | "major" | "normal" | "minor";
-  due?: string; dueKind?: "אמת" | "פנימי"; overdue?: boolean;
-  frozen?: number;                    /* ‏ימים בלי תנועה */
-  waiting?: { who: string; promised?: string; broken?: boolean };
-};
-
-export const DEMO_TASKS: T[] = [
-  { id: "m1", title: "עפולה — לסגור את המחיר המבוקש מול אוהד", arena: "עפולה", owner: "איתי", mine: true, weight: "critical", frozen: 39, overdue: true, due: "17.08", dueKind: "פנימי" },
-  { id: "m2", title: "לאתר את הסכם המכר הסופי החתום — אלמליח", arena: "רובין לנדסמן", owner: "איתי", mine: true, weight: "critical", frozen: 39 },
-  { id: "m3", title: "להחליף את טוקן הוואטסאפ הקבוע (System User)", arena: "תשתית", owner: "איתי", mine: true, weight: "critical", due: "20.09", dueKind: "אמת" },
-  { id: "w1", title: "התחשבנות מול NBS — הסכם השתתפות ברווחים", arena: "מע\"ר בית שמש", owner: "שירה", weight: "critical", frozen: 39, waiting: { who: "שירה", promised: "17.08", broken: true } },
-  { id: "w2", title: "נתוני גבייה — חובות עבר להסכם הפשרה", arena: "השדרה", owner: "שירה", weight: "major", overdue: true, due: "17.08", dueKind: "פנימי", waiting: { who: "שירה" } },
-  { id: "w3", title: "היתר עבודות עפר — להוציא בהקדם", arena: "פסגת שלמה", owner: "אילונה", weight: "major", overdue: true, due: "19.08", dueKind: "אמת", waiting: { who: "אילונה", promised: "28.08" } },
-  { id: "w4", title: "מכרז קבלן עבודות עפר — הריסה ויסודות", arena: "פסגת שלמה", owner: "אילונה", weight: "major", due: "19.08", dueKind: "פנימי", overdue: true, waiting: { who: "אילונה" } },
-  { id: "w5", title: "טבלת ריכוז הלוואות מכל החברות", arena: "פיננסי", owner: "שירה", weight: "normal", frozen: 8, waiting: { who: "שירה", promised: "27.08" } },
-  { id: "w6", title: "מסירה לוועדה המקומית לפני היציאה", arena: "תב\"ע השדרה", owner: "יניב", weight: "major", waiting: { who: "דובי קרן", promised: "01.09" } },
-  { id: "n1", title: "השכרת דוכנים בכניסה לקניון", arena: "השדרה", owner: "אהרון", weight: "normal", frozen: 17, waiting: { who: "אהרון" } },
-  { id: "n2", title: "ג2 — השלמת חוזים על יתרת הנכסים", arena: "ג2", owner: "שייקה", weight: "normal", due: "31.08", dueKind: "אמת", waiting: { who: "שייקה", promised: "31.08" } },
-];
+   ‏בהדגמה הפעולות מציגות טוסט; בלילה 2 הן נקשרות ל-nexus_command_apply.
+   ‏המודל והנתונים חיים ב-lib/data — מקור אחד לעמוד הזה ולכיסוי בבית. */
+import { DEMO_TASKS, type T } from "../lib/data";
 
 const W: Record<T["weight"], { c: string; t: string }> = {
   critical: { c: "var(--crit)", t: "קריטי" },
