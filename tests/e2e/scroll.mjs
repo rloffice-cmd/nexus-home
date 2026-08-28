@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 const b = await chromium.launch();
 const ctx = await b.newContext({viewport:{width:390,height:844},locale:"he-IL"});
 const p = await ctx.newPage();
-await p.goto((process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html",{waitUntil:"domcontentloaded"});
+await p.goto((process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html",{waitUntil:"domcontentloaded"});
 await p.click("text=צפה בהדגמה"); await p.waitForSelector("nav button");
 const issues=[];
 // גלילה עמוקה ואז מעבר טאב — חייב לחזור לראש

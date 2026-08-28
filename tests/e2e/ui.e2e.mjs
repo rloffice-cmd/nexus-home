@@ -14,7 +14,7 @@ async function newPage(vp, opts={}) {
   pg._errs = [];
   pg.on('pageerror', e => pg._errs.push(String(e)));
   pg.on('console', m => { if (m.type()==='error' && !/net::|Failed to load resource/.test(m.text())) pg._errs.push(m.text()); });
-  await pg.goto('http://localhost:8123/index.html', { waitUntil: 'domcontentloaded' });
+  await pg.goto('http://localhost:8123/classic.html', { waitUntil: 'domcontentloaded' });
   await pg.waitForTimeout(900);
   return pg;
 }

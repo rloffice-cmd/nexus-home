@@ -1,10 +1,15 @@
 /* ‏שכבת הנתונים: אותם מנועים, אפס לוגיקה בממשק. מפתח חי נמשך מאותו
-   ‏localStorage של האפליקציה הקיימת (אותו origin ב-Pages) — מי שמחובר שם
-   ‏מחובר גם כאן. בלי מפתח או בכשל רשת ⟶ הדגמה, בלי לשקר על זה.
+   ‏localStorage של האפליקציה הקיימת — מי שמחובר שם מחובר גם כאן.
+   ‏בלי מפתח או בכשל רשת ⟶ הדגמה, בלי לשקר על זה.
 
    ‏העיקרון של הבית (הכרעת איתי 27.8): לא "הדבר האחד" אלא כיסוי מלא —
    ‏כל משימה גלויה, לכל אחת מטפל (איתי · צוות · יניב) ואות-חיים
-   ‏(תנועה או הבטחה עתידית). מה שאין לו — הוא החריג, והוא היחיד שאדום. */
+   ‏(תנועה או הבטחה עתידית). מה שאין לו — הוא החריג, והוא היחיד שאדום.
+
+   ‏החיווט החי (27.8, לילה 2): nexus-app v34 מגיש weight · waiting_on ·
+   ‏expected_by · last_activity_at · date_source, והכיסוי נגזר מהם כאן —
+   ‏אותו כלל השתקה כמו הנדנוד של אלפא: הבטחה עתידית משתיקה. */
+import { API, DEC, apiGet, getKey } from "./api";
 
 export type Decision = { id: string; title: string; arena?: string; needed_by?: string | null; recommendation?: string };
 export type Arena = { id: string; name: string; state: "ok" | "warn" | "crit"; note?: string; open: number };
@@ -93,39 +98,81 @@ export const DEMO: Snapshot = {
   tasks: DEMO_TASKS,
 };
 
-const API = "https://eygeouunxwsrdsijkczh.supabase.co/functions/v1/nexus-app";
+/* ── עזרי תאריך: ISO ⟷ תצוגה, בשעון ישראל ── */
+const todayISO = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Jerusalem" });
+const fmtDay = (iso?: string | null) => {
+  if (!iso) return undefined;
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}.${m[2]}` : String(iso);
+};
+const daysSince = (ts?: string | null) => {
+  if (!ts) return undefined;
+  const d = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000);
+  return d >= 0 ? d : 0;
+};
 
 export async function loadSnapshot(): Promise<Snapshot> {
-  const key = localStorage.getItem("nx_k3") || "";
   const now = new Date().toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
-  if (!key) return { ...DEMO, now };
+  if (!getKey()) return { ...DEMO, now };
   try {
-    const r = await fetch(`${API}?k=${encodeURIComponent(key)}`, { headers: { "x-nexus-key": key } });
-    if (!r.ok) throw 0;
-    const D = await r.json();
-    /* ‏מיפוי מינימלי מהצורה החיה של nexus-app. בלייב אין עדיין אותות
-       ‏הבטחה/קיפאון בקצה הזה — הכיסוי נגזר מבעלות+איחור בלבד, ובלילה 2
-       ‏מתחבר לשדות ההבטחה האמיתיים (waiting_on · expected_by). */
-    const open = (D.tasks || []).filter((t: any) => t.status === "open" || t.status === "waiting");
-    const hb = D.home_brief || {}; const red = hb.red || {};
-    const ts: T[] = open.map((t: any) => ({
-      id: t.id, title: t.title, arena: t.arena_name || "", weight: "normal" as const,
-      owner: t.owner_name || t.owner || "", mine: (t.owner_name || "") === "איתי רובין" || t.owner === "itay",
-      overdue: !!t.overdue,
-    }));
+    /* ‏שני קצוות כמו האפליקציה הקיימת: nexus-app (הגוף) + nx-dec (החלטות
+       ‏עם status/needed_by/recommendation — הגוף שולח אותן בלי status). */
+    const [D, dec] = await Promise.all([apiGet(API), apiGet(DEC).catch(() => null)]);
+    const today = todayISO();
+    const people = new Map<string, string>((D.people || []).map((p: any) => [p.id, p.name]));
+    const itayId = (D.people || []).find((p: any) => p.name === "איתי רובין")?.id || null;
+    const arenaName = new Map<string, string>((D.arenas || []).map((a: any) => [a.id, String(a.name || "").split(" — ")[0]]));
+
+    const ts: T[] = (D.tasks || []).map((t: any) => {
+      const ownerName = people.get(t.owner_id) || "";
+      const mine = !!itayId && t.owner_id === itayId;
+      const promisedISO = t.expected_by ? String(t.expected_by).slice(0, 10) : null;
+      const overdue = !!t.due_date && String(t.due_date).slice(0, 10) < today;
+      const waitingWho = (t.waiting_on || "").trim() || (t.status === "waiting" ? ownerName : "");
+      const w = String(t.weight || "");
+      return {
+        id: t.id, title: t.title,
+        arena: arenaName.get(t.arena_id) || "",
+        owner: mine ? "איתי" : ownerName,
+        mine,
+        weight: (w === "critical" || w === "major" || w === "minor" ? w : "normal") as T["weight"],
+        due: fmtDay(t.due_date),
+        dueKind: t.due_date ? (["anchor", "itay", "report"].includes(t.date_source) ? "אמת" : "פנימי") : undefined,
+        overdue,
+        frozen: daysSince(t.last_activity_at),
+        waiting: (waitingWho || promisedISO) ? {
+          who: waitingWho || ownerName,
+          promised: fmtDay(promisedISO),
+          broken: !!promisedISO && promisedISO < today,
+        } : undefined,
+      };
+    });
+
+    const cov = deriveCoverage(ts);
+    const stuckArena = new Set(cov.uncovered.map(u => u.arena));
+    const overdueArena = new Set(ts.filter(t => t.overdue).map(t => t.arena));
+
+    const pend: Decision[] = ((dec?.decisions || []) as any[])
+      .filter(d => d.status === "pending")
+      .map(d => ({ id: d.id, title: d.title, arena: arenaName.get(d.arena_id) || "", needed_by: fmtDay(d.needed_by), recommendation: d.recommendation || undefined }));
+
     return {
       live: true, now,
-      k: { openTotal: ts.length, closedToday: hb.green?.closed_since_yesterday ?? 0 },
-      coverage: deriveCoverage(ts),
+      k: { openTotal: ts.length, closedToday: (D.closed_today || []).length },
+      coverage: cov,
       needsYou: [
-        ...(red.pending_decisions || []).map((d: any) => ({ id: d.id, kind: "החלטה" as const, title: d.title, meta: "" })),
-        ...(red.itay_overdue || []).map((t: any) => ({ id: t.id, kind: "קריטי" as const, title: t.title, meta: t.due || "" })),
+        ...pend.slice(0, 4).map(d => ({ id: d.id, kind: "החלטה" as const, title: d.title, meta: [d.arena, d.needed_by ? `עד ${d.needed_by}` : ""].filter(Boolean).join(" · "), recommendation: d.recommendation })),
+        ...ts.filter(t => t.mine && t.weight === "critical").slice(0, 4)
+          .map(t => ({ id: t.id, kind: "קריטי" as const, title: t.title, meta: [t.arena, t.due ? `יעד ${t.due}` : ""].filter(Boolean).join(" · ") })),
       ],
-      arenas: (D.arenas || []).filter((a: any) => a.status === "active").slice(0, 8).map((a: any) => ({
-        id: a.id, name: (a.name || "").split(" — ")[0], state: "ok" as const, note: a.summary || "", open: open.filter((t: any) => t.arena_id === a.id).length,
-      })),
-      decisions: (D.decisions || []).filter((d: any) => d.status === "pending").map((d: any) => ({ id: d.id, title: d.title, recommendation: d.recommendation })),
-      tasks: ts.slice(0, 60),
+      arenas: (D.arenas || []).filter((a: any) => a.status === "active").map((a: any) => {
+        const nm = arenaName.get(a.id) || a.name;
+        const open = ts.filter(t => t.arena === nm).length;
+        return { id: a.id, name: nm, note: a.goal || "", open,
+          state: (stuckArena.has(nm) ? "crit" : overdueArena.has(nm) ? "warn" : "ok") as Arena["state"] };
+      }).filter((a: Arena) => a.open > 0).sort((a: Arena, b: Arena) => b.open - a.open).slice(0, 10),
+      decisions: pend,
+      tasks: ts,
     };
   } catch { return { ...DEMO, now }; }
 }

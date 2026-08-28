@@ -4,7 +4,7 @@ const issues = [];
 for (const vp of [{n:"se",w:360,h:640},{n:"14",w:390,h:844},{n:"max",w:430,h:932},{n:"tab",w:768,h:1024}]) {
   const ctx = await b.newContext({viewport:{width:vp.w,height:vp.h},locale:"he-IL"});
   const p = await ctx.newPage();
-  await p.goto((process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html",{waitUntil:"domcontentloaded"});
+  await p.goto((process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html",{waitUntil:"domcontentloaded"});
   await p.click("text=צפה בהדגמה"); await p.waitForSelector("nav button");
   for (const tab of ["home","arenas","decisions","assets","ask"]) {
     await p.click(`nav button[data-tab="${tab}"]`); await p.waitForTimeout(150);

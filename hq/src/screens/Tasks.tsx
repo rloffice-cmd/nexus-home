@@ -1,15 +1,16 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "vaul";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
+
 import Num from "../ui/Num";
 
 /* ‏עמוד המשימות של איתי — לפי מה שהמערכת מדדה עליו:
    ‏משקל לפני דחיפות (מה על הכף) · "שלי" נפרד מ"ממתין לאחרים" · הבטחה חיה
    ‏שקטה, הבטחה שחלפה צועקת · קפואות כבדות למעלה, לא קבורות · פעולות אצבע.
-   ‏בהדגמה הפעולות מציגות טוסט; בלילה 2 הן נקשרות ל-nexus_command_apply.
-   ‏המודל והנתונים חיים ב-lib/data — מקור אחד לעמוד הזה ולכיסוי בבית. */
-import { DEMO_TASKS, type T } from "../lib/data";
+   ‏מ-27.8 (לילה 2) העמוד חי: הנתונים מ-nexus-app v34, הפעולות דרך
+   ‏המנועים (task_done · task_waiting). מקור אחד לעמוד הזה ולכיסוי בבית. */
+import { type Snapshot, type T } from "../lib/data";
+import type { Act } from "../App";
 
 const W: Record<T["weight"], { c: string; t: string }> = {
   critical: { c: "var(--crit)", t: "קריטי" },
@@ -43,13 +44,13 @@ function Card({ t, onOpen }: { t: T; onOpen: (t: T) => void }) {
   );
 }
 
-export default function Tasks() {
+export default function Tasks({ D, onAct }: { D: Snapshot; onAct: Act }) {
   const [view, setView] = useState<"mine" | "others" | "frozen" | "all">("mine");
   const [arena, setArena] = useState<string | null>(null);
   const [open, setOpen] = useState<T | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
 
-  const all = DEMO_TASKS.filter((t) => !done.has(t.id));
+  const all = D.tasks.filter((t) => !done.has(t.id));
   const arenas = [...new Set(all.map((t) => t.arena))];
   const shown = useMemo(() => {
     let l = all;
@@ -61,7 +62,7 @@ export default function Tasks() {
       (wOrder[a.weight] - wOrder[b.weight]) ||
       ((b.overdue ? 1 : 0) - (a.overdue ? 1 : 0)) ||
       ((b.frozen ?? 0) - (a.frozen ?? 0)));
-  }, [view, arena, done]);
+  }, [view, arena, done, D.tasks]);
 
   const counts = {
     mine: all.filter((t) => t.mine).length,
@@ -69,7 +70,13 @@ export default function Tasks() {
     frozen: all.filter((t) => (t.frozen ?? 0) >= 10).length,
     all: all.length,
   };
-  const act = (msg: string) => { setOpen(null); toast.success(msg); };
+  /* ‏אופטימי: הכרטיס יוצא מיד, המנוע מאשר; כשל ⟶ הכרטיס חוזר */
+  const doAct = async (kind: "task_done" | "task_waiting", t: T) => {
+    setOpen(null);
+    if (kind === "task_done") setDone(new Set([...done, t.id]));
+    const ok = await onAct(kind, t.id);
+    if (!ok && kind === "task_done") setDone((s) => { const n = new Set(s); n.delete(t.id); return n; });
+  };
 
   return (
     <div className="page">
@@ -122,22 +129,13 @@ export default function Tasks() {
               <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 16px" }}>
                 {open.arena} · {open.owner}{open.frozen ? ` · ${open.frozen} ימים בלי תנועה` : ""}{open.waiting?.promised ? ` · הובטח ${open.waiting.promised}` : ""}
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: open.mine ? "1fr 1fr" : "1fr 1fr 1fr", gap: 8 }}>
-                {open.mine ? (<>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setDone(new Set([...done, open.id])); act("בוצע — נרשם דרך המנוע"); }}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("נדחה בשבוע — המועד עודכן")}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>דחה שבוע</motion.button>
-                </>) : (<>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act(`אלפא תנדנד את ${open.owner} עכשיו`)}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>🔔 נדנד</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setDone(new Set([...done, open.id])); act("סומן כבוצע"); }}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>בוצע ✓</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("עבר אליך — נוסף ל'דורש אותך'")}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>קח אליי</motion.button>
-                </>)}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <motion.button whileTap={{ scale: 0.96 }} onClick={() => doAct("task_done", open)}
+                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
+                <motion.button whileTap={{ scale: 0.96 }} onClick={() => doAct("task_waiting", open)}
+                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{open.mine ? "אחרים" : "הם"}</motion.button>
               </div>
-              <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>בהדגמה הפעולות מדומות · במצב חי הכול עובר דרך nexus_command_apply</p>
+              <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>{open.mine ? "הפעולה נרשמת דרך המנוע" : `אלפא רודפת את ${open.owner} אוטומטית — נדנוד יומי עד הבטחה חיה`}</p>
             </>)}
           </Drawer.Content>
         </Drawer.Portal>

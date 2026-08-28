@@ -9,7 +9,7 @@
 // 2. פריט שדווח כטופל ולא נמצא לו זוג — חייב להיאמר לאיתי, לא להיבלע.
 // 3. סיכום חופשי לבדו (בלי החלטות) חייב להיקלט; זה המקרה הנפוץ ביותר.
 import { chromium } from "playwright";
-const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html";
+const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html";
 const errors = [];
 const step = (s) => console.log("· " + s);
 const fail = (s) => { errors.push(s); console.log("  ✗ " + s); };

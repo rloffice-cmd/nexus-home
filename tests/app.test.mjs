@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import vm from "node:vm";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const html = readFileSync(join(root, "index.html"), "utf8");
+const html = readFileSync(join(root, "classic.html"), "utf8");
 const fails = [];
 const ok = [];
 const check = (name, cond, detail = "") => (cond ? ok : fails).push(name + (cond ? "" : " — " + detail));
