@@ -8,9 +8,10 @@ import { Decisions, Ask } from "./screens/Simple";
 import Tasks from "./screens/Tasks";
 import Arenas from "./screens/Arenas";
 import Meetings from "./screens/Meetings";
+import { ConnectSheet, DemoBanner, FilingSheet, LessonsSheet, MoreSheet, PeopleSheet, VerifySheet, type SheetId } from "./screens/Extras";
 import { loadSnapshot, DEMO, type Snapshot } from "./lib/data";
 import { PALS, applyPal, savedPal, type Pal } from "./lib/palettes";
-import { API, ACT, apiPost, getKey } from "./lib/api";
+import { API, ACT, apiPost, getKey, dropKey } from "./lib/api";
 
 /* ‏פעולה עוברת דרך מנוע — לא כתיבה מהממשק. שלוש הפעולות שהמסכים צריכים,
    ‏על אותם קצוות שהאפליקציה הקודמת עבדה מולם. בהדגמה — טוסט בלבד. */
@@ -21,6 +22,7 @@ export default function App() {
   const [D, setD] = useState<Snapshot>({ ...DEMO, now: "" });
   const [think, setThink] = useState(false);
   const [pal, setPal] = useState<Pal>(savedPal());
+  const [sheet, setSheet] = useState<SheetId>(null);
   useEffect(() => { applyPal(pal); }, [pal]);
 
   const reload = useCallback(() => { loadSnapshot().then(setD); }, []);
@@ -38,9 +40,12 @@ export default function App() {
     } catch { toast("לא נשמר — נסה שוב"); return false; }
   }, [reload]);
 
-  const connect = () => {
-    const k = window.prompt("מפתח Nexus (נשמר במכשיר בלבד):");
-    if (k && k.trim()) { try { localStorage.setItem("nx_k3", k.trim()); } catch { /* private */ } setThink(true); loadSnapshot().then((s) => { setD(s); setThink(false); }); }
+  /* ‏התחברות במגירה אמיתית — window.prompt לא נפתח ב-PWA מותקן (פידבק איתי 28.8) */
+  const connected = useCallback(() => { setThink(true); loadSnapshot().then((s) => { setD(s); setThink(false); }); }, []);
+  const logout = () => {
+    dropKey();
+    try { localStorage.removeItem("nx_c3"); localStorage.removeItem("nx_deep_pending"); } catch { /* private */ }
+    window.location.reload();
   };
 
   const cyclePal = () => {
@@ -63,15 +68,19 @@ export default function App() {
           Nexus<i style={{ fontStyle: "normal", background: "linear-gradient(120deg,var(--acc-hi),var(--acc) 50%,var(--acc-lo))", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>·</i>
         </b>
         <span style={{ fontSize: 11, color: "var(--mut)", letterSpacing: ".06em" }}>חדר מצב{D.now ? ` · ${D.now}` : ""}</span>
+        <button onClick={() => setSheet("more")} aria-label="עוד"
+          style={{ marginInlineStart: "auto", width: 34, height: 34, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--surface2)", border: "1px solid var(--hair)", fontSize: 16, color: "var(--ink)", WebkitTapHighlightColor: "transparent" }}>☰</button>
         <button onClick={cyclePal} aria-label="החלף פלטה"
-          style={{ marginInlineStart: "auto", width: 34, height: 34, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--surface2)", border: "1px solid var(--hair)", fontSize: 15, WebkitTapHighlightColor: "transparent" }}>🎨</button>
-        <button onClick={D.live ? reload : connect} aria-label={D.live ? "רענן" : "התחבר"}
+          style={{ width: 34, height: 34, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--surface2)", border: "1px solid var(--hair)", fontSize: 15, WebkitTapHighlightColor: "transparent" }}>🎨</button>
+        <button onClick={D.live ? reload : () => setSheet("connect")} aria-label={D.live ? "רענן" : "התחבר"}
           style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 800, letterSpacing: ".1em", color: D.live ? "#8ce4b4" : "var(--gold)", background: D.live ? "rgba(94,196,140,.1)" : "color-mix(in srgb,var(--acc) 10%,transparent)", border: `1px solid ${D.live ? "rgba(94,196,140,.35)" : "color-mix(in srgb,var(--acc) 35%,transparent)"}`, borderRadius: 20, padding: "4px 11px", WebkitTapHighlightColor: "transparent" }}>
           <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.6, repeat: Infinity }}
             style={{ width: 6, height: 6, borderRadius: "50%", background: "currentcolor" }} />
           {D.live ? "LIVE" : "התחבר 🔑"}
         </button>
       </header>
+
+      {!D.live && !think && <DemoBanner onConnect={() => setSheet("connect")} />}
 
       <AnimatePresence mode="wait">
         <motion.main key={tab}
@@ -87,6 +96,14 @@ export default function App() {
           {tab === "ask" && <Ask think={think} onThink={setThink} onChanged={reload} />}
         </motion.main>
       </AnimatePresence>
+
+      {/* ‏מעבר מגירה⟵מגירה: הסגירה של הקודמת לא מפילה את החדשה — כל onClose מנקה רק את עצמו */}
+      <ConnectSheet open={sheet === "connect"} onClose={() => setSheet(s => s === "connect" ? null : s)} onConnected={connected} />
+      <MoreSheet open={sheet === "more"} onClose={() => setSheet(s => s === "more" ? null : s)} D={D} go={setSheet} onLogout={logout} />
+      <FilingSheet open={sheet === "filing"} onClose={() => setSheet(s => s === "filing" ? null : s)} />
+      <VerifySheet open={sheet === "verify"} onClose={() => setSheet(s => s === "verify" ? null : s)} D={D} onChanged={reload} />
+      <PeopleSheet open={sheet === "people"} onClose={() => setSheet(s => s === "people" ? null : s)} D={D} />
+      <LessonsSheet open={sheet === "lessons"} onClose={() => setSheet(s => s === "lessons" ? null : s)} D={D} />
 
       <Dock tab={tab} onTab={setTab} badge={{ decisions: D.decisions.length, meetings: D.meetings.filter(m => m.dayOffset === 0).length }} />
       <Toaster position="bottom-center" offset={92} mobileOffset={92} theme="dark" toastOptions={{ style: { background: "#1a150c", border: "1px solid color-mix(in srgb,var(--acc) 30%,transparent)", color: "var(--ink)" } }} />
