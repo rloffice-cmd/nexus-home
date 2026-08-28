@@ -60,6 +60,9 @@ button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer
 .chip.good{background:rgba(94,196,140,.12);color:#8ce4b4;border:1px solid rgba(94,196,140,.3)}
 .chip.mut{background:var(--surface2);color:var(--mut);border:1px solid var(--hair)}
 
+/* ‏מסך צר: תת-הכותרת מפנה מקום לכפתורים — הלוגו והפעולות קודמים */
+@media (max-width:379px){ .hdr-sub{display:none} }
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }

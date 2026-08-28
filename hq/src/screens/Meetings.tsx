@@ -10,7 +10,7 @@ import type { Snapshot, Meeting } from "../lib/data";
 const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * Math.min(i, 8) } });
 
-export default function Meetings({ D, onAsk }: { D: Snapshot; onAsk: () => void }) {
+export default function Meetings({ D, onAsk }: { D: Snapshot; onAsk: (prefill?: string) => void }) {
   const [open, setOpen] = useState<Meeting | null>(null);
   const groups: { label: string; items: Meeting[] }[] = [];
   for (const m of D.meetings) {
@@ -65,7 +65,8 @@ export default function Meetings({ D, onAsk }: { D: Snapshot; onAsk: () => void 
                 ) : (
                   <div style={{ color: "var(--mut)", fontSize: 13, marginBottom: 14 }}>אין תיק לפגישה הזאת — המערכת מכינה תיקים אוטומטית לקראת פגישות מזוהות.</div>
                 )}
-                <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setOpen(null); onAsk(); }}
+                <motion.button whileTap={{ scale: 0.96 }}
+                  onClick={() => { const m = open; setOpen(null); onAsk(m.dayOffset === 0 ? `סיכום פגישה — ${m.title}: ` : `לגבי הפגישה "${m.title}": `); }}
                   style={{ width: "100%", borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>
                   {open.dayOffset === 0 ? "לסכם את הפגישה עם אלפא ←" : "לשאול את אלפא על הפגישה ←"}
                 </motion.button>

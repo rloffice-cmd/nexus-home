@@ -19,6 +19,8 @@ jobs:
         run: for i in $(seq 1 20); do curl -sf http://127.0.0.1:8099/index.html >/dev/null && break; sleep 1; done
       - name: "HQ-Next בשורש — כיסוי · מיפוי חי · פעולות מנוע"
         run: node tests/e2e/hq.mjs
+      - name: "HQ-Next עומק — 90 משימות · ☰ · דיווחים · אלפא · שיחה ששורדת · כשל רשת"
+        run: OUT=/tmp/nexus-shots node tests/e2e/hq-deep.mjs
       - name: מסלולי משתמש (classic)
         run: node tests/e2e/flows.mjs
       - name: המשכיות ושימוש ממושך

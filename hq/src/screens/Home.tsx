@@ -45,7 +45,7 @@ function Ring({ pct }: { pct: number }) {
   );
 }
 
-export default function Home({ D, onAsk, think, onAct }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act }) {
+export default function Home({ D, onAsk, think, onAct, onArena }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act; onArena: (name: string) => void }) {
   const [open, setOpen] = useState<null | (typeof D.needsYou)[number]>(null);
   const [openU, setOpenU] = useState<Uncovered | null>(null);
   const cov = D.coverage;
@@ -133,6 +133,11 @@ export default function Home({ D, onAsk, think, onAct }: { D: Snapshot; onAsk: (
       {/* ── המגרש שלך: מה שרק אתה יכול ── */}
       <motion.div {...rise(4)}>
         <div className="sec">רק אתה — הכרעות וקריטי · <b className="num">{D.needsYou.length}</b></div>
+        {!D.needsYou.length && (
+          <div className="glass" style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", borderRadius: 16, color: "var(--good)", fontSize: 13, fontWeight: 700 }}>
+            ✓ שולחן נקי — אין הכרעות או קריטי שממתינים רק לך
+          </div>
+        )}
         {D.needsYou.map((x, i) => (
           <motion.button key={x.id} {...rise(4 + i * 0.5)} whileTap={{ scale: 0.985 }} onClick={() => setOpen(x)}
             className="glass"
@@ -152,13 +157,14 @@ export default function Home({ D, onAsk, think, onAct }: { D: Snapshot; onAsk: (
         <div className="sec">מצב הזירות</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {D.arenas.map((a) => (
-            <motion.span key={a.id} whileTap={{ scale: 0.95 }} className="glass"
-              style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 15px", borderRadius: 22, fontSize: 12.5, fontWeight: 700, color: "var(--ink2)" }}>
+            <motion.button key={a.id} whileTap={{ scale: 0.95 }} onClick={() => onArena(a.name)} className="glass"
+              aria-label={`תיק זירה ${a.name}`}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 15px", borderRadius: 22, fontSize: 12.5, fontWeight: 700, color: "var(--ink2)", WebkitTapHighlightColor: "transparent" }}>
               <motion.span animate={a.state !== "ok" ? { opacity: [1, .45, 1] } : {}} transition={{ duration: 1.8, repeat: Infinity }}
                 style={{ width: 8, height: 8, borderRadius: "50%", background: a.state === "crit" ? "var(--crit)" : a.state === "warn" ? "var(--warn)" : "var(--good)", boxShadow: a.state === "crit" ? "0 0 10px var(--crit)" : "none" }} />
               {a.name}
               <b className="num" style={{ color: "var(--mut)", fontWeight: 600 }}>{a.open}</b>
-            </motion.span>
+            </motion.button>
           ))}
         </div>
       </motion.div>
