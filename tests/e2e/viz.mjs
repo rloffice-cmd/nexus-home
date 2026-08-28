@@ -4,7 +4,7 @@
 // · מקטע מוערם בגובה 16px היה יעד לחיצה, והכפתור הצף כיסה אותו.
 // · טיפוס לעומק בלי חזרה הוא מלכודת: יורדים ולא יודעים לחזור.
 import { chromium } from "playwright";
-const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html";
+const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html";
 const issues = [], notes = [];
 
 const browser = await chromium.launch();

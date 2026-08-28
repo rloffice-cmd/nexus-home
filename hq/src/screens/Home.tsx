@@ -3,6 +3,7 @@ import { Drawer } from "vaul";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Snapshot, Uncovered } from "../lib/data";
+import type { Act } from "../App";
 import Orb from "../ui/Orb";
 import Num from "../ui/Num";
 
@@ -44,13 +45,13 @@ function Ring({ pct }: { pct: number }) {
   );
 }
 
-export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => void; think: boolean }) {
+export default function Home({ D, onAsk, think, onAct }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act }) {
   const [open, setOpen] = useState<null | (typeof D.needsYou)[number]>(null);
   const [openU, setOpenU] = useState<Uncovered | null>(null);
   const cov = D.coverage;
   const allGood = cov.uncovered.length === 0;
   const pct = cov.total ? cov.covered / cov.total : 1;
-  const act = (msg: string) => { setOpenU(null); toast.success(msg); };
+  const doU = async (kind: "task_done" | "task_waiting", id: string) => { setOpenU(null); await onAct(kind, id); };
 
   return (
     <div className="page">
@@ -172,22 +173,13 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
               <span className="chip crit">{openU.reason}</span>
               <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 900, lineHeight: 1.28, margin: "10px 0 4px" }}>{openU.title}</Drawer.Title>
               <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 16px" }}>{openU.arena} · {openU.mine ? "אצלך" : openU.owner}</p>
-              <div style={{ display: "grid", gridTemplateColumns: openU.mine ? "1fr 1fr" : "1fr 1fr 1fr", gap: 8 }}>
-                {openU.mine ? (<>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("בוצע — נרשם דרך המנוע")}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("נקבע יעד חדש — חזר לטיפול חי")}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>קבע יעד</motion.button>
-                </>) : (<>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act(`אלפא תנדנד את ${openU.owner} עכשיו`)}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>🔔 נדנד</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("בוצע — נרשם")}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>בוצע ✓</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => act("עבר אליך")}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>קח אליי</motion.button>
-                </>)}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <motion.button whileTap={{ scale: 0.96 }} onClick={() => doU("task_done", openU.id)}
+                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
+                <motion.button whileTap={{ scale: 0.96 }} onClick={() => doU("task_waiting", openU.id)}
+                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{openU.mine ? "אחרים" : "הם"}</motion.button>
               </div>
-              <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>בהדגמה הפעולות מדומות · במצב חי הכול עובר דרך nexus_command_apply</p>
+              <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>{openU.mine ? "הפעולה נרשמת דרך המנוע" : `אלפא רודפת את ${openU.owner} אוטומטית במשמרות — נדנוד יומי עד הבטחה`}</p>
             </>)}
           </Drawer.Content>
         </Drawer.Portal>
@@ -210,7 +202,7 @@ export default function Home({ D, onAsk, think }: { D: Snapshot; onAsk: () => vo
                 </div>
               )}
               <div style={{ display: "flex", gap: 9 }}>
-                <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setOpen(null); toast.success("נרשם — עובר דרך המנוע"); }}
+                <motion.button whileTap={{ scale: 0.96 }} onClick={() => { const o = open; setOpen(null); if (o) onAct(o.kind === "החלטה" ? "decision_decide" : "task_done", o.id); }}
                   style={{ flex: 1, borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>
                   {open.kind === "החלטה" ? "הוכרע ✓" : "טופל ✓"}
                 </motion.button>

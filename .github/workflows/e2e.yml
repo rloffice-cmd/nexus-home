@@ -17,7 +17,9 @@ jobs:
         run: python3 -m http.server 8099 &
       - name: המתנה לשרת
         run: for i in $(seq 1 20); do curl -sf http://127.0.0.1:8099/index.html >/dev/null && break; sleep 1; done
-      - name: מסלולי משתמש
+      - name: "HQ-Next בשורש — כיסוי · מיפוי חי · פעולות מנוע"
+        run: node tests/e2e/hq.mjs
+      - name: מסלולי משתמש (classic)
         run: node tests/e2e/flows.mjs
       - name: המשכיות ושימוש ממושך
         run: node tests/e2e/continuity.mjs

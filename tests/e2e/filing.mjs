@@ -3,7 +3,7 @@
 // שהמסך נטען אלא שהבקשה שיצאה היא בדיוק זו שהמשתמש ביקש, ושהביטול
 // מחזיר את אותם מזהים ולא "כל מה שבתיקייה".
 import { chromium } from "playwright";
-const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html";
+const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html";
 const errors = [];
 const step = (s) => console.log("· " + s);
 const fail = (s) => { errors.push(s); console.log("  ✗ " + s); };

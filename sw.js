@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v8";
+const CACHE = "nexus-hq-v9"; /* v9 (27.8): HQ-Next הפך לאפליקציה הראשית — מטמון חדש כדי שה-shell הישן לא יוגש */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

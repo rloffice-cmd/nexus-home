@@ -7,7 +7,7 @@
 // את כל השדות. לכן הבדיקה מדמה את nexus-app בדיוק כפי שהוא — בלי השדות —
 // ומוודאת שהמסך בכל זאת מציג, כלומר שהנתונים מגיעים מ-nx-dec.
 import { chromium } from "playwright";
-const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html";
+const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html";
 const errors = [];
 const step = (s) => console.log("· " + s);
 const fail = (s) => { errors.push(s); console.log("  ✗ " + s); };

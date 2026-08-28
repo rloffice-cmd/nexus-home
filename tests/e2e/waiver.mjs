@@ -12,7 +12,7 @@
 // 3. אירוע שאינו חוזר לא מציע "כל הסדרה" בכלל.
 // 4. אירוע מנוטרל יוצא מ"ממתין לסיכום" וגם מהמונה שבסרגל — ואפשר להחזירו.
 import { chromium } from "playwright";
-const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html";
+const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html";
 const errors = [];
 const step = (s) => console.log("· " + s);
 const fail = (s) => { errors.push(s); console.log("  ✗ " + s); };

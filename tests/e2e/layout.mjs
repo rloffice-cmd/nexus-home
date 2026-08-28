@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/index.html";
+const URL = (process.env.APP_URL || "http://127.0.0.1:8099") + "/classic.html";
 const OUT = process.env.SHOT_DIR || "/tmp/nexus-shots";
 const issues = [], notes = [];
 
