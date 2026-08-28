@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import type { Snapshot } from "../lib/data";
 import Orb from "../ui/Orb";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { API, ASK, apiPost, getKey } from "../lib/api";
 
@@ -40,63 +40,87 @@ export function Decisions({ D, onDecide }: { D: Snapshot; onDecide: (id: string,
 type Msg = { q?: string; a?: string; ops?: any[]; summary?: string; question?: string; pending?: boolean; done?: string; err?: boolean };
 const DEEP_RE = /^(?:מה|מהו|מהי|מהם|מי|כמה|איזה|איזו|אילו|מתי|היכן|איפה|למה|מדוע|האם)(?=\s)/u;
 
-export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v: boolean) => void; onChanged: () => void }) {
-  const [msgs, setMsgs] = useState<Msg[]>([
-    { a: getKey() ? "היי איתי! שאלה — אבדוק במערכת (שאלה גדולה ⟶ בדיקה לעומק). פקודה — אציג מה יקרה ואחכה לאישורך." : "מצב הדגמה — בלי מפתח אין מוח. התחבר באפליקציה ואחזור לעצמי." },
-  ]);
-  const [txt, setTxt] = useState("");
-  const hist = useRef<{ role: string; content: string }[]>([]);
-  const push = (m: Msg) => setMsgs(s => [...s, m]);
-  const patch = (i: number, m: Partial<Msg>) => setMsgs(s => s.map((x, j) => j === i ? { ...x, ...m } : x));
+/* ‏השיחה חיה מחוץ לקומפוננטה: מעבר טאב לא מוחק אותה, ותשובת מוח עמוק
+   ‏שמגיעה כשהמסך סגור נוחתת בחנות ולא נזרקת. (הכשל שנתפס ב-QA 28.8:
+   ‏שאלה לעומק + מעבר לטאב אחר = התשובה אבדה וה-pending נמחק.) */
+const GREET_LIVE = "היי איתי! שאלה — אבדוק במערכת (שאלה גדולה ⟶ בדיקה לעומק). פקודה — אציג מה יקרה ואחכה לאישורך.";
+const GREET_DEMO = "מצב הדגמה — בלי מפתח אין מוח. התחבר באפליקציה ואחזור לעצמי.";
+const chat = {
+  msgs: [{ a: getKey() ? GREET_LIVE : GREET_DEMO }] as Msg[],
+  hist: [] as { role: string; content: string }[],
+  listeners: new Set<() => void>(),
+  emit() { for (const fn of this.listeners) fn(); },
+  push(m: Msg) { this.msgs = [...this.msgs, m]; this.emit(); },
+  patch(i: number, p: Partial<Msg>) { this.msgs = this.msgs.map((x, j) => (j === i ? { ...x, ...p } : x)); this.emit(); },
+};
+const pollingIds = new Set<string>();
+let pendingPrefill = "";
+/* ‏"לסכם עם אלפא" מפגישה ⟶ הטקסט מחכה בתיבה כשעוברים לטאב */
+export function setAskPrefill(t: string) { pendingPrefill = t; }
 
-  /* ‏מוח עמוק ששרד סגירת אפליקציה: ה-log_id נשמר במכשיר, ובפתיחה הבאה
-     ‏ההמתנה מתחדשת מאותה נקודה — התשובה לא הולכת לאיבוד עם המסך. */
-  const answerRef = useRef<(a: string, err?: boolean) => void>(() => {});
-  const pollDeep = async (logId: string) => {
+function deliver(a: string, err = false) {
+  chat.push({ a, err });
+  chat.hist.push({ role: "assistant", content: a });
+}
+async function pollDeep(logId: string, onThink: (v: boolean) => void) {
+  if (pollingIds.has(logId)) return; /* ‏מעבר טאב לא פותח לולאה שנייה על אותו log */
+  pollingIds.add(logId); onThink(true);
+  try {
     const t0 = Date.now();
     while (Date.now() - t0 < 200000) {
       await new Promise(rs => setTimeout(rs, 4000));
       let p: any = null; try { p = await apiPost(ASK, { poll: logId }); } catch { /* ממשיכים */ }
-      if (p?.status === "done") { try { localStorage.removeItem("nx_deep_pending"); } catch { /* אין אחסון */ } answerRef.current(p.answer || "לא הצלחתי לגבש תשובה."); return true; }
-      if (p?.status === "failed") { try { localStorage.removeItem("nx_deep_pending"); } catch { /* אין אחסון */ } answerRef.current("⚠️ הבדיקה לעומק נכשלה — נסה שוב, ואם זה חוזר שאל בטלגרם.", true); return true; }
+      if (p?.status === "done") { try { localStorage.removeItem("nx_deep_pending"); } catch { /* אין אחסון */ } deliver(p.answer || "לא הצלחתי לגבש תשובה."); return; }
+      if (p?.status === "failed") { try { localStorage.removeItem("nx_deep_pending"); } catch { /* אין אחסון */ } deliver("⚠️ הבדיקה לעומק נכשלה — נסה שוב, ואם זה חוזר שאל בטלגרם.", true); return; }
     }
-    answerRef.current("⚠️ הבדיקה לעומק לא הסתיימה בזמן — נסה שוב בעוד רגע.", true); return false;
-  };
+    deliver("⚠️ הבדיקה לעומק לא הסתיימה בזמן — נסה שוב בעוד רגע.", true);
+  } finally { pollingIds.delete(logId); onThink(false); }
+}
+
+export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v: boolean) => void; onChanged: () => void }) {
+  const msgs = useSyncExternalStore(
+    (cb) => { chat.listeners.add(cb); return () => { chat.listeners.delete(cb); }; },
+    () => chat.msgs,
+  );
+  const [txt, setTxt] = useState(() => { const p = pendingPrefill; pendingPrefill = ""; return p; });
+
   useEffect(() => {
+    /* ‏התחברות אחרי שהברכה כבר נכתבה ⟶ מעדכנים אותה במקום לשקר */
+    if (getKey() && chat.msgs.length === 1 && chat.msgs[0].a === GREET_DEMO) chat.patch(0, { a: GREET_LIVE });
     try {
       const raw = localStorage.getItem("nx_deep_pending");
       if (!raw || !getKey()) return;
       const pend = JSON.parse(raw);
       if (!pend?.log_id || Date.now() - (pend.t || 0) > 15 * 60000) { localStorage.removeItem("nx_deep_pending"); return; }
-      push({ q: pend.q }); push({ a: "🔍 ממשיך בדיקה לעומק שהתחלת קודם…" });
-      onThink(true); pollDeep(pend.log_id).finally(() => onThink(false));
+      if (pollingIds.has(pend.log_id)) return; /* ‏הלולאה כבר רצה ברקע */
+      chat.push({ q: pend.q }); chat.push({ a: "🔍 ממשיך בדיקה לעומק שהתחלת קודם…" });
+      pollDeep(pend.log_id, onThink);
     } catch { /* אין אחסון */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const send = async () => {
     const q = txt.trim(); if (!q || think) return;
-    setTxt(""); push({ q }); onThink(true);
-    hist.current = [...hist.current.slice(-6), { role: "user", content: q }];
-    const answer = (a: string, err = false) => { push({ a, err }); hist.current.push({ role: "assistant", content: a }); onThink(false); };
-    answerRef.current = answer;
+    setTxt(""); chat.push({ q }); onThink(true);
+    chat.hist = [...chat.hist.slice(-6), { role: "user", content: q }];
+    const answer = (a: string, err = false) => { deliver(a, err); onThink(false); };
 
     if (!getKey()) { setTimeout(() => answer("במצב הדגמה אני עונה רק כשמחוברים — המפתח נקלט אוטומטית מהאפליקציה."), 900); return; }
 
     const isDeep = (/[?？]\s*$/.test(q) || DEEP_RE.test(q)) && q.length >= 8;
     try {
       if (isDeep) {
-        const r = await apiPost(ASK, { q, deep: true, history: hist.current.slice(-4) });
+        const r = await apiPost(ASK, { q, deep: true, history: chat.hist.slice(-4) });
         if (r?.mode === "deep" && r.log_id) {
-          push({ a: "🔍 בודק לעומק — כמה שאילתות וכמה מחשבה. עד שתי דקות… (אפשר לסגור — אמשיך בפתיחה הבאה)" });
+          chat.push({ a: "🔍 בודק לעומק — כמה שאילתות וכמה מחשבה. עד שתי דקות… (אפשר לעבור מסך — התשובה תחכה כאן)" });
           try { localStorage.setItem("nx_deep_pending", JSON.stringify({ log_id: r.log_id, q, t: Date.now() })); } catch { /* אין אחסון */ }
-          await pollDeep(r.log_id); return;
+          onThink(false); pollDeep(r.log_id, onThink); return;
         }
         if (r?.reply) { answer(r.reply); return; }
       }
-      const r = await apiPost(API, { action: "command_preview", kind: "general", id: null, text: q, history: hist.current.slice(-4) });
+      const r = await apiPost(API, { action: "command_preview", kind: "general", id: null, text: q, history: chat.hist.slice(-4) });
       if (r.route === "ask") answer(r.answer || "לא הצלחתי לענות על זה כרגע.");
-      else if ((r.ops || []).length) { push({ ops: r.ops, summary: r.summary, question: r.question, pending: true }); onThink(false); }
+      else if ((r.ops || []).length) { chat.push({ ops: r.ops, summary: r.summary, question: r.question, pending: true }); onThink(false); }
       else answer(r.question || "לא זיהיתי פעולה — נסח אחרת, או שאל אותי.");
     } catch (e: any) {
       answer("⚠️ " + (e?.message || "שגיאה בתקשורת — נסה שוב."), true);
@@ -104,15 +128,15 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
   };
 
   const apply = async (i: number) => {
-    const m = msgs[i]; if (!m?.ops || !m.pending) return;
-    patch(i, { pending: false });
+    const m = chat.msgs[i]; if (!m?.ops || !m.pending) return;
+    chat.patch(i, { pending: false });
     try {
       const r = await apiPost(API, { action: "command_apply", ops: m.ops });
       const n = r.applied || 0, errs = r.errors || [];
-      patch(i, { done: errs.length ? `בוצעו ${n} · ${errs.length} נכשלו` : n === 1 ? "בוצע ✓" : `בוצעו ${n} ✓` });
-      if (errs.length) push({ a: "מה שנכשל: " + errs.map((e: any) => e.error || "שגיאה").join(" · "), err: true });
+      chat.patch(i, { done: errs.length ? `בוצעו ${n} · ${errs.length} נכשלו` : n === 1 ? "בוצע ✓" : `בוצעו ${n} ✓` });
+      if (errs.length) chat.push({ a: "מה שנכשל: " + errs.map((e: any) => e.error || "שגיאה").join(" · "), err: true });
       onChanged();
-    } catch (e: any) { patch(i, { pending: true }); toast("הביצוע נכשל — נסה שוב"); }
+    } catch { chat.patch(i, { pending: true }); toast("הביצוע נכשל — נסה שוב"); }
   };
 
   return (
@@ -138,7 +162,7 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
               <div style={{ display: "flex", gap: 8, marginTop: 11 }}>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => apply(i)}
                   style={{ flex: 1, borderRadius: 11, padding: "10px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>אשר ובצע ✓</motion.button>
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => patch(i, { pending: false, done: "בוטל" })}
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => chat.patch(i, { pending: false, done: "בוטל" })}
                   style={{ flex: 1, borderRadius: 11, padding: "10px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>בטל</motion.button>
               </div>
             )}

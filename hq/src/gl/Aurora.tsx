@@ -59,7 +59,10 @@ export default function Aurora({ c1 = [0.85, 0.66, 0.36], c2 = [0.56, 0.35, 0.08
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if (!still) raf = requestAnimationFrame(frame); };
     frame();
-    return () => { dead = true; cancelAnimationFrame(raf); removeEventListener("resize", size); };
+    return () => { dead = true; cancelAnimationFrame(raf); removeEventListener("resize", size);
+      /* ‏החלפת פלטה ממחזרת את הקנבס — משחררים את ההקשר במפורש, לא מחכים ל-GC
+         ‏(דפדפנים מגבילים ל-~16 הקשרים חיים; סיבוב פלטות לא ישאיר מתים מאחור) */
+      gl.getExtension("WEBGL_lose_context")?.loseContext(); };
   }, [c1, c2]);
   return <canvas ref={ref} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: -1 }} aria-hidden />;
 }

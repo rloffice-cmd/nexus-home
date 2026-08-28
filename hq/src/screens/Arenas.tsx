@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "vaul";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Snapshot, Arena } from "../lib/data";
 import Num from "../ui/Num";
 
@@ -12,10 +12,19 @@ const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * Math.min(i, 8) } });
 const ils = (n?: number | null) => n == null ? "" : "₪" + Math.round(n).toLocaleString("en-US");
 
-export default function Arenas({ D }: { D: Snapshot }) {
+export default function Arenas({ D, focus, onFocused }: { D: Snapshot; focus?: string | null; onFocused?: () => void }) {
   const [seg, setSeg] = useState<"arenas" | "assets">("arenas");
   const [open, setOpen] = useState<Arena | null>(null);
   const [af, setAf] = useState<"all" | "rented" | "vacant" | "sale">("all");
+
+  /* ‏הגעה מצ'יפ זירה בבית — התיק נפתח ישר על הזירה שנלחצה */
+  useEffect(() => {
+    if (!focus) return;
+    const a = D.arenas.find(x => x.name === focus);
+    if (a) { setSeg("arenas"); setOpen(a); }
+    onFocused?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
 
   const assets = useMemo(() => {
     let l = D.assets;
@@ -114,6 +123,21 @@ export default function Arenas({ D }: { D: Snapshot }) {
               </motion.div>
             ))}
             {!assets.length && <div style={{ color: "var(--mut)", fontSize: 13, textAlign: "center", padding: "24px 0" }}>אין נכסים בסינון הזה</div>}
+
+            {/* ‏הלוואות ומשכנתאות — היו באפליקציה הקודמת, חוזרות לכאן */}
+            {D.loans.length > 0 && (<>
+              <div className="sec" style={{ marginTop: 16 }}>🏦 הלוואות ומשכנתאות · <b className="num">{D.loans.length}</b></div>
+              {D.loans.map(l => (
+                <div key={l.id} className="glass" style={{ display: "flex", alignItems: "baseline", gap: 10, padding: "11px 15px", borderRadius: 15, marginBottom: 8 }}>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 13, fontWeight: 700 }}>{l.lender}</span>
+                    {l.collateral && <span style={{ display: "block", fontSize: 10.5, color: "var(--mut)", marginTop: 2 }}>{String(l.collateral).slice(0, 44)}</span>}
+                  </span>
+                  {l.interest && <span className="num" style={{ flex: "none", fontSize: 11, color: "var(--mut)" }}>{l.interest}</span>}
+                  <span className="num" style={{ flex: "none", fontFamily: "var(--serif)", fontSize: 15, fontWeight: 800, color: "var(--gold)" }}>{l.principal != null ? ils(l.principal) : "—"}</span>
+                </div>
+              ))}
+            </>)}
           </motion.div>
         )}
       </AnimatePresence>

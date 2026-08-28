@@ -8,6 +8,7 @@ export const ASK = `${BASE}/nx-ask`;
 export const DEC = `${BASE}/nx-dec`;
 export const DASH = `${BASE}/nx-dash`;
 export const FILE = `${BASE}/nx-file`;
+export const REPORT = `${BASE}/report`;
 
 export const getKey = () => { try { return localStorage.getItem("nx_k3") || ""; } catch { return ""; } };
 export const dropKey = () => { try { localStorage.removeItem("nx_k3"); } catch { /* private mode */ } };

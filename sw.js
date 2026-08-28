@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v10"; /* v10 (28.8): כותרות בולטות · תפריט ☰ (שיוך מסמכים · אימות · אנשים · לקחים) · התחברות במגירה + באנר הדגמה */
+const CACHE = "nexus-hq-v11"; /* v11 (29.8, QA לילה): דיווחים + אלפא ב-☰ · הלוואות · שיחה ששורדת מעבר טאב · באנר כשל כן · צ'יפ זירה פותח תיק */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

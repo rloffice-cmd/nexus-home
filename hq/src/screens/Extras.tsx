@@ -3,14 +3,14 @@ import { Drawer } from "vaul";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Snapshot } from "../lib/data";
-import { API, FILE, apiPost, getKey } from "../lib/api";
+import { API, FILE, REPORT, apiGet, apiPost, getKey } from "../lib/api";
 
 /* ‏"עוד" — הפונקציות שחיו בהמבורגר של האפליקציה הקודמת (פידבק איתי 28.8):
    ‏שיוך מסמכים (nx-file, אותו מנוע) · מה לא ברור (verify_commit) · אנשים ·
    ‏לקחים · האפליקציה הקודמת · התנתקות. וההתחברות עצמה — מסך אמיתי במקום
    ‏window.prompt, שב-PWA מותקן פשוט לא נפתח. */
 
-export type SheetId = null | "connect" | "more" | "filing" | "people" | "lessons" | "verify";
+export type SheetId = null | "connect" | "more" | "filing" | "people" | "lessons" | "verify" | "reports" | "alpha";
 
 const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const drawerStyle: React.CSSProperties = { position: "fixed", insetInline: 0, bottom: 0, zIndex: 51, maxHeight: "88dvh", display: "flex", flexDirection: "column", borderRadius: "26px 26px 0 0", background: "color-mix(in srgb,var(--acc) 7%,var(--bg))", border: "1px solid color-mix(in srgb,var(--acc) 25%,transparent)", borderBottom: 0, padding: "0 20px calc(24px + env(safe-area-inset-bottom))", maxWidth: 660, margin: "0 auto", color: "var(--ink)" };
@@ -54,15 +54,23 @@ export function ConnectSheet({ open, onClose, onConnected }: { open: boolean; on
   );
 }
 
-/* ── באנר הדגמה: נתוני דוגמה לעולם לא מתחזים לאמת ── */
-export function DemoBanner({ onConnect }: { onConnect: () => void }) {
+/* ── באנר הדגמה: נתוני דוגמה לעולם לא מתחזים לאמת. שלוש אמיתות שונות:
+   ‏אין מפתח ⟶ "התחבר" · הרשת נפלה ⟶ "נסה שוב" · המפתח נדחה ⟶ "התחבר מחדש".
+   ‏כשל תקשורת שנראה כמו מצב הדגמה רגיל הוא §6 — הבאנר אומר בדיוק מה קרה. */
+export function DemoBanner({ onConnect, err }: { onConnect: () => void; err?: "net" | "key" }) {
+  const isErr = !!err;
+  const col = isErr ? "var(--crit)" : "var(--warn)";
   return (
     <motion.button initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={spring} onClick={onConnect}
-      style={{ display: "flex", alignItems: "center", gap: 10, width: "calc(100% - 32px)", maxWidth: 628, margin: "6px auto 0", textAlign: "start", padding: "11px 15px", borderRadius: 14, background: "color-mix(in srgb,var(--warn) 13%,var(--bg))", border: "1px solid color-mix(in srgb,var(--warn) 40%,transparent)", WebkitTapHighlightColor: "transparent" }}>
-      <span style={{ fontSize: 17 }}>⚠️</span>
+      style={{ display: "flex", alignItems: "center", gap: 10, width: "calc(100% - 32px)", maxWidth: 628, margin: "6px auto 0", textAlign: "start", padding: "11px 15px", borderRadius: 14, background: `color-mix(in srgb,${col} 13%,var(--bg))`, border: `1px solid color-mix(in srgb,${col} 40%,transparent)`, WebkitTapHighlightColor: "transparent" }}>
+      <span style={{ fontSize: 17 }}>{isErr ? "⛔" : "⚠️"}</span>
       <span style={{ fontSize: 12.5, lineHeight: 1.45, color: "var(--ink)" }}>
-        <b>מצב הדגמה — אלה נתוני דוגמה, לא המצב האמיתי שלך.</b>
-        <span style={{ display: "block", color: "var(--ink2)", fontSize: 11.5 }}>הקש כאן והדבק את המפתח כדי להתחבר</span>
+        <b>{err === "net" ? "החיבור נכשל — מוצגים נתוני דוגמה, לא המצב שלך."
+          : err === "key" ? "המפתח נדחה — מוצגים נתוני דוגמה, לא המצב שלך."
+          : "מצב הדגמה — אלה נתוני דוגמה, לא המצב האמיתי שלך."}</b>
+        <span style={{ display: "block", color: "var(--ink2)", fontSize: 11.5 }}>
+          {err === "net" ? "הקש כאן לנסות שוב" : err === "key" ? "הקש כאן והדבק מפתח תקף" : "הקש כאן והדבק את המפתח כדי להתחבר"}
+        </span>
       </span>
     </motion.button>
   );
@@ -206,6 +214,121 @@ export function VerifySheet({ open, onClose, D, onChanged }: { open: boolean; on
   );
 }
 
+/* ── 📋 דיווחים — מערכת הדיווח הדו-צדדית (/report, מצב בעלים) ── */
+type RepData = { pulse: { pending?: number; stuck?: number; silent?: number }; silent: any[]; reports: any[]; team: any[] };
+export function ReportsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [st, setSt] = useState<{ loading: boolean; err: string; d: RepData | null }>({ loading: true, err: "", d: null });
+  const load = async () => {
+    if (!getKey()) { setSt({ loading: false, err: "demo", d: null }); return; }
+    setSt(s => ({ ...s, loading: true, err: "" }));
+    try {
+      const r = await apiGet(REPORT);
+      if (r?.mode !== "owner") { setSt({ loading: false, err: "אין נתוני דיווחים", d: null }); return; }
+      setSt({ loading: false, err: "", d: { pulse: r.pulse || {}, silent: r.silent || [], reports: r.reports || [], team: r.team || [] } });
+    } catch (e: any) { setSt({ loading: false, err: String(e?.message || e), d: null }); }
+  };
+  useEffect(() => { if (open) load(); /* eslint-disable-next-line */ }, [open]);
+  const d = st.d;
+  const fmtAgo = (ts?: string) => { if (!ts) return ""; const days = Math.floor((Date.now() - new Date(ts).getTime()) / 86400000); return days <= 0 ? "היום" : days === 1 ? "אתמול" : `לפני ${days} ימים`; };
+  return (
+    <Sheet open={open} onClose={onClose}>
+      <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 21, fontWeight: 900, margin: "0 0 4px" }}>📋 דיווחים</Drawer.Title>
+      <p style={{ color: "var(--ink2)", fontSize: 12, margin: "0 0 12px" }}>מערכת הדיווח הדו-צדדית — מה חזר מהצוות, ומי שקט מדי.</p>
+      {st.err === "demo" && <p style={{ color: "var(--ink2)", fontSize: 13 }}>זמין במצב מחובר בלבד — התחבר עם המפתח.</p>}
+      {st.err && st.err !== "demo" && <div style={{ color: "var(--crit)", fontSize: 13 }}>שגיאה: {st.err} <button onClick={load} style={{ ...btnLine, padding: "8px 14px", marginInlineStart: 8 }}>נסה שוב</button></div>}
+      {st.loading && <p style={{ color: "var(--mut)", fontSize: 13 }}>טוען…</p>}
+      {d && (<>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+          {[
+            { n: d.pulse.pending || 0, t: "דיווחים אחרונים", c: "var(--gold)" },
+            { n: d.pulse.stuck || 0, t: "נתקעו", c: d.pulse.stuck ? "var(--crit)" : "var(--good)" },
+            { n: d.pulse.silent || 0, t: "שקטים", c: d.pulse.silent ? "var(--warn)" : "var(--good)" },
+          ].map(k => (
+            <div key={k.t} className="glass" style={{ padding: "11px 12px 9px", borderRadius: 14, textAlign: "center" }}>
+              <div className="num" style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 800, color: k.c }}>{k.n}</div>
+              <div style={{ fontSize: 9.5, color: "var(--mut)", fontWeight: 700, marginTop: 3 }}>{k.t}</div>
+            </div>
+          ))}
+        </div>
+        {d.silent.length > 0 && (<>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--warn)", margin: "0 0 6px" }}>🔇 נשמע מזמן (מעל 5 ימים)</div>
+          {d.silent.slice(0, 8).map((s, i) => (
+            <div key={i} style={{ padding: "8px 2px", borderBottom: "1px solid var(--hair)", fontSize: 12.5, lineHeight: 1.45 }}>
+              {s.title}<span style={{ color: "var(--mut)" }}>{s.person ? ` — ${s.person}` : ""}{s.last_report_at ? ` · ${fmtAgo(s.last_report_at)}` : ""}</span>
+            </div>
+          ))}
+        </>)}
+        {d.reports.length > 0 && (<>
+          <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--gold)", margin: "14px 0 6px" }}>דיווחים אחרונים</div>
+          {d.reports.slice(0, 10).map((rp, i) => (
+            <div key={i} style={{ padding: "8px 2px", borderBottom: "1px solid var(--hair)", fontSize: 12.5, lineHeight: 1.5 }}>
+              <span className={"chip " + (rp.status === "done" ? "good" : rp.status === "stuck" ? "crit" : "mut")} style={{ marginInlineEnd: 7 }}>{rp.status === "done" ? "בוצע" : rp.status === "stuck" ? "תקוע" : "בתהליך"}</span>
+              {rp.title}
+              {rp.note && <span style={{ display: "block", color: "var(--mut)", fontSize: 11.5, marginTop: 2 }}>{String(rp.note).slice(0, 110)}</span>}
+            </div>
+          ))}
+        </>)}
+        {!d.silent.length && !d.reports.length && <p style={{ color: "var(--good)", fontSize: 13, fontWeight: 700 }}>✓ אין דיווחים פתוחים</p>}
+      </>)}
+    </Sheet>
+  );
+}
+
+/* ── α אלפא — המנדטים והפעולות. אישור/עצירה דרך המנוע בלבד ── */
+export function AlphaSheet({ open, onClose, D, onChanged }: { open: boolean; onClose: () => void; D: Snapshot; onChanged: () => void }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const A = D.alpha;
+  const proposed = A.mandates.filter(m => m.status === "proposed");
+  const active = A.mandates.filter(m => m.status === "active");
+  const act = async (kind: "alpha_mandate_approve" | "alpha_mandate_stop", id: string) => {
+    if (!getKey()) { toast("מצב הדגמה — הפעולה מדומה"); return; }
+    setBusy(id);
+    try { await apiPost(API, { action: kind, id }); toast.success(kind === "alpha_mandate_approve" ? "המנדט אושר ✓" : "המנדט נעצר"); onChanged(); }
+    catch { toast("לא נשמר — נסה שוב"); }
+    finally { setBusy(null); }
+  };
+  return (
+    <Sheet open={open} onClose={onClose}>
+      <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 21, fontWeight: 900, margin: "0 0 4px" }}>α אלפא — העוזרת הדיגיטלית</Drawer.Title>
+      <p style={{ color: "var(--ink2)", fontSize: 12, margin: "0 0 12px" }}>
+        משמרות היום: <b className="num">{A.shiftsToday}</b>/3 · פועלת רק בתוך מנדט שאישרת · תזכורות לצוות יוצאות בשמה, לא בשמך.
+      </p>
+      {proposed.length > 0 && (<>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--warn)", margin: "0 0 6px" }}>ממתין לאישורך</div>
+        {proposed.map(m => (
+          <div key={m.id} className="glass" style={{ padding: "12px 14px", borderRadius: 15, marginBottom: 8 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.4 }}>{m.title}</div>
+            {m.goal && <div style={{ fontSize: 11.5, color: "var(--mut)", marginTop: 4, lineHeight: 1.5 }}>{String(m.goal).slice(0, 160)}…</div>}
+            <motion.button whileTap={{ scale: 0.95 }} disabled={busy === m.id} onClick={() => act("alpha_mandate_approve", m.id)}
+              style={{ ...btnGold, padding: "10px 16px", fontSize: 12.5, borderRadius: 11, marginTop: 9, opacity: busy === m.id ? 0.6 : 1 }}>אשר מנדט ✓</motion.button>
+          </div>
+        ))}
+      </>)}
+      <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--gold)", margin: "4px 0 6px" }}>מנדטים פעילים · <span className="num">{active.length}</span></div>
+      {!active.length && <p style={{ color: "var(--mut)", fontSize: 12.5 }}>אין מנדטים פעילים.</p>}
+      {active.map(m => (
+        <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 2px", borderBottom: "1px solid var(--hair)" }}>
+          <span aria-hidden style={{ flex: "none", width: 7, height: 7, borderRadius: "50%", background: "var(--good)" }} />
+          <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, lineHeight: 1.4 }}>
+            {m.title}{m.expires && <span style={{ color: "var(--mut)", fontWeight: 400 }}> · עד {m.expires}</span>}
+          </span>
+          <button onClick={() => act("alpha_mandate_stop", m.id)} disabled={busy === m.id}
+            style={{ ...btnLine, padding: "6px 11px", fontSize: 11, borderRadius: 9, color: "var(--crit)", borderColor: "color-mix(in srgb,var(--crit) 35%,transparent)", opacity: busy === m.id ? 0.6 : 1 }}>עצור</button>
+        </div>
+      ))}
+      {A.actions.length > 0 && (<>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--gold)", margin: "14px 0 6px" }}>פעולות אחרונות</div>
+        {A.actions.map(a => (
+          <div key={a.id} style={{ padding: "7px 2px", borderBottom: "1px solid var(--hair)", fontSize: 12, lineHeight: 1.5, color: "var(--ink2)" }}>
+            {a.body}
+            <span style={{ color: "var(--mut)", fontSize: 10.5 }}>{a.when ? ` · ${a.when}` : ""}{a.outcome === "delivered" ? " · נמסר" : a.outcome === "failed" ? " · כשל מסירה" : a.outcome === "replied" ? " · נענה" : ""}</span>
+          </div>
+        ))}
+      </>)}
+    </Sheet>
+  );
+}
+
 /* ── תפריט עוד + אנשים + לקחים ── */
 export function MoreSheet({ open, onClose, D, go, onLogout }: { open: boolean; onClose: () => void; D: Snapshot; go: (s: SheetId) => void; onLogout: () => void }) {
   const item = (ic: string, label: string, badge: number | null, fn: () => void) => (
@@ -220,12 +343,14 @@ export function MoreSheet({ open, onClose, D, go, onLogout }: { open: boolean; o
     <Sheet open={open} onClose={onClose}>
       <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 21, fontWeight: 900, margin: "0 0 12px" }}>עוד</Drawer.Title>
       {item("🗂", "שיוך מסמכים", null, () => go("filing"))}
+      {item("📋", "דיווחים מהצוות", null, () => go("reports"))}
+      {item("α", "אלפא — מנדטים ופעולות", D.alpha.mandates.filter(m => m.status === "proposed").length || null, () => go("alpha"))}
       {item("❓", "מה לא ברור", D.verifications.length || null, () => go("verify"))}
       {item("👥", "אנשים", D.people.length || null, () => go("people"))}
       {item("🧠", "לקחים", D.lessons.length || null, () => go("lessons"))}
       {item("🕰", "האפליקציה הקודמת", null, () => { window.location.href = "./classic.html"; })}
       {getKey() && item("🚪", "התנתקות", null, onLogout)}
-      <div style={{ color: "var(--mut)", fontSize: 10.5, textAlign: "center", marginTop: 8 }}>Nexus HQ · {D.now}</div>
+      <div style={{ color: "var(--mut)", fontSize: 10.5, textAlign: "center", marginTop: 8 }}>Nexus HQ{D.now ? ` · ${D.now}` : ""}</div>
     </Sheet>
   );
 }
@@ -245,6 +370,7 @@ export function PeopleSheet({ open, onClose, D }: { open: boolean; onClose: () =
             <span style={{ display: "block", fontSize: 13.5, fontWeight: 700 }}>{p.name}</span>
             {(p.role || p.organization) && <span style={{ display: "block", fontSize: 11, color: "var(--mut)" }}>{[p.role, p.organization].filter(Boolean).join(" · ")}</span>}
           </span>
+          {p.rel && <span className={"chip " + p.rel}>{p.rel === "crit" ? "מורח" : "אמין"}</span>}
           {p.phone && <a href={`tel:${p.phone}`} style={{ fontSize: 16, textDecoration: "none" }}>📞</a>}
         </div>
       ))}

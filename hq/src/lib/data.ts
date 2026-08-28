@@ -16,7 +16,11 @@ export type Arena = { id: string; name: string; state: "ok" | "warn" | "crit"; n
 export type Meeting = { id: string; title: string; when: string; dayLabel: string; dayOffset: number; location?: string; arena?: string; prepBody?: string; prepDepth?: string; debrief?: string };
 export type Asset = { id: string; code?: string; name: string; arena?: string; type?: string; rented: boolean; rent?: number | null; forSale: boolean; price?: number | null; valuation?: number | null; area?: number | null };
 export type ArenaEvent = { arena: string; text: string; when: string };
-export type Person = { id: string; name: string; role?: string; organization?: string; phone?: string };
+export type Person = { id: string; name: string; role?: string; organization?: string; phone?: string; rel?: "crit" | "good" };
+export type Loan = { id: string; lender: string; principal?: number | null; interest?: string; collateral?: string };
+export type Mandate = { id: string; title: string; goal?: string; status: string; expires?: string };
+export type AlphaAction = { id: string; body: string; outcome?: string; when?: string };
+export type AlphaState = { mandates: Mandate[]; shiftsToday: number; actions: AlphaAction[] };
 export type Lesson = { text: string; when?: string };
 export type Verification = { id: string; kind?: string; subject?: string; question: string };
 
@@ -74,6 +78,9 @@ export function deriveCoverage(ts: T[]): Coverage {
 
 export type Snapshot = {
   live: boolean; now: string;
+  /* ‏כנות בכשל: "net" = יש מפתח אבל הרשת נפלה · "key" = המפתח נדחה.
+     ‏נתוני הדגמה לעולם לא מוצגים בשקט כשהחיבור בעצם נכשל. */
+  err?: "net" | "key";
   k: { openTotal: number; closedToday: number };
   coverage: Coverage;
   needsYou: { id: string; kind: "החלטה" | "קריטי"; title: string; meta: string; recommendation?: string }[];
@@ -86,6 +93,8 @@ export type Snapshot = {
   people: Person[];
   lessons: Lesson[];
   verifications: Verification[];
+  loans: Loan[];
+  alpha: AlphaState;
 };
 
 export const DEMO: Snapshot = {
@@ -122,7 +131,7 @@ export const DEMO: Snapshot = {
     { arena: "פסגת שלמה", text: "הצעת מחיר לקבלן הריסות התקבלה", when: "לפני יומיים" },
   ],
   people: [
-    { id: "p1", name: "שירה אבן צור", role: "כספים", organization: "רם ישראל" },
+    { id: "p1", name: "שירה אבן צור", role: "כספים", organization: "רם ישראל", rel: "good" },
     { id: "p2", name: "אילונה קפטש", role: "פרויקטים" },
     { id: "p3", name: "יניב מידן", role: "שותף" },
   ],
@@ -133,6 +142,20 @@ export const DEMO: Snapshot = {
   verifications: [
     { id: "v1", kind: "contradiction", subject: "ODEM-227", question: "אי-התאמה בת.ז — שומת קושניר משייכת 034543678 לאיתי, הפוך מהסכם השכירות" },
   ],
+  loans: [
+    { id: "l1", lender: "בנק לאומי", principal: 4200000, interest: "P+1.2%", collateral: "השדרה — קומה 2-" },
+    { id: "l2", lender: "מלווה פרטי", principal: 950000, interest: "7%", collateral: "מגרש 227" },
+  ],
+  alpha: {
+    shiftsToday: 1,
+    mandates: [
+      { id: "am1", title: "רדיפת משימות באיחור", status: "active", expires: "12.10" },
+      { id: "am2", title: "הסלמה לאחראי — פריט תקוע מגיע למטפל בזירה", status: "active", expires: "01.10" },
+    ],
+    actions: [
+      { id: "aa1", body: "• יניב — \"התחשבנות שכ\"ט אלי מור\" · באיחור 7 ימים · 2 תזכורות, אפס תשובות", outcome: "delivered", when: "אתמול" },
+    ],
+  },
 };
 
 /* ── עזרי תאריך: ISO ⟷ תצוגה, בשעון ישראל ── */
@@ -239,9 +262,24 @@ export async function loadSnapshot(): Promise<Snapshot> {
         text: e.description || "",
         when: fmtDay(String(e.happened_at || "").slice(0, 10)) || "",
       })),
-      people: ((D.people || []) as any[]).map(p => ({ id: p.id, name: p.name, role: p.role || undefined, organization: p.organization || undefined, phone: p.phone || undefined })),
+      people: ((D.people || []) as any[]).map(p => {
+        /* ‏כיול פולו-אפ כמו באפליקציה הקודמת: "מורח" ⟶ נדנוד יזום · "אמין" ⟶ מרחב */
+        const notes = String(p.reliability_notes || "") + String(p.work_notes || "");
+        const rel = /מורח|לא אמין|מתמהמה/.test(notes) ? "crit" as const : /אמין|מהיר|יסודי/.test(String(p.reliability_notes || "")) ? "good" as const : undefined;
+        return { id: p.id, name: p.name, role: p.role || undefined, organization: p.organization || undefined, phone: p.phone || undefined, rel };
+      }),
       lessons: ((D.lessons || []) as any[]).map(l => ({ text: l.lesson || "", when: fmtDay(String(l.created_at || "").slice(0, 10)) })).filter(l => l.text),
       verifications: ((D.verifications || []) as any[]).map(v => ({ id: v.id, kind: v.kind || undefined, subject: v.subject || undefined, question: v.question || "" })),
+      loans: ((dash?.loans || []) as any[]).map((l, i) => ({ id: l.id || String(i), lender: l.lender || "", principal: l.principal ?? null, interest: l.interest || undefined, collateral: l.collateral || undefined })),
+      alpha: {
+        shiftsToday: D.alpha?.shifts_today ?? 0,
+        mandates: ((D.alpha?.mandates || []) as any[]).map(m => ({ id: m.id, title: m.title || "", goal: m.goal || undefined, status: m.status || "", expires: fmtDay(String(m.expires_at || "").slice(0, 10)) })),
+        actions: ((D.alpha?.recent_actions || []) as any[]).slice(0, 8).map(a => ({ id: a.id, body: a.body || "", outcome: a.outcome || undefined, when: fmtDay(String(a.sent_at || "").slice(0, 10)) })),
+      },
     };
-  } catch { return { ...DEMO, now }; }
+  } catch (e: any) {
+    /* ‏יש מפתח והטעינה נפלה — לא מציגים הדגמה בשקט: הדגל מגיע לבאנר. */
+    const err: "net" | "key" = String(e?.message || "") === "forbidden" ? "key" : "net";
+    return { ...DEMO, now, err };
+  }
 }
