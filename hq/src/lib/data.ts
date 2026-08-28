@@ -16,6 +16,9 @@ export type Arena = { id: string; name: string; state: "ok" | "warn" | "crit"; n
 export type Meeting = { id: string; title: string; when: string; dayLabel: string; dayOffset: number; location?: string; arena?: string; prepBody?: string; prepDepth?: string; debrief?: string };
 export type Asset = { id: string; code?: string; name: string; arena?: string; type?: string; rented: boolean; rent?: number | null; forSale: boolean; price?: number | null; valuation?: number | null; area?: number | null };
 export type ArenaEvent = { arena: string; text: string; when: string };
+export type Person = { id: string; name: string; role?: string; organization?: string; phone?: string };
+export type Lesson = { text: string; when?: string };
+export type Verification = { id: string; kind?: string; subject?: string; question: string };
 
 /* ‏מודל המשימה — אחד לעמוד המשימות ולכיסוי בבית */
 export type T = {
@@ -80,6 +83,9 @@ export type Snapshot = {
   meetings: Meeting[];
   assets: Asset[];
   events: ArenaEvent[];
+  people: Person[];
+  lessons: Lesson[];
+  verifications: Verification[];
 };
 
 export const DEMO: Snapshot = {
@@ -114,6 +120,18 @@ export const DEMO: Snapshot = {
   events: [
     { arena: "השדרה", text: "דיון בוררות נקבע", when: "אתמול" },
     { arena: "פסגת שלמה", text: "הצעת מחיר לקבלן הריסות התקבלה", when: "לפני יומיים" },
+  ],
+  people: [
+    { id: "p1", name: "שירה אבן צור", role: "כספים", organization: "רם ישראל" },
+    { id: "p2", name: "אילונה קפטש", role: "פרויקטים" },
+    { id: "p3", name: "יניב מידן", role: "שותף" },
+  ],
+  lessons: [
+    { text: "ג זה ג2 זה דזירוב", when: "29.07" },
+    { text: "איכות קודמת לעלות — מוכן לשלם כשזה מוצדק", when: "01.08" },
+  ],
+  verifications: [
+    { id: "v1", kind: "contradiction", subject: "ODEM-227", question: "אי-התאמה בת.ז — שומת קושניר משייכת 034543678 לאיתי, הפוך מהסכם השכירות" },
   ],
 };
 
@@ -221,6 +239,9 @@ export async function loadSnapshot(): Promise<Snapshot> {
         text: e.description || "",
         when: fmtDay(String(e.happened_at || "").slice(0, 10)) || "",
       })),
+      people: ((D.people || []) as any[]).map(p => ({ id: p.id, name: p.name, role: p.role || undefined, organization: p.organization || undefined, phone: p.phone || undefined })),
+      lessons: ((D.lessons || []) as any[]).map(l => ({ text: l.lesson || "", when: fmtDay(String(l.created_at || "").slice(0, 10)) })).filter(l => l.text),
+      verifications: ((D.verifications || []) as any[]).map(v => ({ id: v.id, kind: v.kind || undefined, subject: v.subject || undefined, question: v.question || "" })),
     };
   } catch { return { ...DEMO, now }; }
 }

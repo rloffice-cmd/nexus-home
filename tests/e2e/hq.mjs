@@ -29,6 +29,8 @@ FIX.meetings = [
 ];
 FIX.preps = [{ id: "pr1", event_id: "ev1", body: "ZZFIX נקודת המפתח: לוח הזמנים", depth: "מלא" }];
 FIX.events = [{ arena_id: "ar1", description: "ZZFIX דיון בוררות נקבע", happened_at: daysAgo(1) }];
+FIX.verifications = [{ id: "v-zz", kind: "fact", subject: "ZZFIX אודם", question: "ZZFIX האם שכר הדירה 41,000?" }];
+FIX.lessons = [{ lesson: "ZZFIX לקח לבדיקה", created_at: daysAgo(3) }];
 const DASHFIX = { assets: [
   { id: "a1", code: "500", name: "ZZFIX חנות הסופר", arena_id: "ar1", is_rented: true, asking_rent: 41000, for_sale: true, asking_price: 9000000, area_gross: 480 },
   { id: "a2", code: "60", name: "ZZFIX משרד פנוי", arena_id: "ar1", is_rented: false, for_sale: false },
@@ -46,9 +48,11 @@ await T("אין 'הדבר האחד' בבית", async () => { if (await pg.getByT
 await T("לוח הכיסוי — התמונה המלאה", () => pg.getByText("התמונה המלאה").first().waitFor({ timeout: 4000 }));
 await T("חריגים אדומים מוצגים", () => pg.getByText("בלי טיפול חי").first().waitFor({ timeout: 4000 }));
 await T("מצב הדגמה מוצהר", () => pg.getByText("התחבר 🔑").first().waitFor({ timeout: 4000 }));
+await T("באנר הדגמה — נתוני דוגמה לא מתחזים לאמת", () => pg.getByText("מצב הדגמה — אלה נתוני דוגמה").first().waitFor({ timeout: 4000 }));
 
-/* ── (ב) חי מדומה: מפתח + route ── */
+/* ── (ב) חי מדומה: routes ⟶ התחברות דרך המגירה האמיתית (לא prompt) ── */
 const posts = [];
+const FILEFIX = { folders: [{ folder: "G:/דזירוב/ג2", short: "דזירוב/ג2", docs: 12, sample: "הסכם שכירות.pdf", suggest_arena_id: "ar1", suggest_arena: "השדרה / קניון בית שמש" }], arenas: [{ id: "ar1", name: "השדרה / קניון בית שמש" }], count: { docs: 12, folders: 1 } };
 await pg.route("**/functions/v1/nexus-app**", async (route) => {
   const req = route.request();
   if (req.method() === "POST") { posts.push(JSON.parse(req.postData() || "{}")); return route.fulfill({ json: { ok: true, applied: 1 } }); }
@@ -60,11 +64,21 @@ await pg.route("**/functions/v1/nx-act**", async (route) => {
   posts.push(JSON.parse(route.request().postData() || "{}"));
   return route.fulfill({ json: { ok: true } });
 });
-await pg.evaluate(() => localStorage.setItem("nx_k3", "ZZTEST-fixture"));
-await pg.reload({ waitUntil: "domcontentloaded" });
-await pg.waitForTimeout(1800);
+await pg.route("**/functions/v1/nx-file**", async (route) => {
+  const p = JSON.parse(route.request().postData() || "{}");
+  posts.push(p);
+  if (p.action === "unfiled_list") return route.fulfill({ json: FILEFIX });
+  return route.fulfill({ json: { ok: true, filed: 12 } });
+});
 
-await T("LIVE נדלק על ה-fixture", () => pg.getByText("LIVE").first().waitFor({ timeout: 5000 }));
+await T("התחברות במגירה: הדבקת מפתח ⟶ LIVE בלי reload", async () => {
+  await pg.getByText("מצב הדגמה — אלה נתוני דוגמה").first().click();
+  await pg.getByPlaceholder("מפתח Nexus…").waitFor({ timeout: 3000 });
+  await pg.getByPlaceholder("מפתח Nexus…").fill("ZZTEST-fixture");
+  await pg.getByText("התחבר ✓").first().click();
+  await pg.getByText("LIVE").first().waitFor({ timeout: 6000 });
+  await pg.waitForTimeout(800);
+});
 await T("המשימה הקפואה שלי בחריגים", () => pg.getByText("ZZFIX משימה שלי קפואה").first().waitFor({ timeout: 4000 }));
 await T("המובטחת של שירה מכוסה (לא בחריגים בבית)", async () => {
   const home = pg.locator("main");
@@ -114,6 +128,45 @@ await T("פגישות: עתידית מוצגת · עבר מוסתר · תיק נ
   await pg.getByText("ZZFIX ועדת היתרים").first().click();
   await pg.getByText("ZZFIX נקודת המפתח").first().waitFor({ timeout: 4000 });
   await pg.keyboard.press("Escape"); await pg.waitForTimeout(500);
+});
+await T("תפריט ☰ — הפונקציות מההמבורגר חזרו", async () => {
+  await pg.getByLabel("עוד").click();
+  await pg.getByText("שיוך מסמכים").first().waitFor({ timeout: 3000 });
+  await pg.getByText("מה לא ברור").first().waitFor({ timeout: 2000 });
+  await pg.getByText("האפליקציה הקודמת").first().waitFor({ timeout: 2000 });
+});
+await T("שיוך מסמכים: הצעה ⟶ POST file_folder אמיתי", async () => {
+  await pg.getByText("שיוך מסמכים").first().click();
+  await pg.getByText("דזירוב/ג2").first().waitFor({ timeout: 4000 });
+  if (!posts.some((p) => p.action === "unfiled_list")) throw new Error("לא נשלח unfiled_list");
+  await pg.getByText("✓ השדרה").first().click();
+  await pg.waitForTimeout(800);
+  if (!posts.some((p) => p.action === "file_folder" && p.folder === "G:/דזירוב/ג2" && p.arena_id === "ar1")) throw new Error("payload שגוי");
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(600);
+});
+await T("מה לא ברור: אישור ⟶ POST verify_commit", async () => {
+  await pg.getByLabel("עוד").click();
+  await pg.getByText("מה לא ברור").first().waitFor({ timeout: 3000 });
+  await pg.getByText("מה לא ברור").first().click();
+  await pg.getByText("ZZFIX האם שכר הדירה").first().waitFor({ timeout: 4000 });
+  await pg.getByText("✓ נכון כמו שכתוב").first().click();
+  await pg.waitForTimeout(800);
+  if (!posts.some((p) => p.action === "verify_commit" && p.id === "v-zz" && p.verdict === "confirm")) throw new Error("payload שגוי");
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(600);
+});
+await T("אנשים במגירה — מהנתונים החיים", async () => {
+  await pg.getByLabel("עוד").click();
+  await pg.getByText("אנשים").first().waitFor({ timeout: 3000 });
+  await pg.getByText("אנשים").first().click();
+  await pg.getByText("שירה אבן צור").first().waitFor({ timeout: 4000 });
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(600);
+});
+await T("כותרות בולטות — פס מבטא על .sec", async () => {
+  const w = await pg.evaluate(() => {
+    const el = document.querySelector(".sec"); if (!el) return "missing";
+    return getComputedStyle(el, "::before").width;
+  });
+  if (w === "missing" || w === "none" || w === "auto" || parseFloat(w) < 3) throw new Error("אין פס מבטא: " + w);
 });
 await T("אפס שגיאות JS", async () => { if (jserr.length) throw new Error(jserr.join(" | ")); });
 

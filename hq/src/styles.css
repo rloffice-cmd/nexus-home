@@ -45,10 +45,14 @@ button{font-family:inherit;border:0;background:none;color:inherit;cursor:pointer
 
 .page{max-width:660px;margin:0 auto;padding:10px 16px calc(var(--nav-h) + 46px)}
 
-.sec{display:flex;align-items:center;gap:9px;margin:24px 2px 10px;
-  font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--mut)}
+/* 28.8 (פידבק איתי: "הכותרות צריכות להיות יותר ברורות ובולטות") —
+   מ-11px אפור מרווח לכותרת אמיתית: serif בולט, פס מותג, מונה זהב. */
+.sec{display:flex;align-items:center;gap:10px;margin:26px 2px 12px;
+  font-family:var(--serif);font-size:17px;font-weight:800;color:var(--ink);letter-spacing:0}
+.sec::before{content:"";flex:none;width:4px;height:17px;border-radius:3px;
+  background:linear-gradient(180deg,var(--acc-hi),var(--acc-lo))}
 .sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--hair2),transparent)}
-.sec b{color:var(--ink2)}
+.sec b{color:var(--gold);font-family:var(--serif)}
 
 .chip{font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;letter-spacing:.02em}
 .chip.crit{background:rgba(229,123,111,.13);color:#ff9a8f;border:1px solid rgba(229,123,111,.32)}
