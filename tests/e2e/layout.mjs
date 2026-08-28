@@ -151,7 +151,7 @@ for (const vp of VIEWPORTS) {
   await page.waitForTimeout(150);
   const row = await page.$('.row[onclick^="openTask"]');
   if (row) {
-    await row.click(); await page.waitForSelector(".sheet.on"); await page.waitForTimeout(250);
+    await row.click(); await page.waitForSelector(".sheet.on"); await page.waitForTimeout(800);
     const sheetIssues = await page.evaluate(() => {
       const o = [];
       const sh = document.querySelector("#sheet"), ov = document.querySelector("#ov"), nav = document.querySelector("nav");
@@ -187,7 +187,7 @@ for (const vp of VIEWPORTS) {
     // גרירה למטה לסגירה
     if (!stillOpen && isSheet) {
       const row2 = await page.$('.row[onclick^="openTask"]');
-      if (row2) { await row2.click(); await page.waitForSelector(".sheet.on"); await page.waitForTimeout(250);
+      if (row2) { await row2.click(); await page.waitForSelector(".sheet.on"); await page.waitForTimeout(800);
         const top = await page.evaluate(() => document.querySelector("#sheet").getBoundingClientRect().top);
         await page.touchscreen.tap(vp.width/2, top+14).catch(()=>{});
         await page.evaluate(async (t) => {

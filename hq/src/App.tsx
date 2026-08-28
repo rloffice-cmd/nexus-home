@@ -6,6 +6,8 @@ import Dock, { type Tab } from "./ui/Dock";
 import Home from "./screens/Home";
 import { Decisions, Ask } from "./screens/Simple";
 import Tasks from "./screens/Tasks";
+import Arenas from "./screens/Arenas";
+import Meetings from "./screens/Meetings";
 import { loadSnapshot, DEMO, type Snapshot } from "./lib/data";
 import { PALS, applyPal, savedPal, type Pal } from "./lib/palettes";
 import { API, ACT, apiPost, getKey } from "./lib/api";
@@ -80,11 +82,13 @@ export default function App() {
           {tab === "home" && <Home D={D} onAsk={() => setTab("ask")} think={think} onAct={act} />}
           {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} />}
           {tab === "tasks" && <Tasks D={D} onAct={act} />}
+          {tab === "arenas" && <Arenas D={D} />}
+          {tab === "meetings" && <Meetings D={D} onAsk={() => setTab("ask")} />}
           {tab === "ask" && <Ask think={think} onThink={setThink} onChanged={reload} />}
         </motion.main>
       </AnimatePresence>
 
-      <Dock tab={tab} onTab={setTab} badge={{ decisions: D.decisions.length }} />
+      <Dock tab={tab} onTab={setTab} badge={{ decisions: D.decisions.length, meetings: D.meetings.filter(m => m.dayOffset === 0).length }} />
       <Toaster position="bottom-center" offset={92} mobileOffset={92} theme="dark" toastOptions={{ style: { background: "#1a150c", border: "1px solid color-mix(in srgb,var(--acc) 30%,transparent)", color: "var(--ink)" } }} />
     </>
   );

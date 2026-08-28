@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import type { Snapshot } from "../lib/data";
 import Orb from "../ui/Orb";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { API, ASK, apiPost, getKey } from "../lib/api";
 
@@ -49,11 +49,37 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
   const push = (m: Msg) => setMsgs(s => [...s, m]);
   const patch = (i: number, m: Partial<Msg>) => setMsgs(s => s.map((x, j) => j === i ? { ...x, ...m } : x));
 
+  /* ‏מוח עמוק ששרד סגירת אפליקציה: ה-log_id נשמר במכשיר, ובפתיחה הבאה
+     ‏ההמתנה מתחדשת מאותה נקודה — התשובה לא הולכת לאיבוד עם המסך. */
+  const answerRef = useRef<(a: string, err?: boolean) => void>(() => {});
+  const pollDeep = async (logId: string) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < 200000) {
+      await new Promise(rs => setTimeout(rs, 4000));
+      let p: any = null; try { p = await apiPost(ASK, { poll: logId }); } catch { /* ממשיכים */ }
+      if (p?.status === "done") { try { localStorage.removeItem("nx_deep_pending"); } catch { /* אין אחסון */ } answerRef.current(p.answer || "לא הצלחתי לגבש תשובה."); return true; }
+      if (p?.status === "failed") { try { localStorage.removeItem("nx_deep_pending"); } catch { /* אין אחסון */ } answerRef.current("⚠️ הבדיקה לעומק נכשלה — נסה שוב, ואם זה חוזר שאל בטלגרם.", true); return true; }
+    }
+    answerRef.current("⚠️ הבדיקה לעומק לא הסתיימה בזמן — נסה שוב בעוד רגע.", true); return false;
+  };
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("nx_deep_pending");
+      if (!raw || !getKey()) return;
+      const pend = JSON.parse(raw);
+      if (!pend?.log_id || Date.now() - (pend.t || 0) > 15 * 60000) { localStorage.removeItem("nx_deep_pending"); return; }
+      push({ q: pend.q }); push({ a: "🔍 ממשיך בדיקה לעומק שהתחלת קודם…" });
+      onThink(true); pollDeep(pend.log_id).finally(() => onThink(false));
+    } catch { /* אין אחסון */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const send = async () => {
     const q = txt.trim(); if (!q || think) return;
     setTxt(""); push({ q }); onThink(true);
     hist.current = [...hist.current.slice(-6), { role: "user", content: q }];
     const answer = (a: string, err = false) => { push({ a, err }); hist.current.push({ role: "assistant", content: a }); onThink(false); };
+    answerRef.current = answer;
 
     if (!getKey()) { setTimeout(() => answer("במצב הדגמה אני עונה רק כשמחוברים — המפתח נקלט אוטומטית מהאפליקציה."), 900); return; }
 
@@ -62,15 +88,9 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
       if (isDeep) {
         const r = await apiPost(ASK, { q, deep: true, history: hist.current.slice(-4) });
         if (r?.mode === "deep" && r.log_id) {
-          push({ a: "🔍 בודק לעומק — כמה שאילתות וכמה מחשבה. עד שתי דקות…" });
-          const t0 = Date.now();
-          while (Date.now() - t0 < 200000) {
-            await new Promise(rs => setTimeout(rs, 4000));
-            let p: any = null; try { p = await apiPost(ASK, { poll: r.log_id }); } catch { /* ממשיכים */ }
-            if (p?.status === "done") { answer(p.answer || "לא הצלחתי לגבש תשובה."); return; }
-            if (p?.status === "failed") { answer("⚠️ הבדיקה לעומק נכשלה — נסה שוב, ואם זה חוזר שאל בטלגרם.", true); return; }
-          }
-          answer("⚠️ הבדיקה לעומק לא הסתיימה בזמן — נסה שוב בעוד רגע.", true); return;
+          push({ a: "🔍 בודק לעומק — כמה שאילתות וכמה מחשבה. עד שתי דקות… (אפשר לסגור — אמשיך בפתיחה הבאה)" });
+          try { localStorage.setItem("nx_deep_pending", JSON.stringify({ log_id: r.log_id, q, t: Date.now() })); } catch { /* אין אחסון */ }
+          await pollDeep(r.log_id); return;
         }
         if (r?.reply) { answer(r.reply); return; }
       }
