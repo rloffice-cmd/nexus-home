@@ -224,8 +224,8 @@ nav button .pill{position:absolute;top:5px;width:46px;height:27px;border-radius:
 nav button.on .pill{background:var(--brand-soft);transform:scale(1)}
 nav button .ic{font-size:19px;line-height:1;position:relative;z-index:1}nav button.on{color:var(--brand-2)}
 nav .bdg{position:absolute;top:5px;margin-inline-start:20px;background:var(--crit);color:#fff;font-size:9px;font-weight:800;border-radius:20px;min-width:15px;height:15px;padding:0 4px;display:grid;place-items:center}
-.fab{transition:transform .22s ease,opacity .22s ease;position:fixed;inset-inline-end:max(16px,calc((100vw - 680px)/2 + 16px));bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px);width:56px;height:56px;border-radius:18px;border:0;background:linear-gradient(150deg,color-mix(in srgb,var(--brand) 88%,#fff),var(--brand) 55%,var(--brand-2));color:var(--on-brand);font-size:27px;box-shadow:0 10px 26px color-mix(in srgb,var(--brand) 38%,transparent),inset 0 1px 0 rgba(255,255,255,.25);cursor:pointer;z-index:41;display:grid;place-items:center}
-.fab.tucked{transform:translateY(96px) scale(.9);opacity:0;pointer-events:none}
+.fab{width:38px;height:38px;border-radius:13px;border:0;background:linear-gradient(150deg,color-mix(in srgb,var(--brand) 88%,#fff),var(--brand) 55%,var(--brand-2));color:var(--on-brand);font-size:21px;box-shadow:0 4px 14px color-mix(in srgb,var(--brand) 34%,transparent),inset 0 1px 0 rgba(255,255,255,.25);cursor:pointer;display:grid;place-items:center;flex:none;margin-inline-end:8px}
+.fab.tucked{}
 @media (max-height:700px){.fab{width:48px;height:48px;font-size:23px;border-radius:16px;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px)}}
 .fab:active{transform:scale(.93);transition-duration:.09s}
 
@@ -416,10 +416,7 @@ textarea:focus,input:focus,select:focus{border-color:var(--brand)}
   nav button.on{background:var(--brand-soft);color:var(--brand-2)}
   nav .bdg{position:static;margin-inline-start:auto;margin-top:0}
 
-  /* הכפתור הצף יורד לתחתית הסרגל — שם אין תוכן, ולכן הוא לא מכסה דבר */
-  .fab{inset-inline-start:calc((var(--rail) - 52px)/2);inset-inline-end:auto;bottom:22px;
-    width:52px;height:52px;font-size:25px;border-radius:16px}
-  .fab.tucked{transform:none;opacity:1;pointer-events:auto}
+  /* 28.8: הלכידה עברה לכותרת (סטטית) — אין יותר כפתור צף לרדת לסרגל */
 
   /* התוכן נעצר ב-1560px גם על מסך רחב מאוד — שורת טקסט ברוחב 2000px
      אינה קריאה. מעבר לזה הרווח הולך לשוליים, לא לשורה. */
@@ -638,7 +635,7 @@ function badges(){ const b=document.querySelector('nav button[data-tab=decisions
   const pend=(D.meetings||[]).filter(meetPending).length;
   mb.textContent=pend; mb.style.display=pend?"":"none"; }
 function shell(){
-  app().innerHTML=`<header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div><span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span><button class="iconbtn" id="themeBtn" aria-label="ערכת תאורה">◐</button><button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
+  app().innerHTML=`<header><div class="brand"><b>Nexus<i>·</i></b><small>חדר מצב · ${esc(D.now||"")}</small></div><span class="hsp"></span><span class="demo-dot" id="demoDot" style="display:none">הדגמה</span><button class="fab" id="fab" aria-label="לכידה">+</button><button class="iconbtn" id="themeBtn" aria-label="ערכת תאורה">◐</button><button class="iconbtn" id="moreBtn" aria-label="עוד">☰</button></header>
   <main id="main"></main>
   <nav>
     <button data-tab="home"><span class="pill"></span><span class="ic">◈</span>בית</button>
@@ -648,7 +645,6 @@ function shell(){
     <button data-tab="assets"><span class="pill"></span><span class="ic">▦</span>נכסים</button>
     <button data-tab="ask"><span class="pill"></span><span class="ic">${alphaMark(21,"nav")}</span>אלפא</button>
   </nav>
-  <button class="fab" id="fab" aria-label="לכידה">+</button>
   <div class="ov" id="ov"></div><div class="sheet" id="sheet"></div>
   <div class="toast" id="toast"><span class="m"></span><span class="u">בטל</span></div>`;
   document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;render();});

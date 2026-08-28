@@ -1,10 +1,12 @@
 import { motion } from "motion/react";
 
-export type Tab = "home" | "decisions" | "tasks" | "ask";
+export type Tab = "home" | "tasks" | "decisions" | "arenas" | "meetings" | "ask";
 const TABS: { id: Tab; ic: string; label: string }[] = [
   { id: "home", ic: "◈", label: "בית" },
-  { id: "decisions", ic: "✦", label: "החלטות" },
   { id: "tasks", ic: "▤", label: "משימות" },
+  { id: "decisions", ic: "✦", label: "החלטות" },
+  { id: "arenas", ic: "▦", label: "זירות" },
+  { id: "meetings", ic: "◔", label: "פגישות" },
   { id: "ask", ic: "α", label: "אלפא" },
 ];
 
@@ -21,12 +23,12 @@ export default function Dock({ tab, onTab, badge }: { tab: Tab; onTab: (t: Tab) 
     }}>
       {TABS.map((t) => (
         <button key={t.id} onClick={() => onTab(t.id)} aria-label={t.label}
-          style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, color: tab === t.id ? "var(--gold-hi)" : "var(--mut)", fontSize: 10.5, fontWeight: 700, WebkitTapHighlightColor: "transparent" }}>
+          style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, color: tab === t.id ? "var(--gold-hi)" : "var(--mut)", fontSize: 9.5, fontWeight: 700, WebkitTapHighlightColor: "transparent" }}>
           {tab === t.id && (
             <motion.span layoutId="dockpill" transition={{ type: "spring", duration: 0.5, bounce: 0.25 }}
               style={{ position: "absolute", inset: "7px 8px", borderRadius: 20, background: "linear-gradient(150deg,color-mix(in srgb,var(--acc) 22%,transparent),color-mix(in srgb,var(--acc-lo) 14%,transparent))", boxShadow: "inset 0 0 0 1px color-mix(in srgb,var(--acc) 30%,transparent)" }} />
           )}
-          <motion.span whileTap={{ scale: 0.82 }} style={{ position: "relative", fontSize: 19, lineHeight: 1 }}>{t.ic}</motion.span>
+          <motion.span whileTap={{ scale: 0.82 }} style={{ position: "relative", fontSize: 17, lineHeight: 1 }}>{t.ic}</motion.span>
           <span style={{ position: "relative" }}>{t.label}</span>
           {badge?.[t.id] ? (
             <span className="num" style={{ position: "absolute", top: 6, insetInlineStart: "56%", background: "var(--crit)", color: "#fff", fontSize: 9, fontWeight: 800, borderRadius: 20, minWidth: 15, height: 15, display: "grid", placeItems: "center", padding: "0 4px" }}>{badge[t.id]}</span>

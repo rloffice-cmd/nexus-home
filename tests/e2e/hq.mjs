@@ -23,6 +23,16 @@ const FIX = {
   home_brief: null, decisions: [],
 };
 const DECFIX = { decisions: [{ id: "d-zz", title: "ZZFIX האם להתקדם?", arena_id: "ar1", status: "pending", needed_by: iso(2), recommendation: "כן." }] };
+FIX.meetings = [
+  { id: "ev1", title: "ZZFIX ועדת היתרים", starts_at: new Date(Date.now() + 3 * 3600000).toISOString(), all_day: false, location: "מודיעין עילית", arena: "השדרה / קניון בית שמש", on_date: iso(0), day_offset: 0 },
+  { id: "ev2", title: "ZZFIX פגישת עבר", starts_at: daysAgo(2), all_day: false, on_date: iso(-2), day_offset: -2 },
+];
+FIX.preps = [{ id: "pr1", event_id: "ev1", body: "ZZFIX נקודת המפתח: לוח הזמנים", depth: "מלא" }];
+FIX.events = [{ arena_id: "ar1", description: "ZZFIX דיון בוררות נקבע", happened_at: daysAgo(1) }];
+const DASHFIX = { assets: [
+  { id: "a1", code: "500", name: "ZZFIX חנות הסופר", arena_id: "ar1", is_rented: true, asking_rent: 41000, for_sale: true, asking_price: 9000000, area_gross: 480 },
+  { id: "a2", code: "60", name: "ZZFIX משרד פנוי", arena_id: "ar1", is_rented: false, for_sale: false },
+] };
 
 const b = await chromium.launch(process.env.PW_EXEC ? { executablePath: process.env.PW_EXEC } : {});
 const pg = await b.newPage({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -45,6 +55,7 @@ await pg.route("**/functions/v1/nexus-app**", async (route) => {
   return route.fulfill({ json: FIX });
 });
 await pg.route("**/functions/v1/nx-dec**", (route) => route.fulfill({ json: DECFIX }));
+await pg.route("**/functions/v1/nx-dash**", (route) => route.fulfill({ json: DASHFIX }));
 await pg.route("**/functions/v1/nx-act**", async (route) => {
   posts.push(JSON.parse(route.request().postData() || "{}"));
   return route.fulfill({ json: { ok: true } });
@@ -82,6 +93,27 @@ await T("החלטה מה-fixture + הכרעה ⟶ decision_decide", async () => 
   await pg.getByText("הוכרע ✓").first().click();
   await pg.waitForTimeout(900);
   if (!posts.some((p) => p.action === "decision_decide" && p.id === "d-zz" && p.verdict === "decided")) throw new Error("payload שגוי");
+});
+await T("זירות: כרטיס זירה + תיק זירה", async () => {
+  await pg.getByText("זירות", { exact: true }).last().click();
+  await pg.getByText("השדרה", { exact: false }).first().waitFor({ timeout: 4000 });
+  await pg.getByText("השדרה").first().click();
+  await pg.getByText("ZZFIX דיון בוררות נקבע").first().waitFor({ timeout: 4000 });
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(500);
+});
+await T("נכסים: KPI + מושכר/למכירה", async () => {
+  await pg.getByText("נכסים ·", { exact: false }).first().click();
+  await pg.getByText("ZZFIX חנות הסופר").first().waitFor({ timeout: 4000 });
+  await pg.getByText("שכ\"ד חודשי").first().waitFor({ timeout: 3000 });
+  await pg.getByText("למכירה · ₪9,000,000").first().waitFor({ timeout: 3000 });
+});
+await T("פגישות: עתידית מוצגת · עבר מוסתר · תיק נפתח", async () => {
+  await pg.getByText("פגישות", { exact: true }).last().click();
+  await pg.getByText("ZZFIX ועדת היתרים").first().waitFor({ timeout: 4000 });
+  if (await pg.getByText("ZZFIX פגישת עבר").count()) throw new Error("פגישת עבר מוצגת");
+  await pg.getByText("ZZFIX ועדת היתרים").first().click();
+  await pg.getByText("ZZFIX נקודת המפתח").first().waitFor({ timeout: 4000 });
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(500);
 });
 await T("אפס שגיאות JS", async () => { if (jserr.length) throw new Error(jserr.join(" | ")); });
 
