@@ -240,6 +240,22 @@ await T("כרטיס אדם: לחיצה ⟶ אמינות + משימות פתוח�
   await dlg.getByPlaceholder("חיפוש…").waitFor({ timeout: 2000 });
   await pg.keyboard.press("Escape"); await pg.waitForTimeout(500);
 });
+await T("כפתור אחורה: סוגר מגירה ⟶ חוזר לבית ⟶ סוגר תפריט (לא יוצא)", async () => {
+  await pg.getByText("משימות", { exact: true }).last().click();
+  await pg.waitForTimeout(700);
+  await pg.getByText("ZZQA משימה 0 ", { exact: false }).first().click();
+  await pg.getByText("💬 תגובה חופשית").first().waitFor({ timeout: 3000 });
+  await pg.goBack(); await pg.waitForTimeout(800);
+  if (await pg.getByText("💬 תגובה חופשית").count()) throw new Error("אחורה לא סגר את המגירה");
+  await pg.getByText("שלך —", { exact: false }).first().waitFor({ timeout: 2500 });
+  await pg.goBack(); await pg.waitForTimeout(800);
+  await pg.getByText("התמונה המלאה").first().waitFor({ timeout: 3000 });
+  await pg.getByLabel("עוד").click(); await pg.waitForTimeout(600);
+  await pg.getByText("שיוך מסמכים").first().waitFor({ timeout: 2000 });
+  await pg.goBack(); await pg.waitForTimeout(800);
+  if (await pg.getByText("שיוך מסמכים").count()) throw new Error("אחורה לא סגר את התפריט");
+  await pg.getByText("התמונה המלאה").first().waitFor({ timeout: 2000 });
+});
 await T("אפס שגיאות JS בסיור המלא", async () => { if (pg.jserr.length) throw new Error(pg.jserr.join(" | ")); });
 await pg.close();
 

@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { Drawer } from "vaul";
 import { useState } from "react";
 import type { Snapshot, Meeting } from "../lib/data";
+import { useBackLayer } from "../lib/nav";
 
 /* ‏פגישות — החלון הקדימה (±14 יום מגיע מהמערכת; כאן מוצג מהיום והלאה).
    תיק פגישה שהוכן ע"י nexus-meeting-prep נפתח במגירה; פגישה בלי תיק
@@ -12,6 +13,7 @@ const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacit
 
 export default function Meetings({ D, onAsk }: { D: Snapshot; onAsk: (prefill?: string) => void }) {
   const [open, setOpen] = useState<Meeting | null>(null);
+  useBackLayer(!!open, () => setOpen(null));
   const groups: { label: string; items: Meeting[] }[] = [];
   for (const m of D.meetings) {
     const g = groups.find(x => x.label === m.dayLabel);

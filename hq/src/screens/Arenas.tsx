@@ -5,6 +5,7 @@ import type { Snapshot, Arena, T } from "../lib/data";
 import type { Act } from "../App";
 import Num from "../ui/Num";
 import CmdBox from "../ui/CmdBox";
+import { useBackLayer } from "../lib/nav";
 
 /* ‏זירות + נכסים — מסך אחד, שני מבטים על אותו נדל"ן. הזירה עונה "מה קורה
    שם", הנכס עונה "מה יש לי שם". לחיצה על זירה פותחת את התיק: משימות ·
@@ -19,6 +20,8 @@ export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onAct,
   const [open, setOpen] = useState<Arena | null>(null);
   const [selTask, setSelTask] = useState<T | null>(null);
   const [af, setAf] = useState<"all" | "rented" | "vacant" | "sale">("all");
+  useBackLayer(!!open, () => { setOpen(null); setSelTask(null); });
+  useBackLayer(!!selTask, () => setSelTask(null));
 
   /* ‏הגעה מצ'יפ זירה בבית — התיק נפתח ישר על הזירה שנלחצה */
   useEffect(() => {

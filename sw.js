@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v15"; /* v15 (29.8): משימות בתוך תיק זירה לחיצות — פרטים · בוצע/ממתין · תגובה חופשית; החלטות בתיק מנווטות */
+const CACHE = "nexus-hq-v16"; /* v16 (29.8): כפתור אחורה של הטלפון סוגר שכבות — מגירה ⟶ מסך ⟶ בית — במקום לצאת מהאפליקציה */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
