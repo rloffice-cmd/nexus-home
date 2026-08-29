@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v12"; /* v12 (29.8): כרטיס אדם — לחיצה על שורה פותחת אמינות · עבודה איתו · המשימות הפתוחות שלו */
+const CACHE = "nexus-hq-v13"; /* v13 (29.8): צ'יפ מחזיק בבית ⟶ המשימות שלו (מסנן אדם בעמוד המשימות) */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

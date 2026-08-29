@@ -12,7 +12,7 @@ const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * Math.min(i, 8) } });
 const ils = (n?: number | null) => n == null ? "" : "₪" + Math.round(n).toLocaleString("en-US");
 
-export default function Arenas({ D, focus, onFocused }: { D: Snapshot; focus?: string | null; onFocused?: () => void }) {
+export default function Arenas({ D, focus, onFocused, onTasks }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void }) {
   const [seg, setSeg] = useState<"arenas" | "assets">("arenas");
   const [open, setOpen] = useState<Arena | null>(null);
   const [af, setAf] = useState<"all" | "rented" | "vacant" | "sale">("all");
@@ -168,6 +168,12 @@ export default function Arenas({ D, focus, onFocused }: { D: Snapshot; focus?: s
                   <div className="sec" style={{ marginTop: 12 }}>קרה לאחרונה</div>
                   {x.events.map((e, i) => <div key={i} style={{ fontSize: 12, color: "var(--ink2)", padding: "6px 0", lineHeight: 1.45 }}><span className="num" style={{ color: "var(--mut)" }}>{e.when}</span> · {e.text}</div>)}
                 </>}
+                {x.tasks.length > 0 && (
+                  <motion.button whileTap={{ scale: 0.97 }} onClick={() => { const nm = open.name; setOpen(null); onTasks(nm); }}
+                    style={{ width: "100%", marginTop: 14, borderRadius: 13, padding: "12px 0", fontSize: 13, fontWeight: 800, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)", WebkitTapHighlightColor: "transparent" }}>
+                    ▤ כל המשימות של הזירה ‹
+                  </motion.button>
+                )}
               </div>
             ); })()}
           </Drawer.Content>

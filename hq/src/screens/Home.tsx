@@ -45,7 +45,7 @@ function Ring({ pct }: { pct: number }) {
   );
 }
 
-export default function Home({ D, onAsk, think, onAct, onArena }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act; onArena: (name: string) => void }) {
+export default function Home({ D, onAsk, think, onAct, onArena, onOwner }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act; onArena: (name: string) => void; onOwner: (name: string) => void }) {
   const [open, setOpen] = useState<null | (typeof D.needsYou)[number]>(null);
   const [openU, setOpenU] = useState<Uncovered | null>(null);
   const cov = D.coverage;
@@ -87,19 +87,22 @@ export default function Home({ D, onAsk, think, onAct, onArena }: { D: Snapshot;
           </div>
         </div>
 
-        {/* ‏מי מחזיק מה — כל הידיים על השולחן */}
+        {/* ‏מי מחזיק מה — כל הידיים על השולחן. לחיצה ⟶ המשימות שלו
+            ‏(פידבק איתי 29.8: "לדוגמה כאן שום דבר לא נלחץ") */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginTop: 15 }}>
           {cov.handlers.map((h) => (
-            <span key={h.name} style={{
-              display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 18, fontSize: 11.5, fontWeight: 700,
-              background: h.me ? "color-mix(in srgb,var(--acc) 14%,transparent)" : "var(--surface2)",
-              border: `1px solid ${h.me ? "color-mix(in srgb,var(--acc) 40%,transparent)" : "var(--hair)"}`,
-              color: h.me ? "var(--acc-hi)" : "var(--ink2)",
-            }}>
+            <motion.button key={h.name} whileTap={{ scale: 0.94 }} onClick={() => onOwner(h.me ? "__mine__" : h.name)}
+              aria-label={`המשימות של ${h.me ? "איתי" : h.name}`}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 18, fontSize: 11.5, fontWeight: 700,
+                background: h.me ? "color-mix(in srgb,var(--acc) 14%,transparent)" : "var(--surface2)",
+                border: `1px solid ${h.me ? "color-mix(in srgb,var(--acc) 40%,transparent)" : "var(--hair)"}`,
+                color: h.me ? "var(--acc-hi)" : "var(--ink2)", WebkitTapHighlightColor: "transparent",
+              }}>
               <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", background: h.stuck ? "var(--crit)" : "var(--good)", boxShadow: h.stuck ? "0 0 8px var(--crit)" : "none" }} />
               {h.me ? "אצלי" : h.name}
               <b className="num" style={{ fontWeight: 600, opacity: 0.75 }}>{h.open}</b>
-            </span>
+            </motion.button>
           ))}
         </div>
       </motion.section>

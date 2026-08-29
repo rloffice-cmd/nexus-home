@@ -104,6 +104,21 @@ await T("בית נטען על 90 משימות · LIVE", async () => {
   await pg.getByText("התמונה המלאה").first().waitFor({ timeout: 4000 });
   await shot("01-home");
 });
+await T("צ'יפ מחזיק בבית ⟶ משימות מסוננות על האדם", async () => {
+  try {
+    await pg.getByLabel("המשימות של אהרון לואיס").click();
+    await pg.getByText("אצל אהרון לואיס").first().waitFor({ timeout: 3000 });
+    await pg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 3000 });
+    await pg.waitForTimeout(1000); /* ‏כרטיסים יוצאים נשארים ב-DOM עד סוף האנימציה */
+    if (await pg.getByText("ZZQA משימה 0 ", { exact: false }).count()) throw new Error("משימה של אדם אחר מוצגת בסינון");
+    await pg.getByText("👤 אהרון לואיס").first().click();
+    await pg.waitForTimeout(600);
+    if (await pg.getByText("אצל אהרון לואיס").count()) throw new Error("הסינון לא ירד ב-✕");
+  } finally {
+    await pg.getByText("בית", { exact: true }).last().click();
+    await pg.waitForTimeout(800);
+  }
+});
 await T("צ'יפ זירה בבית ⟶ תיק הזירה נפתח", async () => {
   await pg.getByLabel(/תיק זירה/).first().click();
   await pg.waitForTimeout(900);

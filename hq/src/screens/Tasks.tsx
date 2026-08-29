@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "vaul";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Num from "../ui/Num";
 
@@ -44,11 +44,22 @@ function Card({ t, onOpen }: { t: T; onOpen: (t: T) => void }) {
   );
 }
 
-export default function Tasks({ D, onAct }: { D: Snapshot; onAct: Act }) {
+export default function Tasks({ D, onAct, focus, onFocused }: { D: Snapshot; onAct: Act; focus?: string | null; onFocused?: () => void }) {
   const [view, setView] = useState<"mine" | "others" | "frozen" | "all">("mine");
   const [arena, setArena] = useState<string | null>(null);
+  const [owner, setOwner] = useState<string | null>(null);
   const [open, setOpen] = useState<T | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
+
+  /* ‏הגעה מבחוץ: צ'יפ מחזיק בבית ("__mine__" או שם אדם) או תיק זירה ("arena:<שם>") */
+  useEffect(() => {
+    if (!focus) return;
+    if (focus === "__mine__") { setView("mine"); setOwner(null); setArena(null); }
+    else if (focus.startsWith("arena:")) { setView("all"); setArena(focus.slice(6)); setOwner(null); }
+    else { setView("all"); setOwner(focus); setArena(null); }
+    onFocused?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
 
   const all = D.tasks.filter((t) => !done.has(t.id));
   const arenas = [...new Set(all.map((t) => t.arena))];
@@ -58,11 +69,12 @@ export default function Tasks({ D, onAct }: { D: Snapshot; onAct: Act }) {
     if (view === "others") l = l.filter((t) => !t.mine);
     if (view === "frozen") l = l.filter((t) => (t.frozen ?? 0) >= 10);
     if (arena) l = l.filter((t) => t.arena === arena);
+    if (owner) l = owner === "ללא בעלים" ? l.filter((t) => !t.owner) : l.filter((t) => t.owner === owner);
     return [...l].sort((a, b) =>
       (wOrder[a.weight] - wOrder[b.weight]) ||
       ((b.overdue ? 1 : 0) - (a.overdue ? 1 : 0)) ||
       ((b.frozen ?? 0) - (a.frozen ?? 0)));
-  }, [view, arena, done, D.tasks]);
+  }, [view, arena, owner, done, D.tasks]);
 
   const counts = {
     mine: all.filter((t) => t.mine).length,
@@ -105,8 +117,14 @@ export default function Tasks({ D, onAct }: { D: Snapshot; onAct: Act }) {
         ))}
       </div>
 
+      {owner && (
+        <motion.button initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.95 }} onClick={() => setOwner(null)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 12, padding: "8px 14px", borderRadius: 18, fontSize: 12.5, fontWeight: 800, background: "color-mix(in srgb,var(--acc) 16%,transparent)", border: "1px solid color-mix(in srgb,var(--acc) 42%,transparent)", color: "var(--acc-hi)", WebkitTapHighlightColor: "transparent" }}>
+          👤 {owner} <span style={{ opacity: 0.7 }}>✕</span>
+        </motion.button>
+      )}
       <div className="sec" style={{ marginTop: 14 }}>
-        {view === "mine" ? "שלך — לפי מה שעומד על הכף" : view === "others" ? "ממתין לאחרים — הבטחה חיה שקטה" : view === "frozen" ? "קפוא מעל 10 ימים" : "הכול"} · <b className="num"><Num value={shown.length} /></b>
+        {owner ? `אצל ${owner}` : view === "mine" ? "שלך — לפי מה שעומד על הכף" : view === "others" ? "ממתין לאחרים — הבטחה חיה שקטה" : view === "frozen" ? "קפוא מעל 10 ימים" : "הכול"} · <b className="num"><Num value={shown.length} /></b>
       </div>
       <AnimatePresence mode="popLayout">
         {shown.map((t) => <Card key={t.id} t={t} onOpen={setOpen} />)}

@@ -25,6 +25,7 @@ export default function App() {
   const [pal, setPal] = useState<Pal>(savedPal());
   const [sheet, setSheet] = useState<SheetId>(null);
   const [arenaFocus, setArenaFocus] = useState<string | null>(null);
+  const [ownerFocus, setOwnerFocus] = useState<string | null>(null);
   useEffect(() => { applyPal(pal); }, [pal]);
 
   const reload = useCallback(() => { loadSnapshot().then(setD); }, []);
@@ -93,10 +94,12 @@ export default function App() {
           exit={{ opacity: 0, y: -8, filter: "blur(3px)" }}
           transition={{ type: "spring", duration: 0.45, bounce: 0 }}>
           {tab === "home" && <Home D={D} onAsk={() => setTab("ask")} think={think} onAct={act}
-            onArena={(name) => { setArenaFocus(name); setTab("arenas"); }} />}
+            onArena={(name) => { setArenaFocus(name); setTab("arenas"); }}
+            onOwner={(name) => { setOwnerFocus(name); setTab("tasks"); }} />}
           {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} />}
-          {tab === "tasks" && <Tasks D={D} onAct={act} />}
-          {tab === "arenas" && <Arenas D={D} focus={arenaFocus} onFocused={() => setArenaFocus(null)} />}
+          {tab === "tasks" && <Tasks D={D} onAct={act} focus={ownerFocus} onFocused={() => setOwnerFocus(null)} />}
+          {tab === "arenas" && <Arenas D={D} focus={arenaFocus} onFocused={() => setArenaFocus(null)}
+            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} />}
           {tab === "meetings" && <Meetings D={D} onAsk={(prefill) => { if (prefill) setAskPrefill(prefill); setTab("ask"); }} />}
           {tab === "ask" && <Ask think={think} onThink={setThink} onChanged={reload} />}
         </motion.main>
