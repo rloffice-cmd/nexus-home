@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "vaul";
 import { useEffect, useMemo, useState } from "react";
-import type { Snapshot, Arena } from "../lib/data";
+import type { Snapshot, Arena, T } from "../lib/data";
+import type { Act } from "../App";
 import Num from "../ui/Num";
 import CmdBox from "../ui/CmdBox";
 
@@ -13,9 +14,10 @@ const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * Math.min(i, 8) } });
 const ils = (n?: number | null) => n == null ? "" : "₪" + Math.round(n).toLocaleString("en-US");
 
-export default function Arenas({ D, focus, onFocused, onTasks, onChanged }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void; onChanged: () => void }) {
+export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onAct, onDecisions }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void; onChanged: () => void; onAct: Act; onDecisions: () => void }) {
   const [seg, setSeg] = useState<"arenas" | "assets">("arenas");
   const [open, setOpen] = useState<Arena | null>(null);
+  const [selTask, setSelTask] = useState<T | null>(null);
   const [af, setAf] = useState<"all" | "rented" | "vacant" | "sale">("all");
 
   /* ‏הגעה מצ'יפ זירה בבית — התיק נפתח ישר על הזירה שנלחצה */
@@ -144,25 +146,50 @@ export default function Arenas({ D, focus, onFocused, onTasks, onChanged }: { D:
       </AnimatePresence>
 
       {/* ‏תיק זירה */}
-      <Drawer.Root open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
+      <Drawer.Root open={!!open} onOpenChange={(o) => { if (!o) { setOpen(null); setSelTask(null); } }}>
         <Drawer.Portal>
           <Drawer.Overlay style={{ position: "fixed", inset: 0, background: "rgba(5,4,2,.6)", zIndex: 50 }} />
           <Drawer.Content style={{ position: "fixed", insetInline: 0, bottom: 0, zIndex: 51, maxHeight: "86dvh", display: "flex", flexDirection: "column", borderRadius: "26px 26px 0 0", background: "color-mix(in srgb,var(--acc) 7%,var(--bg))", border: "1px solid color-mix(in srgb,var(--acc) 25%,transparent)", borderBottom: 0, padding: "0 20px calc(24px + env(safe-area-inset-bottom))", maxWidth: 660, margin: "0 auto", color: "var(--ink)" }}>
             <div aria-hidden style={{ flex: "none", width: 44, height: 5, borderRadius: 5, background: "color-mix(in srgb,var(--acc) 35%,transparent)", margin: "12px auto 14px" }} />
-            {open && (() => { const x = inArena(open.name); return (
+            {open && selTask && (
+              /* ‏פרטי משימה בתוך התיק — לחיצה על שורה פותחת פעולות (פידבק איתי 29.8: "גם לא לחיץ") */
+              <div style={{ overflowY: "auto", minHeight: 0 }}>
+                <button onClick={() => setSelTask(null)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "var(--gold)", padding: "2px 0 10px", WebkitTapHighlightColor: "transparent" }}>‹ {open.name}</button>
+                <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 20, fontWeight: 900, lineHeight: 1.28, margin: "0 0 4px" }}>{selTask.title}</Drawer.Title>
+                <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 14px" }}>
+                  {selTask.mine ? "אצלך" : selTask.owner}{selTask.frozen ? ` · ${selTask.frozen} ימים בלי תנועה` : ""}{selTask.waiting?.promised ? ` · הובטח ${selTask.waiting.promised}` : ""}{selTask.due ? ` · יעד ${selTask.due}` : ""}
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => { const t = selTask; setSelTask(null); setOpen(null); onAct("task_done", t.id); }}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => { const t = selTask; setSelTask(null); setOpen(null); onAct("task_waiting", t.id); }}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{selTask.mine ? "אחרים" : "הם"}</motion.button>
+                </div>
+                <CmdBox kind="task" id={selTask.id} onDone={() => { setSelTask(null); setOpen(null); onChanged(); }}
+                  placeholder={selTask.mine ? "למשל: בוצע חלקית — נשאר רק ההיתר" : `למשל: ${selTask.owner} הבטיח עד חמישי`} />
+              </div>
+            )}
+            {open && !selTask && (() => { const x = inArena(open.name); return (
               <div style={{ overflowY: "auto", minHeight: 0 }}>
                 <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 22, fontWeight: 900, margin: "0 0 3px" }}>{open.name}</Drawer.Title>
                 {open.note && <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 12px" }}>{open.note}</p>}
                 {x.decisions.length > 0 && <>
                   <div className="sec" style={{ marginTop: 8 }}>להכרעה · <b className="num">{x.decisions.length}</b></div>
-                  {x.decisions.map(d => <div key={d.id} style={{ fontSize: 13, fontWeight: 700, padding: "7px 0", borderBottom: "1px solid var(--hair)" }}>✦ {d.title}</div>)}
+                  {x.decisions.map(d => (
+                    <button key={d.id} onClick={() => { setOpen(null); onDecisions(); }}
+                      style={{ display: "flex", gap: 8, width: "100%", textAlign: "start", fontSize: 13, fontWeight: 700, color: "var(--ink)", padding: "7px 0", borderBottom: "1px solid var(--hair)", WebkitTapHighlightColor: "transparent" }}>
+                      <span style={{ flex: 1 }}>✦ {d.title}</span><span style={{ color: "var(--mut)" }}>‹</span>
+                    </button>
+                  ))}
                 </>}
                 <div className="sec" style={{ marginTop: 12 }}>משימות · <b className="num">{x.tasks.length}</b></div>
                 {x.tasks.slice(0, 12).map(t => (
-                  <div key={t.id} style={{ display: "flex", gap: 8, alignItems: "baseline", padding: "7px 0", borderBottom: "1px solid var(--hair)", fontSize: 13 }}>
+                  <button key={t.id} onClick={() => setSelTask(t)}
+                    style={{ display: "flex", gap: 8, alignItems: "baseline", width: "100%", textAlign: "start", padding: "8px 0", borderBottom: "1px solid var(--hair)", fontSize: 13, color: "var(--ink)", WebkitTapHighlightColor: "transparent" }}>
                     <span style={{ flex: 1, fontWeight: 600, lineHeight: 1.35 }}>{t.title}</span>
                     <span style={{ flex: "none", fontSize: 10.5, color: t.waiting?.broken || (t.frozen ?? 0) >= 10 ? "var(--crit)" : "var(--mut)", fontWeight: 700 }}>{t.owner}</span>
-                  </div>
+                    <span style={{ flex: "none", color: "var(--mut)" }}>‹</span>
+                  </button>
                 ))}
                 {x.tasks.length === 0 && <div style={{ color: "var(--mut)", fontSize: 12.5, padding: "6px 0" }}>אין משימות פתוחות</div>}
                 {x.events.length > 0 && <>
