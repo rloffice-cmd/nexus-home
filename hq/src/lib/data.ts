@@ -49,15 +49,25 @@ export const DEMO_TASKS: T[] = [
 
 /* ── כיסוי: מי מחזיק מה, ומה נשאר בלי אות-חיים ── */
 export type Handler = { name: string; me?: boolean; open: number; stuck: number };
-export type Uncovered = { id: string; title: string; arena: string; owner: string; mine?: boolean; reason: string };
+export type Bucket = "ownerless" | "broken" | "overdue" | "frozen";
+export type Uncovered = { id: string; title: string; arena: string; owner: string; mine?: boolean; reason: string; bucket: Bucket };
 export type Coverage = { total: number; covered: number; handlers: Handler[]; uncovered: Uncovered[] };
+
+/* ‏ארבעת הדליים, בסדר הפעולה: שיוך ⟶ רדיפת הבטחה ⟶ תאריך חדש ⟶ הנעה.
+   ‏עם ~85 קפואות חיות רשימה שטוחה היא קיר — הדלי אומר מה הצעד, לא רק שיש בעיה. */
+export const BUCKETS: { key: Bucket; label: string; hint: string }[] = [
+  { key: "ownerless", label: "אין בעלים", hint: "אף אחד לא מחזיק — שיוך הוא הצעד" },
+  { key: "broken", label: "הבטחה חלפה", hint: "הבטיחו ולא קרה — אלפא רודפת יומית" },
+  { key: "overdue", label: "באיחור בלי הבטחה", hint: "המועד עבר ואין תאריך חדש" },
+  { key: "frozen", label: "קיפאון", hint: "10+ ימים בלי תנועה" },
+];
 
 /* ‏"בלי טיפול חי" = הבטחה שחלפה · קיפאון ≥10 ימים · איחור בלי הבטחה חדשה.
    ‏הבטחה עתידית משתיקה — אותו כלל בדיוק כמו הנדנוד של אלפא. */
-export function stuckReason(t: T): string | null {
-  if (t.waiting?.broken) return `הבטחה חלפה (${t.waiting.promised})`;
-  if ((t.frozen ?? 0) >= 10) return `${t.frozen} ימים בלי תנועה`;
-  if (t.overdue && !t.waiting?.promised) return "באיחור · בלי הבטחה חדשה";
+export function stuckReason(t: T): { bucket: Bucket; reason: string } | null {
+  if (t.waiting?.broken) return { bucket: "broken", reason: `הבטחה חלפה (${t.waiting.promised})` };
+  if ((t.frozen ?? 0) >= 10) return { bucket: "frozen", reason: `${t.frozen} ימים בלי תנועה` };
+  if (t.overdue && !t.waiting?.promised) return { bucket: "overdue", reason: "באיחור · בלי הבטחה חדשה" };
   return null;
 }
 
@@ -68,8 +78,8 @@ export function deriveCoverage(ts: T[]): Coverage {
     const name = t.owner || "ללא בעלים";
     const h = by.get(name) || { name, me: !!t.mine, open: 0, stuck: 0 };
     h.open++;
-    const r = t.owner ? stuckReason(t) : "אין בעלים — אף אחד לא מחזיק";
-    if (r) { h.stuck++; uncovered.push({ id: t.id, title: t.title, arena: t.arena, owner: name, mine: t.mine, reason: r }); }
+    const r = t.owner ? stuckReason(t) : { bucket: "ownerless" as Bucket, reason: "אין בעלים — אף אחד לא מחזיק" };
+    if (r) { h.stuck++; uncovered.push({ id: t.id, title: t.title, arena: t.arena, owner: name, mine: t.mine, ...r }); }
     by.set(name, h);
   }
   const handlers = [...by.values()].sort((a, b) => (b.me ? 1 : 0) - (a.me ? 1 : 0) || b.open - a.open);
