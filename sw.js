@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v13"; /* v13 (29.8): צ'יפ מחזיק בבית ⟶ המשימות שלו (מסנן אדם בעמוד המשימות) */
+const CACHE = "nexus-hq-v14"; /* v14 (29.8): תגובה חופשית בכל פריט — משימה · החלטה · זירה · אדם — דרך command_preview/apply */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

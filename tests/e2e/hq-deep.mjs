@@ -71,7 +71,11 @@ async function makePage(vp) {
   pg.on("pageerror", (e) => pg.jserr.push(String(e.message)));
   await pg.route("**/functions/v1/nexus-app**", async (route) => {
     const req = route.request();
-    if (req.method() === "POST") { posts.push(JSON.parse(req.postData() || "{}")); return route.fulfill({ json: { ok: true, applied: 1 } }); }
+    if (req.method() === "POST") {
+      const p = JSON.parse(req.postData() || "{}"); posts.push(p);
+      if (p.action === "command_preview") return route.fulfill({ json: { ops: [{ op: "task.update", id: p.id, title: "ZZQA עדכון מהתגובה" }], summary: "ZZQA מה שיבוצע" } });
+      return route.fulfill({ json: { ok: true, applied: 1 } });
+    }
     return route.fulfill({ json: FIX });
   });
   await pg.route("**/functions/v1/nx-dec**", (r) => r.fulfill({ json: DECFIX }));
@@ -167,6 +171,21 @@ await T("פגישה ⟶ 'לסכם עם אלפא' ממלא את התיבה", asyn
   if (!v.includes("סיכום פגישה — ZZQA ועדת היתרים")) throw new Error("התיבה לא מולאה: " + v);
   await shot("07-ask-prefill");
 });
+await T("תגובה חופשית במגירת משימה ⟶ preview ⟶ apply", async () => {
+  await pg.getByText("משימות", { exact: true }).last().click();
+  await pg.waitForTimeout(700);
+  await pg.getByText("ZZQA משימה 0 ", { exact: false }).first().click();
+  await pg.getByText("💬 תגובה חופשית").first().waitFor({ timeout: 3000 });
+  await pg.getByPlaceholder(/למשל:/).fill("בוצע חלקית, נשאר ההיתר");
+  await pg.getByLabel("שלח תגובה").click();
+  await pg.getByText("ZZQA מה שיבוצע").first().waitFor({ timeout: 4000 });
+  if (!posts.some((p) => p.action === "command_preview" && p.kind === "task" && p.id === "t0")) throw new Error("לא נשלח command_preview עם kind+id");
+  await pg.getByText("אשר ובצע ✓").first().click();
+  await pg.waitForTimeout(900);
+  if (!posts.some((p) => p.action === "command_apply" && (p.ops || []).length)) throw new Error("לא נשלח command_apply");
+  await pg.keyboard.press("Escape"); await pg.waitForTimeout(600);
+  await pg.getByText("בית", { exact: true }).last().click(); await pg.waitForTimeout(700);
+});
 await T("☰ ⟶ דיווחים (fixture /report)", async () => {
   await pg.getByLabel("עוד").click();
   await pg.waitForTimeout(600);
@@ -196,13 +215,15 @@ await T("אנשים — צ'יפ מורח/אמין", async () => {
   await shot("11-people");
 });
 await T("כרטיס אדם: לחיצה ⟶ אמינות + משימות פתוחות + חזרה", async () => {
-  await pg.getByText("אהרון לואיס").first().click();
-  await pg.getByText("מורח, דורש נדנוד").first().waitFor({ timeout: 3000 });
-  await pg.getByText("משימות פתוחות ·").first().waitFor({ timeout: 2000 });
-  await pg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 2000 });
+  /* ‏בתוך הדיאלוג בלבד — "אהרון לואיס" קיים גם בצ'יפ בבית מאחורי המגירה */
+  const dlg = pg.getByRole("dialog");
+  await dlg.getByText("אהרון לואיס").first().click();
+  await dlg.getByText("מורח, דורש נדנוד").first().waitFor({ timeout: 3000 });
+  await dlg.getByText("משימות פתוחות ·").first().waitFor({ timeout: 2000 });
+  await dlg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 2000 });
   await shot("11b-person-card");
-  await pg.getByText("‹ כל האנשים").first().click();
-  await pg.getByPlaceholder("חיפוש…").waitFor({ timeout: 2000 });
+  await dlg.getByText("‹ כל האנשים").first().click();
+  await dlg.getByPlaceholder("חיפוש…").waitFor({ timeout: 2000 });
   await pg.keyboard.press("Escape"); await pg.waitForTimeout(500);
 });
 await T("אפס שגיאות JS בסיור המלא", async () => { if (pg.jserr.length) throw new Error(pg.jserr.join(" | ")); });

@@ -3,6 +3,7 @@ import { Drawer } from "vaul";
 import { useEffect, useMemo, useState } from "react";
 import type { Snapshot, Arena } from "../lib/data";
 import Num from "../ui/Num";
+import CmdBox from "../ui/CmdBox";
 
 /* ‏זירות + נכסים — מסך אחד, שני מבטים על אותו נדל"ן. הזירה עונה "מה קורה
    שם", הנכס עונה "מה יש לי שם". לחיצה על זירה פותחת את התיק: משימות ·
@@ -12,7 +13,7 @@ const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * Math.min(i, 8) } });
 const ils = (n?: number | null) => n == null ? "" : "₪" + Math.round(n).toLocaleString("en-US");
 
-export default function Arenas({ D, focus, onFocused, onTasks }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void }) {
+export default function Arenas({ D, focus, onFocused, onTasks, onChanged }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void; onChanged: () => void }) {
   const [seg, setSeg] = useState<"arenas" | "assets">("arenas");
   const [open, setOpen] = useState<Arena | null>(null);
   const [af, setAf] = useState<"all" | "rented" | "vacant" | "sale">("all");
@@ -174,6 +175,8 @@ export default function Arenas({ D, focus, onFocused, onTasks }: { D: Snapshot; 
                     ▤ כל המשימות של הזירה ‹
                   </motion.button>
                 )}
+                <CmdBox kind="arena" id={open.id} onDone={() => { setOpen(null); onChanged(); }}
+                  placeholder="למשל: פתח משימה לשירה — לרכז את חובות העבר" />
               </div>
             ); })()}
           </Drawer.Content>

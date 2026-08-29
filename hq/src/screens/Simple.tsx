@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import type { Snapshot } from "../lib/data";
 import Orb from "../ui/Orb";
+import CmdBox from "../ui/CmdBox";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { API, ASK, apiPost, getKey } from "../lib/api";
@@ -8,7 +9,8 @@ import { API, ASK, apiPost, getKey } from "../lib/api";
 const spring = { type: "spring" as const, duration: 0.6, bounce: 0.15 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * i } });
 
-export function Decisions({ D, onDecide }: { D: Snapshot; onDecide: (id: string, verdict: "decided" | "dropped") => Promise<boolean> }) {
+export function Decisions({ D, onDecide, onChanged }: { D: Snapshot; onDecide: (id: string, verdict: "decided" | "dropped") => Promise<boolean>; onChanged: () => void }) {
+  const [cmdFor, setCmdFor] = useState<string | null>(null);
   return (
     <div className="page">
       <div className="sec" style={{ marginTop: 12 }}>החלטות ממתינות · <b className="num">{D.decisions.length}</b></div>
@@ -27,7 +29,11 @@ export function Decisions({ D, onDecide }: { D: Snapshot; onDecide: (id: string,
               style={{ flex: 1, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>הוכרע ✓</motion.button>
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => onDecide(d.id, "dropped")}
               style={{ flex: 1, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>ירד מהפרק</motion.button>
+            <motion.button whileTap={{ scale: 0.96 }} onClick={() => setCmdFor(cmdFor === d.id ? null : d.id)} aria-label="תגובה חופשית"
+              style={{ flex: "none", width: 44, borderRadius: 12, fontSize: 15, color: cmdFor === d.id ? "var(--acc-hi)" : "var(--mut)", border: `1px solid ${cmdFor === d.id ? "color-mix(in srgb,var(--acc) 40%,transparent)" : "var(--hair)"}` }}>✏️</motion.button>
           </div>
+          {cmdFor === d.id && <CmdBox kind="decision" id={d.id} onDone={() => { setCmdFor(null); onChanged(); }}
+            placeholder="למשל: מאשר, אבל רק אחרי חוות דעת של שירה" />}
         </motion.div>
       ))}
     </div>

@@ -6,6 +6,7 @@ import type { Snapshot, Uncovered } from "../lib/data";
 import type { Act } from "../App";
 import Orb from "../ui/Orb";
 import Num from "../ui/Num";
+import CmdBox from "../ui/CmdBox";
 
 /* ‏הבית של איתי — התמונה המלאה, לא "הדבר האחד" (הכרעתו 27.8):
    ‏"אני תמיד חייב לראות את כל התמונה… הרעיון הוא שהכל!!! יטופל —
@@ -45,7 +46,7 @@ function Ring({ pct }: { pct: number }) {
   );
 }
 
-export default function Home({ D, onAsk, think, onAct, onArena, onOwner }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act; onArena: (name: string) => void; onOwner: (name: string) => void }) {
+export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChanged }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act; onArena: (name: string) => void; onOwner: (name: string) => void; onChanged: () => void }) {
   const [open, setOpen] = useState<null | (typeof D.needsYou)[number]>(null);
   const [openU, setOpenU] = useState<Uncovered | null>(null);
   const cov = D.coverage;
@@ -189,6 +190,8 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner }: { D: 
                   style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{openU.mine ? "אחרים" : "הם"}</motion.button>
               </div>
               <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>{openU.mine ? "הפעולה נרשמת דרך המנוע" : `אלפא רודפת את ${openU.owner} אוטומטית במשמרות — נדנוד יומי עד הבטחה`}</p>
+              <CmdBox kind="task" id={openU.id} onDone={() => { setOpenU(null); onChanged(); }}
+                placeholder={openU.mine ? "למשל: בוצע חלקית — נשאר רק ההיתר" : `למשל: דיברתי עם ${openU.owner} — יסגור עד חמישי`} />
             </>)}
           </Drawer.Content>
         </Drawer.Portal>
@@ -220,6 +223,8 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner }: { D: 
                   אחר כך
                 </motion.button>
               </div>
+              <CmdBox kind={open.kind === "החלטה" ? "decision" : "task"} id={open.id} onDone={() => { setOpen(null); onChanged(); }}
+                placeholder={open.kind === "החלטה" ? "למשל: מאשר, אבל רק אחרי חוות דעת של שירה" : "למשל: קבע יעד ל-15.9 והעבר לשירה"} />
             </>)}
           </Drawer.Content>
         </Drawer.Portal>
