@@ -2,7 +2,8 @@ import { motion } from "motion/react";
 import { Drawer } from "vaul";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { Snapshot, Uncovered } from "../lib/data";
+import { BUCKETS } from "../lib/data";
+import type { Snapshot, Uncovered, Bucket } from "../lib/data";
 import type { Act } from "../App";
 import Orb from "../ui/Orb";
 import Num from "../ui/Num";
@@ -54,6 +55,15 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChang
   useBackLayer(!!openU, () => setOpenU(null));
   const cov = D.coverage;
   const allGood = cov.uncovered.length === 0;
+  /* ‏דלי קטן (עד 6) נפתח מעצמו — הקיר של הקפואות נשאר סגור עד לחיצה */
+  const [expand, setExpand] = useState<Partial<Record<Bucket, boolean>>>(() => {
+    const e: Partial<Record<Bucket, boolean>> = {};
+    for (const b of BUCKETS) {
+      const n = cov.uncovered.filter((u) => u.bucket === b.key).length;
+      if (n > 0 && n <= 6) e[b.key] = true;
+    }
+    return e;
+  });
   const pct = cov.total ? cov.covered / cov.total : 1;
   const doU = async (kind: "task_done" | "task_waiting", id: string) => { setOpenU(null); await onAct(kind, id); };
 
@@ -111,7 +121,8 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChang
         </div>
       </motion.section>
 
-      {/* ── החריגים: מה שאין לו אות-חיים ── */}
+      {/* ── החריגים: מה שאין לו אות-חיים — בארבעה דליים, לפי הצעד הנדרש
+          ‏(פיצול 29.8: רשימה שטוחה של ~85 קפואות היא קיר בנייד; דלי גדול נפתח בלחיצה) ── */}
       <motion.div {...rise(2)}>
         {allGood ? (
           <div className="glass" style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderRadius: 17, marginTop: 12, color: "var(--good)", fontSize: 13, fontWeight: 700 }}>
@@ -119,21 +130,40 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChang
           </div>
         ) : (<>
           <div className="sec">בלי טיפול חי — כאן נכנסים · <b className="num">{cov.uncovered.length}</b></div>
-          {cov.uncovered.map((u, i) => (
-            <motion.button key={u.id} {...rise(2 + i * 0.5)} whileTap={{ scale: 0.985 }} onClick={() => setOpenU(u)}
-              className="glass"
-              style={{ display: "block", width: "100%", textAlign: "start", padding: "13px 16px 11px", borderRadius: 17, marginBottom: 9, WebkitTapHighlightColor: "transparent", borderColor: "color-mix(in srgb,var(--crit) 26%,transparent)" }}>
-              <span style={{ display: "block", fontSize: 14, fontWeight: 700, lineHeight: 1.35 }}>{u.title}</span>
-              <span style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 7, fontSize: 11 }}>
-                <span className="chip crit">{u.reason}</span>
-                <span style={{ color: "var(--mut)", fontWeight: 600 }}>{u.arena}</span>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--ink2)", fontWeight: 700 }}>
-                  <span style={{ width: 17, height: 17, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--hair)", display: "grid", placeItems: "center", fontSize: 9.5 }}>{u.owner[0]}</span>
-                  {u.mine ? "אצלך" : u.owner}
-                </span>
-              </span>
-            </motion.button>
-          ))}
+          {BUCKETS.map((b) => {
+            const items = cov.uncovered.filter((u) => u.bucket === b.key);
+            if (!items.length) return null;
+            const openHere = !!expand[b.key];
+            return (
+              <div key={b.key} style={{ marginBottom: 10 }}>
+                <motion.button whileTap={{ scale: 0.985 }} onClick={() => setExpand((e) => ({ ...e, [b.key]: !e[b.key] }))}
+                  className="glass" aria-expanded={openHere}
+                  style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "start", padding: "12px 15px", borderRadius: 15, WebkitTapHighlightColor: "transparent", borderColor: "color-mix(in srgb,var(--crit) 22%,transparent)" }}>
+                  <span aria-hidden style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--crit)", boxShadow: "0 0 8px color-mix(in srgb,var(--crit) 55%,transparent)", flex: "none" }} />
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 13.5, fontWeight: 800 }}>{b.label} · <b className="num">{items.length}</b></span>
+                    <span style={{ display: "block", fontSize: 10.5, color: "var(--mut)", marginTop: 1 }}>{b.hint}</span>
+                  </span>
+                  <motion.span aria-hidden animate={{ rotate: openHere ? 90 : 0 }} style={{ marginInlineStart: "auto", color: "var(--mut)", display: "inline-block" }}>‹</motion.span>
+                </motion.button>
+                {openHere && items.map((u) => (
+                  <motion.button key={u.id} initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.985 }} onClick={() => setOpenU(u)}
+                    className="glass"
+                    style={{ display: "block", width: "100%", textAlign: "start", padding: "12px 16px 10px", borderRadius: 15, marginTop: 7, WebkitTapHighlightColor: "transparent" }}>
+                    <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, lineHeight: 1.35 }}>{u.title}</span>
+                    <span style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginTop: 6, fontSize: 11 }}>
+                      <span className="chip crit">{u.reason}</span>
+                      <span style={{ color: "var(--mut)", fontWeight: 600 }}>{u.arena}</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--ink2)", fontWeight: 700 }}>
+                        <span style={{ width: 17, height: 17, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--hair)", display: "grid", placeItems: "center", fontSize: 9.5 }}>{u.owner[0]}</span>
+                        {u.mine ? "אצלך" : u.owner}
+                      </span>
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            );
+          })}
         </>)}
       </motion.div>
 
