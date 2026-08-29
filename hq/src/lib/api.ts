@@ -26,6 +26,9 @@ export async function apiPost(url: string, payload: unknown) {
     headers: { "content-type": "application/json", "x-nexus-key": getKey() },
     body: JSON.stringify(payload),
   });
-  if (!r.ok) throw new Error(`http ${r.status}`);
-  return r.json();
+  /* ‏P0-1 29.8: גם הסטטוס וגם הגוף — 200 עם {error} או ok:false הוא כשל.
+     ‏בלעדיו טוסט "בוצע ✓" יכול לרכוב על תשובה שמודה בכישלון. */
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j?.error || j?.ok === false) throw new Error(j?.error || `http ${r.status}`);
+  return j;
 }

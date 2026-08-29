@@ -188,7 +188,9 @@ export async function loadSnapshot(): Promise<Snapshot> {
       const mine = !!itayId && t.owner_id === itayId;
       const promisedISO = t.expected_by ? String(t.expected_by).slice(0, 10) : null;
       const overdue = !!t.due_date && String(t.due_date).slice(0, 10) < today;
-      const waitingWho = (t.waiting_on || "").trim() || (t.status === "waiting" ? ownerName : "");
+      /* ‏29.8 (ביקורת): waiting_on הוא UUID של אדם — התצוגה הציגה אותו גולמי.
+         ‏המיפוי דרך רשימת האנשים; מזהה שאינו מוכר לא מוצג כג'יבריש. */
+      const waitingWho = (t.waiting_on ? people.get(String(t.waiting_on)) || "" : "") || (t.status === "waiting" ? ownerName : "");
       const w = String(t.weight || "");
       return {
         id: t.id, title: t.title,
