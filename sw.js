@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v11"; /* v11 (29.8, QA לילה): דיווחים + אלפא ב-☰ · הלוואות · שיחה ששורדת מעבר טאב · באנר כשל כן · צ'יפ זירה פותח תיק */
+const CACHE = "nexus-hq-v12"; /* v12 (29.8): כרטיס אדם — לחיצה על שורה פותחת אמינות · עבודה איתו · המשימות הפתוחות שלו */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

@@ -355,23 +355,68 @@ export function MoreSheet({ open, onClose, D, go, onLogout }: { open: boolean; o
   );
 }
 
+/* ‏אנשים: הרשימה היא שער — לחיצה פותחת את כרטיס האדם (כמו openPerson
+   ‏באפליקציה הקודמת): טלפון · אמינות · עבודה איתו · המשימות הפתוחות שלו. */
 export function PeopleSheet({ open, onClose, D }: { open: boolean; onClose: () => void; D: Snapshot }) {
   const [q, setQ] = useState("");
-  const list = D.people.filter(p => !q || p.name.includes(q) || (p.organization || "").includes(q));
+  const [sel, setSel] = useState<Snapshot["people"][number] | null>(null);
+  useEffect(() => { if (open) { setSel(null); setQ(""); } }, [open]);
+  const list = D.people.filter(p => !q || p.name.includes(q) || (p.organization || "").includes(q) || (p.role || "").includes(q));
+
+  if (sel) {
+    const mine = D.tasks.filter(t => t.owner === sel.name || (sel.name === "איתי רובין" && t.owner === "איתי"));
+    return (
+      <Sheet open={open} onClose={onClose}>
+        <button onClick={() => setSel(null)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "var(--gold)", padding: "2px 0 10px", WebkitTapHighlightColor: "transparent" }}>‹ כל האנשים</button>
+        <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 22, fontWeight: 900, margin: "0 0 3px" }}>{sel.name}</Drawer.Title>
+        {(sel.role || sel.organization) && <p style={{ color: "var(--mut)", fontSize: 12.5, margin: "0 0 10px" }}>{[sel.role, sel.organization].filter(Boolean).join(" · ")}</p>}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 12 }}>
+          {sel.phone && <a href={`tel:${sel.phone}`} className="chip mut" style={{ textDecoration: "none", padding: "7px 12px", fontSize: 12 }}>☎ <span className="num">{sel.phone}</span></a>}
+          {sel.rel && <span className={"chip " + sel.rel} style={{ padding: "7px 12px", fontSize: 12 }}>{sel.rel === "crit" ? "מורח — נדנוד יזום" : "אמין"}</span>}
+          <span className="chip mut" style={{ padding: "7px 12px", fontSize: 12 }}><span className="num">{mine.length}</span> משימות</span>
+        </div>
+        {sel.reliabilityNotes && (
+          <div style={{ background: "color-mix(in srgb,var(--acc) 8%,transparent)", border: "1px solid color-mix(in srgb,var(--acc) 25%,transparent)", borderRadius: 13, padding: "11px 13px", marginBottom: 9 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".12em", color: "var(--gold)", marginBottom: 4 }}>אמינות</div>
+            <div style={{ fontSize: 12.5, lineHeight: 1.55 }}>{sel.reliabilityNotes}</div>
+          </div>
+        )}
+        {sel.workNotes && (
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--hair)", borderRadius: 13, padding: "11px 13px", marginBottom: 9 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".12em", color: "var(--mut)", marginBottom: 4 }}>עבודה איתו</div>
+            <div style={{ fontSize: 12.5, lineHeight: 1.55 }}>{sel.workNotes}</div>
+          </div>
+        )}
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--gold)", margin: "10px 0 6px" }}>משימות פתוחות · <span className="num">{mine.length}</span></div>
+        {!mine.length && <p style={{ color: "var(--good)", fontSize: 12.5, fontWeight: 700 }}>✓ אין משימות פתוחות</p>}
+        {mine.map(t => (
+          <div key={t.id} style={{ display: "flex", gap: 8, alignItems: "baseline", padding: "8px 2px", borderBottom: "1px solid var(--hair)", fontSize: 12.5 }}>
+            <span style={{ flex: 1, fontWeight: 600, lineHeight: 1.4 }}>{t.title}</span>
+            {t.waiting?.promised && <span className="num" style={{ flex: "none", fontSize: 10.5, color: t.waiting.broken ? "var(--crit)" : "var(--good)", fontWeight: 700 }}>🤝 {t.waiting.promised}</span>}
+            {!t.waiting?.promised && t.due && <span className="num" style={{ flex: "none", fontSize: 10.5, color: t.overdue ? "var(--crit)" : "var(--mut)", fontWeight: 700 }}>{t.due}</span>}
+          </div>
+        ))}
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet open={open} onClose={onClose}>
       <Drawer.Title style={{ fontFamily: "var(--serif)", fontSize: 21, fontWeight: 900, margin: "0 0 10px" }}>👥 אנשים · <span style={{ color: "var(--gold)" }}>{list.length}</span></Drawer.Title>
       <input value={q} onChange={e => setQ(e.target.value)} placeholder="חיפוש…"
         style={{ width: "100%", background: "var(--surface2)", border: "1px solid var(--hair)", color: "var(--ink)", borderRadius: 12, padding: "11px 13px", fontSize: 14, fontFamily: "inherit", outline: "none", marginBottom: 10 }} />
       {list.map(p => (
-        <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 2px", borderBottom: "1px solid var(--hair)" }}>
-          <span style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--hair)", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 800, color: "var(--gold)" }}>{p.name[0]}</span>
+        /* ‏div ולא button — בתוך השורה יש עוגן טלפון, ואינטראקטיבי בתוך אינטראקטיבי אסור */
+        <div key={p.id} role="button" tabIndex={0} onClick={() => setSel(p)} onKeyDown={e => e.key === "Enter" && setSel(p)}
+          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "start", padding: "10px 2px", borderBottom: "1px solid var(--hair)", color: "var(--ink)", cursor: "pointer", WebkitTapHighlightColor: "transparent" }}>
+          <span style={{ flex: "none", width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", border: "1px solid var(--hair)", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 800, color: "var(--gold)" }}>{p.name[0]}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontSize: 13.5, fontWeight: 700 }}>{p.name}</span>
             {(p.role || p.organization) && <span style={{ display: "block", fontSize: 11, color: "var(--mut)" }}>{[p.role, p.organization].filter(Boolean).join(" · ")}</span>}
           </span>
           {p.rel && <span className={"chip " + p.rel}>{p.rel === "crit" ? "מורח" : "אמין"}</span>}
-          {p.phone && <a href={`tel:${p.phone}`} style={{ fontSize: 16, textDecoration: "none" }}>📞</a>}
+          {p.phone && <a href={`tel:${p.phone}`} onClick={e => e.stopPropagation()} style={{ fontSize: 16, textDecoration: "none" }}>📞</a>}
+          <span style={{ color: "var(--mut)" }}>‹</span>
         </div>
       ))}
     </Sheet>
