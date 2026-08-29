@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import type { Snapshot } from "../lib/data";
 import { API, FILE, REPORT, apiGet, apiPost, getKey } from "../lib/api";
 import CmdBox from "../ui/CmdBox";
+import { useBackLayer } from "../lib/nav";
 
 /* ‏"עוד" — הפונקציות שחיו בהמבורגר של האפליקציה הקודמת (פידבק איתי 28.8):
    ‏שיוך מסמכים (nx-file, אותו מנוע) · מה לא ברור (verify_commit) · אנשים ·
@@ -362,6 +363,7 @@ export function PeopleSheet({ open, onClose, D, onChanged }: { open: boolean; on
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<Snapshot["people"][number] | null>(null);
   useEffect(() => { if (open) { setSel(null); setQ(""); } }, [open]);
+  useBackLayer(open && !!sel, () => setSel(null));
   const list = D.people.filter(p => !q || p.name.includes(q) || (p.organization || "").includes(q) || (p.role || "").includes(q));
 
   if (sel) {

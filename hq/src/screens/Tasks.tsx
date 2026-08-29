@@ -12,6 +12,7 @@ import Num from "../ui/Num";
 import { type Snapshot, type T } from "../lib/data";
 import type { Act } from "../App";
 import CmdBox from "../ui/CmdBox";
+import { useBackLayer } from "../lib/nav";
 
 const W: Record<T["weight"], { c: string; t: string }> = {
   critical: { c: "var(--crit)", t: "קריטי" },
@@ -51,6 +52,7 @@ export default function Tasks({ D, onAct, focus, onFocused, onChanged }: { D: Sn
   const [owner, setOwner] = useState<string | null>(null);
   const [open, setOpen] = useState<T | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
+  useBackLayer(!!open, () => setOpen(null));
 
   /* ‏הגעה מבחוץ: צ'יפ מחזיק בבית ("__mine__" או שם אדם) או תיק זירה ("arena:<שם>") */
   useEffect(() => {

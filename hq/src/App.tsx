@@ -13,6 +13,7 @@ import { setAskPrefill } from "./screens/Simple";
 import { loadSnapshot, DEMO, type Snapshot } from "./lib/data";
 import { PALS, applyPal, savedPal, type Pal } from "./lib/palettes";
 import { API, ACT, apiPost, getKey, dropKey } from "./lib/api";
+import { useBackLayer } from "./lib/nav";
 
 /* ‏פעולה עוברת דרך מנוע — לא כתיבה מהממשק. שלוש הפעולות שהמסכים צריכים,
    ‏על אותם קצוות שהאפליקציה הקודמת עבדה מולם. בהדגמה — טוסט בלבד. */
@@ -27,6 +28,11 @@ export default function App() {
   const [arenaFocus, setArenaFocus] = useState<string | null>(null);
   const [ownerFocus, setOwnerFocus] = useState<string | null>(null);
   useEffect(() => { applyPal(pal); }, [pal]);
+
+  /* ‏"אחורה" של הטלפון: מסך שאינו הבית ⟶ חזרה הביתה · תפריט פתוח ⟶ נסגר.
+     ‏מהבית עם כלום פתוח — יציאה רגילה. */
+  useBackLayer(tab !== "home", () => setTab("home"));
+  useBackLayer(sheet !== null, () => setSheet(null));
 
   const reload = useCallback(() => { loadSnapshot().then(setD); }, []);
   /* ‏רענון מפורש (כפתור LIVE / התחברות) — עם חיווי חשיבה, לא בשקט */

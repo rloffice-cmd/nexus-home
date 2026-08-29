@@ -7,6 +7,7 @@ import type { Act } from "../App";
 import Orb from "../ui/Orb";
 import Num from "../ui/Num";
 import CmdBox from "../ui/CmdBox";
+import { useBackLayer } from "../lib/nav";
 
 /* ‏הבית של איתי — התמונה המלאה, לא "הדבר האחד" (הכרעתו 27.8):
    ‏"אני תמיד חייב לראות את כל התמונה… הרעיון הוא שהכל!!! יטופל —
@@ -49,6 +50,8 @@ function Ring({ pct }: { pct: number }) {
 export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChanged }: { D: Snapshot; onAsk: () => void; think: boolean; onAct: Act; onArena: (name: string) => void; onOwner: (name: string) => void; onChanged: () => void }) {
   const [open, setOpen] = useState<null | (typeof D.needsYou)[number]>(null);
   const [openU, setOpenU] = useState<Uncovered | null>(null);
+  useBackLayer(!!open, () => setOpen(null));
+  useBackLayer(!!openU, () => setOpenU(null));
   const cov = D.coverage;
   const allGood = cov.uncovered.length === 0;
   const pct = cov.total ? cov.covered / cov.total : 1;
