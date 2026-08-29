@@ -16,7 +16,7 @@ export type Arena = { id: string; name: string; state: "ok" | "warn" | "crit"; n
 export type Meeting = { id: string; title: string; when: string; dayLabel: string; dayOffset: number; location?: string; arena?: string; prepBody?: string; prepDepth?: string; debrief?: string };
 export type Asset = { id: string; code?: string; name: string; arena?: string; type?: string; rented: boolean; rent?: number | null; forSale: boolean; price?: number | null; valuation?: number | null; area?: number | null };
 export type ArenaEvent = { arena: string; text: string; when: string };
-export type Person = { id: string; name: string; role?: string; organization?: string; phone?: string; rel?: "crit" | "good" };
+export type Person = { id: string; name: string; role?: string; organization?: string; phone?: string; rel?: "crit" | "good"; reliabilityNotes?: string; workNotes?: string };
 export type Loan = { id: string; lender: string; principal?: number | null; interest?: string; collateral?: string };
 export type Mandate = { id: string; title: string; goal?: string; status: string; expires?: string };
 export type AlphaAction = { id: string; body: string; outcome?: string; when?: string };
@@ -131,7 +131,7 @@ export const DEMO: Snapshot = {
     { arena: "פסגת שלמה", text: "הצעת מחיר לקבלן הריסות התקבלה", when: "לפני יומיים" },
   ],
   people: [
-    { id: "p1", name: "שירה אבן צור", role: "כספים", organization: "רם ישראל", rel: "good" },
+    { id: "p1", name: "שירה אבן צור", role: "כספים", organization: "רם ישראל", rel: "good", reliabilityNotes: "אמינה ויסודית — עומדת בהבטחות" },
     { id: "p2", name: "אילונה קפטש", role: "פרויקטים" },
     { id: "p3", name: "יניב מידן", role: "שותף" },
   ],
@@ -266,7 +266,8 @@ export async function loadSnapshot(): Promise<Snapshot> {
         /* ‏כיול פולו-אפ כמו באפליקציה הקודמת: "מורח" ⟶ נדנוד יזום · "אמין" ⟶ מרחב */
         const notes = String(p.reliability_notes || "") + String(p.work_notes || "");
         const rel = /מורח|לא אמין|מתמהמה/.test(notes) ? "crit" as const : /אמין|מהיר|יסודי/.test(String(p.reliability_notes || "")) ? "good" as const : undefined;
-        return { id: p.id, name: p.name, role: p.role || undefined, organization: p.organization || undefined, phone: p.phone || undefined, rel };
+        return { id: p.id, name: p.name, role: p.role || undefined, organization: p.organization || undefined, phone: p.phone || undefined, rel,
+          reliabilityNotes: p.reliability_notes || undefined, workNotes: p.work_notes || undefined };
       }),
       lessons: ((D.lessons || []) as any[]).map(l => ({ text: l.lesson || "", when: fmtDay(String(l.created_at || "").slice(0, 10)) })).filter(l => l.text),
       verifications: ((D.verifications || []) as any[]).map(v => ({ id: v.id, kind: v.kind || undefined, subject: v.subject || undefined, question: v.question || "" })),

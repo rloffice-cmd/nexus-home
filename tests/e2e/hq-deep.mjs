@@ -179,6 +179,15 @@ await T("אנשים — צ'יפ מורח/אמין", async () => {
   await pg.getByText("מורח").first().waitFor({ timeout: 3000 });
   await pg.getByText("אמין", { exact: true }).first().waitFor({ timeout: 2000 });
   await shot("11-people");
+});
+await T("כרטיס אדם: לחיצה ⟶ אמינות + משימות פתוחות + חזרה", async () => {
+  await pg.getByText("אהרון לואיס").first().click();
+  await pg.getByText("מורח, דורש נדנוד").first().waitFor({ timeout: 3000 });
+  await pg.getByText("משימות פתוחות ·").first().waitFor({ timeout: 2000 });
+  await pg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 2000 });
+  await shot("11b-person-card");
+  await pg.getByText("‹ כל האנשים").first().click();
+  await pg.getByPlaceholder("חיפוש…").waitFor({ timeout: 2000 });
   await pg.keyboard.press("Escape"); await pg.waitForTimeout(500);
 });
 await T("אפס שגיאות JS בסיור המלא", async () => { if (pg.jserr.length) throw new Error(pg.jserr.join(" | ")); });
