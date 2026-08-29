@@ -95,11 +95,11 @@ export default function App() {
           transition={{ type: "spring", duration: 0.45, bounce: 0 }}>
           {tab === "home" && <Home D={D} onAsk={() => setTab("ask")} think={think} onAct={act}
             onArena={(name) => { setArenaFocus(name); setTab("arenas"); }}
-            onOwner={(name) => { setOwnerFocus(name); setTab("tasks"); }} />}
-          {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} />}
-          {tab === "tasks" && <Tasks D={D} onAct={act} focus={ownerFocus} onFocused={() => setOwnerFocus(null)} />}
+            onOwner={(name) => { setOwnerFocus(name); setTab("tasks"); }} onChanged={reload} />}
+          {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} onChanged={reload} />}
+          {tab === "tasks" && <Tasks D={D} onAct={act} focus={ownerFocus} onFocused={() => setOwnerFocus(null)} onChanged={reload} />}
           {tab === "arenas" && <Arenas D={D} focus={arenaFocus} onFocused={() => setArenaFocus(null)}
-            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} />}
+            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} onChanged={reload} />}
           {tab === "meetings" && <Meetings D={D} onAsk={(prefill) => { if (prefill) setAskPrefill(prefill); setTab("ask"); }} />}
           {tab === "ask" && <Ask think={think} onThink={setThink} onChanged={reload} />}
         </motion.main>
@@ -112,7 +112,7 @@ export default function App() {
       <ReportsSheet open={sheet === "reports"} onClose={() => setSheet(s => s === "reports" ? null : s)} />
       <AlphaSheet open={sheet === "alpha"} onClose={() => setSheet(s => s === "alpha" ? null : s)} D={D} onChanged={reload} />
       <VerifySheet open={sheet === "verify"} onClose={() => setSheet(s => s === "verify" ? null : s)} D={D} onChanged={reload} />
-      <PeopleSheet open={sheet === "people"} onClose={() => setSheet(s => s === "people" ? null : s)} D={D} />
+      <PeopleSheet open={sheet === "people"} onClose={() => setSheet(s => s === "people" ? null : s)} D={D} onChanged={reload} />
       <LessonsSheet open={sheet === "lessons"} onClose={() => setSheet(s => s === "lessons" ? null : s)} D={D} />
 
       <Dock tab={tab} onTab={setTab} badge={{ decisions: D.decisions.length, meetings: D.meetings.filter(m => m.dayOffset === 0).length }} />

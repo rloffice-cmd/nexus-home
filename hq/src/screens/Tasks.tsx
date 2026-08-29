@@ -11,6 +11,7 @@ import Num from "../ui/Num";
    ‏המנועים (task_done · task_waiting). מקור אחד לעמוד הזה ולכיסוי בבית. */
 import { type Snapshot, type T } from "../lib/data";
 import type { Act } from "../App";
+import CmdBox from "../ui/CmdBox";
 
 const W: Record<T["weight"], { c: string; t: string }> = {
   critical: { c: "var(--crit)", t: "קריטי" },
@@ -44,7 +45,7 @@ function Card({ t, onOpen }: { t: T; onOpen: (t: T) => void }) {
   );
 }
 
-export default function Tasks({ D, onAct, focus, onFocused }: { D: Snapshot; onAct: Act; focus?: string | null; onFocused?: () => void }) {
+export default function Tasks({ D, onAct, focus, onFocused, onChanged }: { D: Snapshot; onAct: Act; focus?: string | null; onFocused?: () => void; onChanged: () => void }) {
   const [view, setView] = useState<"mine" | "others" | "frozen" | "all">("mine");
   const [arena, setArena] = useState<string | null>(null);
   const [owner, setOwner] = useState<string | null>(null);
@@ -154,6 +155,8 @@ export default function Tasks({ D, onAct, focus, onFocused }: { D: Snapshot; onA
                   style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{open.mine ? "אחרים" : "הם"}</motion.button>
               </div>
               <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>{open.mine ? "הפעולה נרשמת דרך המנוע" : `אלפא רודפת את ${open.owner} אוטומטית — נדנוד יומי עד הבטחה חיה`}</p>
+              <CmdBox kind="task" id={open.id} onDone={() => { setOpen(null); onChanged(); }}
+                placeholder={open.mine ? "למשל: בוצע חלקית — נשאר רק ההיתר" : `למשל: ${open.owner} הבטיח עד חמישי`} />
             </>)}
           </Drawer.Content>
         </Drawer.Portal>

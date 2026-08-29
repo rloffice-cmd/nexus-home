@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Snapshot } from "../lib/data";
 import { API, FILE, REPORT, apiGet, apiPost, getKey } from "../lib/api";
+import CmdBox from "../ui/CmdBox";
 
 /* ‏"עוד" — הפונקציות שחיו בהמבורגר של האפליקציה הקודמת (פידבק איתי 28.8):
    ‏שיוך מסמכים (nx-file, אותו מנוע) · מה לא ברור (verify_commit) · אנשים ·
@@ -357,7 +358,7 @@ export function MoreSheet({ open, onClose, D, go, onLogout }: { open: boolean; o
 
 /* ‏אנשים: הרשימה היא שער — לחיצה פותחת את כרטיס האדם (כמו openPerson
    ‏באפליקציה הקודמת): טלפון · אמינות · עבודה איתו · המשימות הפתוחות שלו. */
-export function PeopleSheet({ open, onClose, D }: { open: boolean; onClose: () => void; D: Snapshot }) {
+export function PeopleSheet({ open, onClose, D, onChanged }: { open: boolean; onClose: () => void; D: Snapshot; onChanged: () => void }) {
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<Snapshot["people"][number] | null>(null);
   useEffect(() => { if (open) { setSel(null); setQ(""); } }, [open]);
@@ -396,6 +397,8 @@ export function PeopleSheet({ open, onClose, D }: { open: boolean; onClose: () =
             {!t.waiting?.promised && t.due && <span className="num" style={{ flex: "none", fontSize: 10.5, color: t.overdue ? "var(--crit)" : "var(--mut)", fontWeight: 700 }}>{t.due}</span>}
           </div>
         ))}
+        <CmdBox kind="person" id={sel.id} onDone={onChanged}
+          placeholder="למשל: הוא מורח בהיתר — תפתח לו משימה לחזור אליי עד חמישי" />
       </Sheet>
     );
   }
