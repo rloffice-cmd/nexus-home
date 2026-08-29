@@ -99,7 +99,8 @@ export default function App() {
           {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} onChanged={reload} />}
           {tab === "tasks" && <Tasks D={D} onAct={act} focus={ownerFocus} onFocused={() => setOwnerFocus(null)} onChanged={reload} />}
           {tab === "arenas" && <Arenas D={D} focus={arenaFocus} onFocused={() => setArenaFocus(null)}
-            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} onChanged={reload} />}
+            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} onChanged={reload}
+            onAct={act} onDecisions={() => setTab("decisions")} />}
           {tab === "meetings" && <Meetings D={D} onAsk={(prefill) => { if (prefill) setAskPrefill(prefill); setTab("ask"); }} />}
           {tab === "ask" && <Ask think={think} onThink={setThink} onChanged={reload} />}
         </motion.main>

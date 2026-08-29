@@ -123,6 +123,20 @@ await T("צ'יפ מחזיק בבית ⟶ משימות מסוננות על האד
     await pg.waitForTimeout(800);
   }
 });
+await T("משימה בתוך תיק זירה ⟶ פרטים + בוצע ⟶ task_done", async () => {
+  await pg.getByText("זירות", { exact: true }).last().click();
+  await pg.waitForTimeout(600);
+  const dlg = pg.getByRole("dialog");
+  await pg.getByText("השדרה", { exact: false }).first().click();
+  await dlg.getByText("ZZQA משימה 0 ", { exact: false }).first().waitFor({ timeout: 4000 });
+  await dlg.getByText("ZZQA משימה 0 ", { exact: false }).first().click();
+  await dlg.getByText("בוצע ✓").first().waitFor({ timeout: 3000 });
+  await dlg.getByText("💬 תגובה חופשית").first().waitFor({ timeout: 2000 });
+  await dlg.getByText("בוצע ✓").first().click();
+  await pg.waitForTimeout(900);
+  if (!posts.some((p) => p.action === "task_done" && p.id === "t0")) throw new Error("לא נשלח task_done מהתיק");
+  await pg.getByText("בית", { exact: true }).last().click(); await pg.waitForTimeout(700);
+});
 await T("צ'יפ זירה בבית ⟶ תיק הזירה נפתח", async () => {
   await pg.getByLabel(/תיק זירה/).first().click();
   await pg.waitForTimeout(900);

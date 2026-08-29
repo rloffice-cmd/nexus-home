@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v14"; /* v14 (29.8): תגובה חופשית בכל פריט — משימה · החלטה · זירה · אדם — דרך command_preview/apply */
+const CACHE = "nexus-hq-v15"; /* v15 (29.8): משימות בתוך תיק זירה לחיצות — פרטים · בוצע/ממתין · תגובה חופשית; החלטות בתיק מנווטות */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
