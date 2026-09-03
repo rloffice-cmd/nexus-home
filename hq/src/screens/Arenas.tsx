@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "vaul";
 import { useEffect, useMemo, useState } from "react";
-import type { Snapshot, Arena, T } from "../lib/data";
+import { type Snapshot, type Arena, type T, waitingOwner } from "../lib/data";
 import type { Act } from "../App";
 import Num from "../ui/Num";
 import CmdBox from "../ui/CmdBox";
@@ -15,7 +15,7 @@ const spring = { type: "spring" as const, duration: 0.55, bounce: 0.14 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * Math.min(i, 8) } });
 const ils = (n?: number | null) => n == null ? "" : "₪" + Math.round(n).toLocaleString("en-US");
 
-export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onAct, onDecisions }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void; onChanged: () => void; onAct: Act; onDecisions: () => void }) {
+export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onRetry, onAct, onDecisions }: { D: Snapshot; focus?: string | null; onFocused?: () => void; onTasks: (arenaName: string) => void; onChanged: () => void; onRetry: () => void; onAct: Act; onDecisions: () => void }) {
   const [seg, setSeg] = useState<"arenas" | "assets">("arenas");
   const [open, setOpen] = useState<Arena | null>(null);
   const [selTask, setSelTask] = useState<T | null>(null);
@@ -128,7 +128,17 @@ export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onAct,
                 </div>
               </motion.div>
             ))}
-            {!assets.length && <div style={{ color: "var(--mut)", fontSize: 13, textAlign: "center", padding: "24px 0" }}>אין נכסים בסינון הזה</div>}
+            {/* ‏ביקורת 3.9: nx-dash שנפל הוצג כ"אין נכסים בסינון הזה" — כשל טעינה אינו ריק */}
+            {!assets.length && (D.live && !D.dash_ok ? (
+              <div className="glass" style={{ padding: "16px 18px", borderRadius: 18, marginTop: 4, border: "1px solid color-mix(in srgb,var(--crit) 40%,transparent)" }}>
+                <div style={{ color: "var(--crit)", fontSize: 13.5, fontWeight: 800 }}>⛔ הנכסים לא נטענו</div>
+                <div style={{ color: "var(--ink2)", fontSize: 12, lineHeight: 1.5, marginTop: 4 }}>שגיאת רשת מול מקור הנכסים — הרשימה לא ריקה, היא לא הגיעה. משוך לרענון או נסה שוב.</div>
+                <motion.button whileTap={{ scale: 0.96 }} onClick={onRetry}
+                  style={{ marginTop: 10, borderRadius: 12, padding: "9px 16px", fontSize: 12.5, fontWeight: 800, background: "var(--surface2)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)", color: "var(--acc-hi)" }}>נסה שוב ↻</motion.button>
+              </div>
+            ) : (
+              <div style={{ color: "var(--mut)", fontSize: 13, textAlign: "center", padding: "24px 0" }}>אין נכסים בסינון הזה</div>
+            ))}
 
             {/* ‏הלוואות ומשכנתאות — היו באפליקציה הקודמת, חוזרות לכאן */}
             {D.loans.length > 0 && (<>
@@ -165,8 +175,8 @@ export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onAct,
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   <motion.button whileTap={{ scale: 0.96 }} onClick={() => { const t = selTask; setSelTask(null); setOpen(null); onAct("task_done", t.id); }}
                     style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
-                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => { const t = selTask; setSelTask(null); setOpen(null); onAct("task_waiting", t.id); }}
-                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{selTask.mine ? "אחרים" : "הם"}</motion.button>
+                  <motion.button whileTap={{ scale: 0.96 }} onClick={() => { const t = selTask; setSelTask(null); setOpen(null); onAct("task_waiting", t.id, { owner: waitingOwner(t) }); }}
+                    style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין לתשובה</motion.button>
                 </div>
                 <CmdBox kind="task" id={selTask.id} onDone={() => { setSelTask(null); setOpen(null); onChanged(); }}
                   placeholder={selTask.mine ? "למשל: בוצע חלקית — נשאר רק ההיתר" : `למשל: ${selTask.owner} הבטיח עד חמישי`} />

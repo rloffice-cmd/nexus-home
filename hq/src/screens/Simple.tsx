@@ -4,38 +4,80 @@ import Orb from "../ui/Orb";
 import CmdBox from "../ui/CmdBox";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { API, ASK, apiPost, getKey } from "../lib/api";
+import { API, ASK, apiPost, errText, getKey } from "../lib/api";
+import { applyText, draftText, opLabel } from "../lib/ops";
 
 const spring = { type: "spring" as const, duration: 0.6, bounce: 0.15 };
 const rise = (i: number) => ({ initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { ...spring, delay: 0.04 * i } });
 
-export function Decisions({ D, onDecide, onChanged }: { D: Snapshot; onDecide: (id: string, verdict: "decided" | "dropped") => Promise<boolean>; onChanged: () => void }) {
+/* ‏ביקורת 3.9 (איתי: "הכפתורים לא אומרים מה הם עושים"): הכרטיס אומר מאיפה
+   ‏ההחלטה באה, מה ✓ עושה ומה ✖ עושה (effect מ-nx-dec), ומציג חלופות ומחיר
+   ‏דחייה שכבר נשלחו ונזרקו. משימה שקטה (task-escalation) אומרת במפורש
+   ‏שהמשימה עצמה לא משתנה מכאן — ומובילה אליה. */
+export function Decisions({ D, onDecide, onChanged, onRetry, onTask }: { D: Snapshot; onDecide: (id: string, verdict: "decided" | "dropped") => Promise<boolean>; onChanged: () => void; onRetry: () => void; onTask?: (id: string) => void }) {
   const [cmdFor, setCmdFor] = useState<string | null>(null);
+  const [more, setMore] = useState<string | null>(null);
+  const failed = D.live && !D.decisions_ok;
   return (
     <div className="page">
-      <div className="sec" style={{ marginTop: 12 }}>החלטות ממתינות · <b className="num">{D.decisions.length}</b></div>
-      {D.decisions.length === 0 && (
+      <div className="sec" style={{ marginTop: 12 }}>החלטות ממתינות · <b className="num">{failed ? "—" : D.decisions.length}</b></div>
+      {failed && (
+        <div className="glass" style={{ padding: "16px 18px", borderRadius: 18, border: "1px solid color-mix(in srgb,var(--crit) 40%,transparent)" }}>
+          <div style={{ color: "var(--crit)", fontSize: 13.5, fontWeight: 800 }}>⛔ ההחלטות לא נטענו</div>
+          <div style={{ color: "var(--ink2)", fontSize: 12, lineHeight: 1.5, marginTop: 4 }}>שגיאת רשת מול מקור ההחלטות — זה לא אומר שהכול הוכרע. משוך לרענון או נסה שוב.</div>
+          <motion.button whileTap={{ scale: 0.96 }} onClick={onRetry}
+            style={{ marginTop: 10, borderRadius: 12, padding: "9px 16px", fontSize: 12.5, fontWeight: 800, background: "var(--surface2)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)", color: "var(--acc-hi)" }}>נסה שוב ↻</motion.button>
+        </div>
+      )}
+      {!failed && D.decisions.length === 0 && (
         <div className="glass" style={{ padding: "16px 18px", borderRadius: 18, color: "var(--good)", fontSize: 13.5, fontWeight: 700 }}>
           ✓ אין החלטות ממתינות — הכל הוכרע
         </div>
       )}
-      {D.decisions.map((d, i) => (
-        <motion.div key={d.id} {...rise(i)} className="glass" style={{ padding: "16px 18px", borderRadius: 18, marginBottom: 10 }}>
-          <div style={{ fontFamily: "var(--serif)", fontSize: 17.5, fontWeight: 700, lineHeight: 1.3 }}>{d.title}</div>
-          <div style={{ fontSize: 11.5, color: "var(--mut)", marginTop: 5 }}>{d.arena}{d.needed_by ? ` · עד ${d.needed_by}` : ""}</div>
-          {d.recommendation && <div style={{ fontSize: 13, color: "var(--ink2)", marginTop: 9, borderInlineStart: "2px solid var(--gold)", paddingInlineStart: 10 }}>{d.recommendation}</div>}
-          <div style={{ display: "flex", gap: 8, marginTop: 13 }}>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={() => onDecide(d.id, "decided")}
-              style={{ flex: 1, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>הוכרע ✓</motion.button>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={() => onDecide(d.id, "dropped")}
-              style={{ flex: 1, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>ירד מהפרק</motion.button>
-            <motion.button whileTap={{ scale: 0.96 }} onClick={() => setCmdFor(cmdFor === d.id ? null : d.id)} aria-label="תגובה חופשית"
-              style={{ flex: "none", width: 44, borderRadius: 12, fontSize: 15, color: cmdFor === d.id ? "var(--acc-hi)" : "var(--mut)", border: `1px solid ${cmdFor === d.id ? "color-mix(in srgb,var(--acc) 40%,transparent)" : "var(--hair)"}` }}>✏️</motion.button>
-          </div>
-          {cmdFor === d.id && <CmdBox kind="decision" id={d.id} onDone={() => { setCmdFor(null); onChanged(); }}
-            placeholder="למשל: מאשר, אבל רק אחרי חוות דעת של שירה" />}
-        </motion.div>
-      ))}
+      {D.decisions.map((d, i) => {
+        const learn = d.source === "learning-engine", esc = d.source === "task-escalation";
+        const extra = [d.alternatives ? "חלופות" : "", d.cost_of_delay ? "מחיר הדחייה" : ""].filter(Boolean);
+        return (
+          <motion.div key={d.id} {...rise(i)} className="glass" style={{ padding: "16px 18px", borderRadius: 18, marginBottom: 10 }}>
+            <div style={{ fontFamily: "var(--serif)", fontSize: 17.5, fontWeight: 700, lineHeight: 1.3 }}>{d.title}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--mut)", marginTop: 6 }}>
+              {d.effect?.source_label && <span className="chip mut" style={{ fontSize: 10 }}>{d.effect.source_label}</span>}
+              <span>{[d.arena, d.needed_by ? `עד ${d.needed_by}` : "", d.created ? `נפתחה ${d.created}` : ""].filter(Boolean).join(" · ")}</span>
+            </div>
+            {d.recommendation && <div style={{ fontSize: 13, color: "var(--ink2)", marginTop: 9, borderInlineStart: "2px solid var(--gold)", paddingInlineStart: 10 }}>{d.recommendation}</div>}
+            {extra.length > 0 && (more === d.id ? (
+              <div style={{ marginTop: 9, fontSize: 12.5, color: "var(--ink2)", lineHeight: 1.5 }}>
+                {d.alternatives && <div><div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".1em", color: "var(--mut)" }}>חלופות</div><div style={{ whiteSpace: "pre-wrap" }}>{d.alternatives}</div></div>}
+                {d.cost_of_delay && <div style={{ marginTop: 6 }}><div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".1em", color: "var(--mut)" }}>מחיר הדחייה</div><div style={{ whiteSpace: "pre-wrap" }}>{d.cost_of_delay}</div></div>}
+              </div>
+            ) : (
+              <button onClick={() => setMore(d.id)} style={{ marginTop: 8, padding: 0, fontSize: 11.5, fontWeight: 700, color: "var(--acc-hi)" }}>{extra.join(" · ")} ▾</button>
+            ))}
+            {esc && (
+              <div style={{ marginTop: 9, fontSize: 12, color: "var(--warn)", lineHeight: 1.45 }}>
+                המשימה עצמה לא משתנה מכאן — כדי לסגור/לבטל/לתת יעד, פתח את המשימה
+                {d.taskId && onTask && <> · <button onClick={() => onTask(d.taskId!)} style={{ padding: 0, fontSize: 12, fontWeight: 800, color: "var(--acc-hi)" }}>פתח את המשימה ‹</button></>}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, marginTop: 13 }}>
+              <motion.button whileTap={{ scale: 0.96 }} onClick={() => onDecide(d.id, "decided")}
+                style={{ flex: 1, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>{learn ? "✓ אמץ כלל" : "✓ קבל המלצה"}</motion.button>
+              <motion.button whileTap={{ scale: 0.96 }} onClick={() => onDecide(d.id, "dropped")}
+                style={{ flex: 1, borderRadius: 12, padding: "11px 0", fontSize: 13, fontWeight: 700, color: "var(--ink2)", border: "1px solid var(--hair)" }}>ירד מהפרק</motion.button>
+              <motion.button whileTap={{ scale: 0.96 }} onClick={() => setCmdFor(cmdFor === d.id ? null : d.id)} aria-label="תגובה חופשית"
+                style={{ flex: "none", padding: "0 11px", borderRadius: 12, fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", color: cmdFor === d.id ? "var(--acc-hi)" : "var(--mut)", border: `1px solid ${cmdFor === d.id ? "color-mix(in srgb,var(--acc) 40%,transparent)" : "var(--hair)"}` }}>✏️ תגובה חופשית</motion.button>
+            </div>
+            {(d.effect?.approve || d.effect?.drop) && (
+              <div style={{ marginTop: 8, fontSize: 11, color: "var(--mut)", lineHeight: 1.5 }}>
+                {d.effect.approve && <div>✓ = {d.effect.approve}</div>}
+                {d.effect.drop && <div>✖ = {d.effect.drop}</div>}
+              </div>
+            )}
+            {cmdFor === d.id && <CmdBox kind="decision" id={d.id} onDone={() => { setCmdFor(null); onChanged(); }}
+              placeholder="למשל: מאשר, אבל רק אחרי חוות דעת של שירה" />}
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -43,7 +85,7 @@ export function Decisions({ D, onDecide, onChanged }: { D: Snapshot; onDecide: (
 /* ── אלפא: המוח האמיתי. שאלה ⟶ מוח עמוק (עם polling) או סינכרוני;
    ‏פקודה ⟶ command_preview ⟶ כרטיס פעולות עם אישור ⟶ command_apply.
    ‏אותם מנועים ואותו חוזה כמו האפליקציה הקודמת — אפס לוגיקה חדשה. */
-type Msg = { q?: string; a?: string; ops?: any[]; summary?: string; question?: string; pending?: boolean; done?: string; err?: boolean };
+type Msg = { q?: string; a?: string; ops?: any[]; labels?: any[]; summary?: string; question?: string; pending?: boolean; done?: string; fail?: boolean; err?: boolean };
 const DEEP_RE = /^(?:מה|מהו|מהי|מהם|מי|כמה|איזה|איזו|אילו|מתי|היכן|איפה|למה|מדוע|האם)(?=\s)/u;
 
 /* ‏השיחה חיה מחוץ לקומפוננטה: מעבר טאב לא מוחק אותה, ותשובת מוח עמוק
@@ -126,7 +168,9 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
       }
       const r = await apiPost(API, { action: "command_preview", kind: "general", id: null, text: q, history: chat.hist.slice(-4) });
       if (r.route === "ask") answer(r.answer || "לא הצלחתי לענות על זה כרגע.");
-      else if ((r.ops || []).length) { chat.push({ ops: r.ops, summary: r.summary, question: r.question, pending: true }); onThink(false); }
+      /* ‏ביקורת 3.9: route=draft נקרא כ"לא זיהיתי פעולה" בזמן שהטיוטה כבר נשמרה ב-drafts */
+      else if (r.route === "draft" && r.draft?.body) answer(draftText(r.draft));
+      else if ((r.ops || []).length) { chat.push({ ops: r.ops, labels: Array.isArray(r.labels) ? r.labels : undefined, summary: r.summary, question: r.question, pending: true }); onThink(false); }
       else answer(r.question || "לא זיהיתי פעולה — נסח אחרת, או שאל אותי.");
     } catch (e: any) {
       answer("⚠️ " + (e?.message || "שגיאה בתקשורת — נסה שוב."), true);
@@ -138,11 +182,12 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
     chat.patch(i, { pending: false });
     try {
       const r = await apiPost(API, { action: "command_apply", ops: m.ops });
-      const n = r.applied || 0, errs = r.errors || [];
-      chat.patch(i, { done: errs.length ? `בוצעו ${n} · ${errs.length} נכשלו` : n === 1 ? "בוצע ✓" : `בוצעו ${n} ✓` });
-      if (errs.length) chat.push({ a: "מה שנכשל: " + errs.map((e: any) => e.error || "שגיאה").join(" · "), err: true });
-      onChanged();
-    } catch { chat.patch(i, { pending: true }); toast("הביצוע נכשל — נסה שוב"); }
+      /* ‏ביקורת 3.9: "בוצעו 0 ✓" אינו הצלחה — applied=0 מוצג כ"לא בוצע דבר" */
+      const a = applyText(r), errs: unknown[] = Array.isArray(r.errors) ? r.errors : [];
+      chat.patch(i, { done: a.text, fail: !a.ok });
+      if (errs.length) chat.push({ a: "מה שנכשל: " + errs.map((e) => errText(e) || "שגיאה").join(" · "), err: true });
+      if (a.applied > 0) onChanged();
+    } catch (e: any) { chat.patch(i, { pending: true }); toast("הביצוע נכשל — " + (e?.message || "נסה שוב")); }
   };
 
   return (
@@ -156,14 +201,17 @@ export function Ask({ think, onThink, onChanged }: { think: boolean; onThink: (v
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={spring}
             style={{ alignSelf: "flex-end", maxWidth: "94%", width: "94%", background: "color-mix(in srgb,var(--acc) 8%,var(--surface2))", border: "1px solid color-mix(in srgb,var(--acc) 30%,transparent)", borderRadius: 16, padding: "13px 15px" }}>
             <div style={{ fontSize: 13.5, fontWeight: 700, marginBottom: 8 }}>{m.summary || "הפעולות שיבוצעו:"}</div>
-            {(m.ops || []).map((o: any, j: number) => (
-              <div key={j} style={{ fontSize: 12.5, color: "var(--ink2)", padding: "4px 0", borderTop: j ? "1px solid var(--hair)" : "none" }}>
-                <code style={{ color: "var(--gold)", fontSize: 11 }}>{o.op}</code> {o.title || o.note || o.id || ""}
-              </div>
-            ))}
+            {(m.ops || []).map((o: any, j: number) => {
+              const l = opLabel(o, m.labels?.[j]);
+              return (
+                <div key={j} style={{ fontSize: 12.5, color: "var(--ink2)", padding: "4px 0", borderTop: j ? "1px solid var(--hair)" : "none" }}>
+                  <b style={{ color: "var(--gold)" }}>{l.title}</b>{l.detail ? <span> — {l.detail}</span> : null}
+                </div>
+              );
+            })}
             {m.question && <div style={{ fontSize: 12, color: "var(--mut)", marginTop: 6 }}>❓ {m.question}</div>}
             {m.done ? (
-              <div style={{ marginTop: 10, fontSize: 13, fontWeight: 800, color: "var(--good)" }}>{m.done}</div>
+              <div style={{ marginTop: 10, fontSize: 13, fontWeight: 800, color: m.fail ? "var(--crit)" : "var(--good)" }}>{m.done}</div>
             ) : m.pending && (
               <div style={{ display: "flex", gap: 8, marginTop: 11 }}>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => apply(i)}

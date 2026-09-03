@@ -1,4 +1,4 @@
-const CACHE = "nexus-hq-v16"; /* v16 (29.8): כפתור אחורה של הטלפון סוגר שכבות — מגירה ⟶ מסך ⟶ בית — במקום לצאת מהאפליקציה */
+const CACHE = "nexus-hq-v17"; /* v17 (3.9): הכפתורים אומרים מה הם עושים — כרטיס החלטה עם effect · שמות פעולות · כשל טעינה אינו "אין ✓" · טיוטה · applied=0 */
 const FONTS = "nexus-fonts-v1";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon.svg"];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];

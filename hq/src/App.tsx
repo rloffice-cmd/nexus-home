@@ -17,7 +17,7 @@ import { useBackLayer } from "./lib/nav";
 
 /* ‏פעולה עוברת דרך מנוע — לא כתיבה מהממשק. שלוש הפעולות שהמסכים צריכים,
    ‏על אותם קצוות שהאפליקציה הקודמת עבדה מולם. בהדגמה — טוסט בלבד. */
-export type Act = (kind: "task_done" | "task_waiting" | "decision_decide", id: string, extra?: { verdict?: "decided" | "dropped" }) => Promise<boolean>;
+export type Act = (kind: "task_done" | "task_waiting" | "decision_decide", id: string, extra?: { verdict?: "decided" | "dropped"; owner?: string }) => Promise<boolean>;
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
@@ -43,12 +43,13 @@ export default function App() {
     if (!getKey()) { toast("מצב הדגמה — הפעולה מדומה"); return true; }
     try {
       if (kind === "task_done") await apiPost(API, { action: "task_done", id });
-      else if (kind === "task_waiting") await apiPost(ACT, { action: "task_waiting", id });
+      /* ‏ביקורת 3.9: nx-act מקבל body.owner (שם) — המגירה שמכירה את הבעלים שולחת אותו */
+      else if (kind === "task_waiting") await apiPost(ACT, { action: "task_waiting", id, ...(extra?.owner ? { owner: extra.owner } : {}) });
       else await apiPost(ACT, { action: "decision_decide", id, verdict: extra?.verdict || "decided" });
-      toast.success(kind === "decision_decide" ? (extra?.verdict === "dropped" ? "ירד מהפרק" : "הוכרע ✓") : kind === "task_done" ? "בוצע ✓ — נרשם במערכת" : "עבר להמתנה ⏳");
+      toast.success(kind === "decision_decide" ? (extra?.verdict === "dropped" ? "ירד מהפרק" : "הוכרע ✓") : kind === "task_done" ? "בוצע ✓ — נרשם במערכת" : "⏳ ממתין לתשובה — נרשם במערכת");
       reload();
       return true;
-    } catch { toast("לא נשמר — נסה שוב"); return false; }
+    } catch (e: any) { toast("לא נשמר — " + (e?.message || "נסה שוב")); return false; }
   }, [reload]);
 
   /* ‏התחברות במגירה אמיתית — window.prompt לא נפתח ב-PWA מותקן (פידבק איתי 28.8) */
@@ -102,10 +103,11 @@ export default function App() {
           {tab === "home" && <Home D={D} onAsk={() => setTab("ask")} think={think} onAct={act}
             onArena={(name) => { setArenaFocus(name); setTab("arenas"); }}
             onOwner={(name) => { setOwnerFocus(name); setTab("tasks"); }} onChanged={reload} />}
-          {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} onChanged={reload} />}
+          {tab === "decisions" && <Decisions D={D} onDecide={(id, v) => act("decision_decide", id, { verdict: v })} onChanged={reload} onRetry={reloadVisible}
+            onTask={(id) => { setOwnerFocus("task:" + id); setTab("tasks"); }} />}
           {tab === "tasks" && <Tasks D={D} onAct={act} focus={ownerFocus} onFocused={() => setOwnerFocus(null)} onChanged={reload} />}
           {tab === "arenas" && <Arenas D={D} focus={arenaFocus} onFocused={() => setArenaFocus(null)}
-            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} onChanged={reload}
+            onTasks={(arenaName) => { setOwnerFocus("arena:" + arenaName); setTab("tasks"); }} onChanged={reload} onRetry={reloadVisible}
             onAct={act} onDecisions={() => setTab("decisions")} />}
           {tab === "meetings" && <Meetings D={D} onAsk={(prefill) => { if (prefill) setAskPrefill(prefill); setTab("ask"); }} />}
           {tab === "ask" && <Ask think={think} onThink={setThink} onChanged={reload} />}

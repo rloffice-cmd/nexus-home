@@ -9,7 +9,7 @@ import Num from "../ui/Num";
    ‏שקטה, הבטחה שחלפה צועקת · קפואות כבדות למעלה, לא קבורות · פעולות אצבע.
    ‏מ-27.8 (לילה 2) העמוד חי: הנתונים מ-nexus-app v34, הפעולות דרך
    ‏המנועים (task_done · task_waiting). מקור אחד לעמוד הזה ולכיסוי בבית. */
-import { type Snapshot, type T } from "../lib/data";
+import { type Snapshot, type T, waitingOwner } from "../lib/data";
 import type { Act } from "../App";
 import CmdBox from "../ui/CmdBox";
 import { useBackLayer } from "../lib/nav";
@@ -54,11 +54,13 @@ export default function Tasks({ D, onAct, focus, onFocused, onChanged }: { D: Sn
   const [done, setDone] = useState<Set<string>>(new Set());
   useBackLayer(!!open, () => setOpen(null));
 
-  /* ‏הגעה מבחוץ: צ'יפ מחזיק בבית ("__mine__" או שם אדם) או תיק זירה ("arena:<שם>") */
+  /* ‏הגעה מבחוץ: צ'יפ מחזיק בבית ("__mine__" או שם אדם) · תיק זירה ("arena:<שם>")
+     ‏· משימה שקטה מכרטיס החלטה ("task:<id>", 3.9) — נפתחת ישר במגירה */
   useEffect(() => {
     if (!focus) return;
     if (focus === "__mine__") { setView("mine"); setOwner(null); setArena(null); }
     else if (focus.startsWith("arena:")) { setView("all"); setArena(focus.slice(6)); setOwner(null); }
+    else if (focus.startsWith("task:")) { const t = D.tasks.find((x) => x.id === focus.slice(5)); setView("all"); setOwner(null); setArena(null); if (t) setOpen(t); }
     else { setView("all"); setOwner(focus); setArena(null); }
     onFocused?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,7 +91,7 @@ export default function Tasks({ D, onAct, focus, onFocused, onChanged }: { D: Sn
   const doAct = async (kind: "task_done" | "task_waiting", t: T) => {
     setOpen(null);
     if (kind === "task_done") setDone(new Set([...done, t.id]));
-    const ok = await onAct(kind, t.id);
+    const ok = await onAct(kind, t.id, kind === "task_waiting" ? { owner: waitingOwner(t) } : undefined);
     if (!ok && kind === "task_done") setDone((s) => { const n = new Set(s); n.delete(t.id); return n; });
   };
 
@@ -154,7 +156,7 @@ export default function Tasks({ D, onAct, focus, onFocused, onChanged }: { D: Sn
                 <motion.button whileTap={{ scale: 0.96 }} onClick={() => doAct("task_done", open)}
                   style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
                 <motion.button whileTap={{ scale: 0.96 }} onClick={() => doAct("task_waiting", open)}
-                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{open.mine ? "אחרים" : "הם"}</motion.button>
+                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין לתשובה</motion.button>
               </div>
               <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>{open.mine ? "הפעולה נרשמת דרך המנוע" : `אלפא רודפת את ${open.owner} אוטומטית — נדנוד יומי עד הבטחה חיה`}</p>
               <CmdBox kind="task" id={open.id} onDone={() => { setOpen(null); onChanged(); }}

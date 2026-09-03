@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { Drawer } from "vaul";
 import { useState } from "react";
 import { toast } from "sonner";
-import { BUCKETS } from "../lib/data";
+import { BUCKETS, waitingOwner } from "../lib/data";
 import type { Snapshot, Uncovered, Bucket } from "../lib/data";
 import type { Act } from "../App";
 import Orb from "../ui/Orb";
@@ -65,7 +65,7 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChang
     return e;
   });
   const pct = cov.total ? cov.covered / cov.total : 1;
-  const doU = async (kind: "task_done" | "task_waiting", id: string) => { setOpenU(null); await onAct(kind, id); };
+  const doU = async (kind: "task_done" | "task_waiting", id: string, owner?: string) => { setOpenU(null); await onAct(kind, id, kind === "task_waiting" ? { owner } : undefined); };
 
   return (
     <div className="page">
@@ -219,8 +219,8 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChang
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <motion.button whileTap={{ scale: 0.96 }} onClick={() => doU("task_done", openU.id)}
                   style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 800, background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", color: "var(--acc-ink)" }}>בוצע ✓</motion.button>
-                <motion.button whileTap={{ scale: 0.96 }} onClick={() => doU("task_waiting", openU.id)}
-                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין ל{openU.mine ? "אחרים" : "הם"}</motion.button>
+                <motion.button whileTap={{ scale: 0.96 }} onClick={() => doU("task_waiting", openU.id, waitingOwner(openU))}
+                  style={{ borderRadius: 13, padding: "13px 0", fontSize: 13.5, fontWeight: 700, color: "var(--acc-hi)", border: "1px solid color-mix(in srgb,var(--acc) 35%,transparent)" }}>⏳ ממתין לתשובה</motion.button>
               </div>
               <p style={{ color: "var(--mut)", fontSize: 10.5, margin: "12px 2px 0", textAlign: "center" }}>{openU.mine ? "הפעולה נרשמת דרך המנוע" : `אלפא רודפת את ${openU.owner} אוטומטית במשמרות — נדנוד יומי עד הבטחה`}</p>
               <CmdBox kind="task" id={openU.id} onDone={() => { setOpenU(null); onChanged(); }}
