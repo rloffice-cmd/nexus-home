@@ -11,7 +11,15 @@
    ‏אותו כלל השתקה כמו הנדנוד של אלפא: הבטחה עתידית משתיקה. */
 import { API, DEC, DASH, apiGet, getKey } from "./api";
 
-export type Decision = { id: string; title: string; arena?: string; needed_by?: string | null; recommendation?: string };
+/* ‏ביקורת 3.9: nx-dec מסביר מה כל כפתור עושה (effect) ומאיפה ההחלטה באה
+   ‏(source) — ‏alternatives · cost_of_delay · rationale נשלחו כבר קודם
+   ‏ונזרקו כאן במיפוי. taskId נגזר מ-rationale של משימה שקטה. */
+export type DecisionEffect = { source_label?: string; approve?: string; drop?: string };
+export type Decision = {
+  id: string; title: string; arena?: string; needed_by?: string | null; recommendation?: string;
+  source?: string; created?: string; effect?: DecisionEffect;
+  alternatives?: string; cost_of_delay?: string; rationale?: string; taskId?: string;
+};
 export type Arena = { id: string; name: string; state: "ok" | "warn" | "crit"; note?: string; open: number };
 export type Meeting = { id: string; title: string; when: string; dayLabel: string; dayOffset: number; location?: string; arena?: string; prepBody?: string; prepDepth?: string; debrief?: string };
 export type Asset = { id: string; code?: string; name: string; arena?: string; type?: string; rented: boolean; rent?: number | null; forSale: boolean; price?: number | null; valuation?: number | null; area?: number | null };
@@ -71,6 +79,11 @@ export function stuckReason(t: T): { bucket: Bucket; reason: string } | null {
   return null;
 }
 
+/* ‏"⏳ ממתין לתשובה" — nx-act מקבל body.owner (שם) ומשייך; "איתי" הוא כינוי
+   ‏תצוגה ולא שם במערכת, ו"ללא בעלים" אינו אדם — שניהם לא נשלחים. */
+export const waitingOwner = (t: { mine?: boolean; owner: string }) =>
+  (!t.mine && t.owner && t.owner !== "ללא בעלים") ? t.owner : undefined;
+
 export function deriveCoverage(ts: T[]): Coverage {
   const uncovered: Uncovered[] = [];
   const by = new Map<string, Handler>();
@@ -91,6 +104,9 @@ export type Snapshot = {
   /* ‏כנות בכשל: "net" = יש מפתח אבל הרשת נפלה · "key" = המפתח נדחה.
      ‏נתוני הדגמה לעולם לא מוצגים בשקט כשהחיבור בעצם נכשל. */
   err?: "net" | "key";
+  /* ‏ביקורת 3.9: כשל של מקור אחד (nx-dec / nx-dash) אינו "אין החלטות ✓" ולא
+     ‏"אין נכסים" — הדגל פר-מקור מבדיל ריק אמיתי מטעינה שנפלה (DEC_OK ב-classic). */
+  decisions_ok: boolean; dash_ok: boolean;
   k: { openTotal: number; closedToday: number };
   coverage: Coverage;
   needsYou: { id: string; kind: "החלטה" | "קריטי"; title: string; meta: string; recommendation?: string }[];
@@ -108,7 +124,7 @@ export type Snapshot = {
 };
 
 export const DEMO: Snapshot = {
-  live: false, now: "",
+  live: false, now: "", decisions_ok: true, dash_ok: true,
   k: { openTotal: DEMO_TASKS.length, closedToday: 2 },
   coverage: deriveCoverage(DEMO_TASKS),
   needsYou: [
@@ -226,10 +242,23 @@ export async function loadSnapshot(): Promise<Snapshot> {
 
     const pend: Decision[] = ((dec?.decisions || []) as any[])
       .filter(d => d.status === "pending")
-      .map(d => ({ id: d.id, title: d.title, arena: arenaName.get(d.arena_id) || "", needed_by: fmtDay(d.needed_by), recommendation: d.recommendation || undefined }));
+      .map(d => {
+        const ef = d.effect && typeof d.effect === "object" ? d.effect : null;
+        /* ‏משימה שקטה (source='task-escalation'): מזהה המשימה נוסע בתוך rationale */
+        const tm = String(d.rationale || "").match(/מזהה משימה:\s*([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+        return {
+          id: d.id, title: d.title, arena: arenaName.get(d.arena_id) || "", needed_by: fmtDay(d.needed_by), recommendation: d.recommendation || undefined,
+          source: d.source || undefined, created: fmtDay(d.created_at),
+          effect: ef ? { source_label: ef.source_label || undefined, approve: ef.approve || undefined, drop: ef.drop || undefined } : undefined,
+          alternatives: d.alternatives || undefined, cost_of_delay: d.cost_of_delay || undefined, rationale: d.rationale || undefined,
+          taskId: tm?.[1],
+        };
+      });
 
     return {
       live: true, now,
+      decisions_ok: !!dec && Array.isArray(dec.decisions),
+      dash_ok: !!dash && Array.isArray(dash.assets),
       k: { openTotal: ts.length, closedToday: (D.closed_today || []).length },
       coverage: cov,
       needsYou: [

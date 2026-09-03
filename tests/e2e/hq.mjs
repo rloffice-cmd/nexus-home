@@ -104,7 +104,7 @@ await T("עמוד המשימות חי — הבטחה מוצגת", async () => {
 await T("החלטה מה-fixture + הכרעה ⟶ decision_decide", async () => {
   await pg.getByText("החלטות", { exact: true }).last().click();
   await pg.getByText("ZZFIX האם להתקדם?").first().waitFor({ timeout: 4000 });
-  await pg.getByText("הוכרע ✓").first().click();
+  await pg.getByText("✓ קבל המלצה").first().click();
   await pg.waitForTimeout(900);
   if (!posts.some((p) => p.action === "decision_decide" && p.id === "d-zz" && p.verdict === "decided")) throw new Error("payload שגוי");
 });

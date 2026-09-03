@@ -29,6 +29,21 @@ export async function apiPost(url: string, payload: unknown) {
   /* ‏P0-1 29.8: גם הסטטוס וגם הגוף — 200 עם {error} או ok:false הוא כשל.
      ‏בלעדיו טוסט "בוצע ✓" יכול לרכוב על תשובה שמודה בכישלון. */
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || j?.error || j?.ok === false) throw new Error(j?.error || `http ${r.status}`);
+  if (!r.ok || j?.error || j?.ok === false) throw new Error(failText(j, r.status));
   return j;
+}
+
+/* ‏ביקורת 3.9: command_apply שנכשל חוזר כ-{ok:false, applied, errors:[…]} על
+   ‏200 — והמשתמש ראה "http 200", שאינו הודעה. הסיבה מ-errors[0] קודמת;
+   ‏הסטטוס הוא המוצא האחרון. */
+export function errText(e: unknown): string {
+  if (!e) return "";
+  if (typeof e === "string") return e;
+  const o = e as Record<string, unknown>;
+  return String(o.error || o.message || o.reason || JSON.stringify(e));
+}
+export function failText(j: any, status?: number): string {
+  if (j?.error) return errText(j.error);
+  if (Array.isArray(j?.errors) && j.errors.length) return errText(j.errors[0]);
+  return status ? `http ${status}` : "שגיאה לא ידועה";
 }

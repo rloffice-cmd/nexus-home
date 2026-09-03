@@ -272,6 +272,120 @@ await T("כשל רשת עם מפתח ⟶ באנר ⛔ ולא הדגמה שקטה
   await p2.close();
 });
 
+/* ── ביקורת 3.9 (איתי: "הכפתורים לא אומרים מה הם עושים ואין משוב") ──
+   ‏(א) כשל של מקור אחד אינו "אין ✓" · (ב) כרטיס החלטה מסביר מקור/✓/✖ ומוביל
+   ‏למשימה שקטה · (ג) שמות פעולות, applied=0, סיבת כשל אמיתית, טיוטה. */
+const mkPage = () => b.newPage({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+const goLive = async (p) => {
+  await p.goto(URL, { waitUntil: "domcontentloaded" });
+  await p.evaluate(() => localStorage.setItem("nx_k3", "ZZTEST"));
+  await p.reload({ waitUntil: "domcontentloaded" });
+  await p.getByText("LIVE").first().waitFor({ timeout: 6000 });
+};
+await T("nx-dec/nx-dash נופלים ⟶ 'לא נטענו' + נסה שוב, לא 'אין החלטות ✓' / 'אין נכסים'", async () => {
+  const p = await mkPage();
+  await p.route("**/functions/v1/**", (r) => r.fulfill({ json: {} }));
+  await p.route("**/functions/v1/nexus-app**", (r) => r.fulfill({ json: r.request().method() === "POST" ? { ok: true } : FIX }));
+  await p.route("**/functions/v1/nx-dec**", (r) => r.fulfill({ status: 500, json: { error: "ZZQA boom" } }));
+  await p.route("**/functions/v1/nx-dash**", (r) => r.abort());
+  await goLive(p);
+  await p.getByText("החלטות", { exact: true }).last().click();
+  await p.getByText("ההחלטות לא נטענו").first().waitFor({ timeout: 4000 });
+  let txt = await p.evaluate(() => document.body.innerText);
+  if (/אין החלטות ממתינות/.test(txt)) throw new Error("כשל nx-dec הוצג כ'אין החלטות ממתינות'");
+  await p.getByRole("button", { name: /נסה שוב/ }).first().click();
+  await p.waitForTimeout(600);
+  await p.getByText("זירות", { exact: true }).last().click();
+  await p.getByText("נכסים ·", { exact: false }).first().click();
+  await p.getByText("הנכסים לא נטענו").first().waitFor({ timeout: 4000 });
+  txt = await p.evaluate(() => document.body.innerText);
+  if (/אין נכסים בסינון הזה/.test(txt)) throw new Error("כשל nx-dash הוצג כ'אין נכסים בסינון הזה'");
+  await p.screenshot({ path: `${OUT}/15-source-fail.png` });
+  await p.close();
+});
+await T("כרטיס החלטה: מקור · ✓ = / ✖ = · חלופות · משימה שקטה ⟶ פתח את המשימה ⟶ ממתין לתשובה עם owner", async () => {
+  const p = await mkPage(); const posts = [];
+  const TID = "11111111-2222-3333-4444-555555555555";
+  const DEC2 = { decisions: [
+    { id: "d-esc", title: "ZZQA משימה שקטה — היתר עפר", arena_id: "ar1", status: "pending", needed_by: iso(1), source: "task-escalation", created_at: daysAgo(2),
+      recommendation: "לתת יעד חדש", rationale: `אין תנועה 12 ימים. מזהה משימה: ${TID}`, alternatives: "ZZQA לבטל את המשימה", cost_of_delay: "ZZQA קנס יומי",
+      effect: { source_label: "משימה שקטה", approve: "ZZQA ההחלטה תסומן כהוכרעה בלבד", drop: "ZZQA ההחלטה תרד מהתיבה" } },
+    { id: "d-learn", title: "ZZQA כלל מוצע — בריף בבוקר", arena_id: "ar1", status: "pending", source: "learning-engine",
+      effect: { source_label: "מנוע הלמידה", approve: "ZZQA הכלל ייכנס לפרומפט", drop: "ZZQA הכלל יידחה" } },
+  ] };
+  const FIX2 = { ...FIX, tasks: [...FIX.tasks, { id: TID, title: "ZZQA משימת ההיתר השקטה", arena_id: "ar1", owner_id: "p-ilona", status: "open", weight: "major", last_activity_at: daysAgo(12) }] };
+  await p.route("**/functions/v1/**", (r) => r.fulfill({ json: {} }));
+  await p.route("**/functions/v1/nexus-app**", (r) => r.fulfill({ json: r.request().method() === "POST" ? { ok: true } : FIX2 }));
+  await p.route("**/functions/v1/nx-dec**", (r) => r.fulfill({ json: DEC2 }));
+  await p.route("**/functions/v1/nx-dash**", (r) => r.fulfill({ json: DASHFIX }));
+  await p.route("**/functions/v1/nx-act**", (r) => { posts.push(JSON.parse(r.request().postData() || "{}")); return r.fulfill({ json: { ok: true } }); });
+  await goLive(p);
+  await p.getByText("החלטות", { exact: true }).last().click();
+  /* ‏הכותרת מופיעה גם בבית ("צריך ממך") — ממתינים לכפתור שקיים רק במסך ההחלטות */
+  await p.getByText("✓ אמץ כלל").first().waitFor({ timeout: 4000 });
+  const txt = await p.evaluate(() => document.body.innerText);
+  for (const s of ["משימה שקטה", "✓ = ZZQA ההחלטה תסומן", "✖ = ZZQA ההחלטה תרד", "המשימה עצמה לא משתנה מכאן", "✓ קבל המלצה", "✓ אמץ כלל", "✏️ תגובה חופשית", "מנוע הלמידה"]) if (!txt.includes(s)) throw new Error("חסר בכרטיס: " + s + " :: " + txt.replace(/\n/g, " ⏎ ").slice(0, 400));
+  if (/הוכרע ✓/.test(txt)) throw new Error("התווית הישנה 'הוכרע ✓' עדיין מוצגת");
+  await p.getByRole("button", { name: /חלופות/ }).first().click();
+  await p.getByText("ZZQA לבטל את המשימה").first().waitFor({ timeout: 2000 });
+  await p.getByText("ZZQA קנס יומי").first().waitFor({ timeout: 2000 });
+  await p.screenshot({ path: `${OUT}/16-decision-card.png` });
+  await p.getByRole("button", { name: /פתח את המשימה/ }).first().click();
+  await p.getByText("ZZQA משימת ההיתר השקטה").first().waitFor({ timeout: 4000 });
+  await p.getByText("⏳ ממתין לתשובה").first().click();
+  await p.waitForTimeout(800);
+  const w = posts.find((x) => x.action === "task_waiting");
+  if (!w || w.id !== TID || w.owner !== "אילונה קפטש") throw new Error("task_waiting בלי owner נכון: " + JSON.stringify(w));
+  await p.close();
+});
+await T("אלפא: שמות פעולות (labels · מפה) · applied=0 ⟶ 'לא בוצע דבר' · כשל עם סיבה · טיוטה", async () => {
+  const p = await mkPage();
+  await p.route("**/functions/v1/**", (r) => r.fulfill({ json: {} }));
+  await p.route("**/functions/v1/nexus-app**", (r) => {
+    const req = r.request();
+    if (req.method() !== "POST") return r.fulfill({ json: FIX });
+    const q = JSON.parse(req.postData() || "{}");
+    if (q.action === "command_preview") {
+      if (/טיוטה/.test(q.text)) return r.fulfill({ json: { ok: true, route: "draft", summary: "ZZQA", draft: { id: "dr1", to_name: "שירה", channel: "whatsapp", subject: null, body: "ZZQA היי שירה, מה עם הגבייה?" }, ops: [] } });
+      if (/מפה/.test(q.text)) return r.fulfill({ json: { ops: [{ op: "person.note", id: "p-shira", note: "ZZQA הערה" }], summary: "ZZQA בלי labels" } });
+      return r.fulfill({ json: { ops: [{ op: "task.update", id: "t1" }], labels: [{ title: "ZZQA עדכון משימה מהשרת", detail: "ZZQA יעד לחמישי" }], summary: "ZZQA עם labels" } });
+    }
+    if (q.action === "command_apply") {
+      if (q.ops?.[0]?.op === "person.note") return r.fulfill({ json: { ok: false, applied: 0, errors: [{ op: "person.note", error: "ZZQA אין הרשאה לכתוב על אדם" }] } });
+      return r.fulfill({ json: { ok: true, applied: 0, errors: [] } });
+    }
+    return r.fulfill({ json: { ok: true } });
+  });
+  await p.route("**/functions/v1/nx-dec**", (r) => r.fulfill({ json: DECFIX }));
+  await p.route("**/functions/v1/nx-dash**", (r) => r.fulfill({ json: DASHFIX }));
+  await goLive(p);
+  await p.getByText("אלפא", { exact: true }).last().click();
+  const input = p.getByPlaceholder("דבר איתי — שאלה, משימה, בקשה…");
+  await input.fill("תעדכן את המשימה"); await p.keyboard.press("Enter");
+  await p.getByText("ZZQA עדכון משימה מהשרת").first().waitFor({ timeout: 4000 });
+  await p.getByText("ZZQA יעד לחמישי").first().waitFor({ timeout: 2000 });
+  await p.getByText("אשר ובצע ✓").first().click();
+  await p.getByText("לא בוצע דבר").first().waitFor({ timeout: 4000 });
+  let txt = await p.evaluate(() => document.body.innerText);
+  if (/בוצעו 0/.test(txt)) throw new Error("'בוצעו 0 ✓' עדיין מוצג");
+  if (/task\.update/.test(txt)) throw new Error("שם פעולה גולמי מוצג במקום תווית");
+  await input.fill("מפה בלי labels"); await p.keyboard.press("Enter");
+  await p.getByText("הערה על אדם").first().waitFor({ timeout: 4000 });
+  txt = await p.evaluate(() => document.body.innerText);
+  if (/person\.note/.test(txt)) throw new Error("person.note גולמי במקום המפה העברית");
+  await p.getByText("אשר ובצע ✓").last().click();
+  await p.getByText("ZZQA אין הרשאה לכתוב על אדם").first().waitFor({ timeout: 4000 });
+  txt = await p.evaluate(() => document.body.innerText);
+  if (/http 200/.test(txt)) throw new Error("כשל הוצג כ-'http 200'");
+  await input.fill("תכין טיוטה לשירה"); await p.keyboard.press("Enter");
+  await p.getByText("הכנתי טיוטה").first().waitFor({ timeout: 4000 });
+  txt = await p.evaluate(() => document.body.innerText);
+  if (!/ZZQA היי שירה/.test(txt)) throw new Error("גוף הטיוטה לא מוצג");
+  if (/לא זיהיתי פעולה/.test(txt)) throw new Error("טיוטה הוצגה כ'לא זיהיתי פעולה'");
+  await p.screenshot({ path: `${OUT}/17-alpha-labels.png` });
+  await p.close();
+});
+
 /* ── מסך צר 360 — הכותרת לא נשברת ── */
 await T("360px: הכותרת נושמת (תת-כותרת מוסתרת)", async () => {
   const p3 = await b.newPage({ viewport: { width: 360, height: 740 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
