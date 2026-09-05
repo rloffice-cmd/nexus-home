@@ -10,7 +10,7 @@ const iso = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10
 
 // ~90 משימות בצורת v34, מפוזרות על 12 זירות ו-7 בעלים
 const ARENAS = ["השדרה / קניון בית שמש", "פסגת שלמה", "תב\"ע השדרה", "ג2", "אגרו-אנרגיה", "עפולה", "דוגמה א", "מע\"ר בית שמש", "פינוי בינוי", "דוגמה ב", "דוגמה ג", "כללי פיננסי"].map((n, i) => ({ id: "ar" + i, name: n, status: "active", goal: "יעד " + n }));
-const PEOPLE = [["p-itay", "איתי רובין"], ["p-shira", "דנה לוי"], ["p-ilona", "מיכל ברק"], ["p-aharon", "רון פרץ"], ["p-yaniv", "אלון שגב"], ["p-shayke", "גיל רם"], ["p-yoni", "עומר נחום"]].map(([id, name], i) => ({ id, name, role: i ? "צוות" : "בעלים", organization: i % 2 ? "רם ישראל" : "", phone: "05012345" + i, reliability_notes: i === 3 ? "דורש מעקב" : i === 1 ? "אמינה ויסודית" : "" }));
+const PEOPLE = [["p-itay", "איתי רובין"], ["p-shira", "דנה לוי"], ["p-ilona", "מיכל ברק"], ["p-aharon", "רון פרץ"], ["p-yaniv", "אלון שגב"], ["p-shayke", "גיל רם"], ["p-yoni", "עומר נחום"]].map(([id, name], i) => ({ id, name, role: i ? "צוות" : "בעלים", organization: i % 2 ? "רם ישראל" : "", phone: "05012345" + i, reliability_notes: i === 3 ? "מורח, דורש נדנוד" : i === 1 ? "אמינה ויסודית" : "" }));
 const W = ["critical", "major", "normal", "minor"];
 const tasks = [];
 for (let i = 0; i < 90; i++) {
@@ -232,7 +232,7 @@ await T("כרטיס אדם: לחיצה ⟶ אמינות + משימות פתוח�
   /* ‏בתוך הדיאלוג בלבד — "רון פרץ" קיים גם בצ'יפ בבית מאחורי המגירה */
   const dlg = pg.getByRole("dialog");
   await dlg.getByText("רון פרץ").first().click();
-  await dlg.getByText("דורש מעקב").first().waitFor({ timeout: 3000 });
+  await dlg.getByText("מורח, דורש נדנוד").first().waitFor({ timeout: 3000 });
   await dlg.getByText("משימות פתוחות ·").first().waitFor({ timeout: 2000 });
   await dlg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 2000 });
   await shot("11b-person-card");
