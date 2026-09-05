@@ -13,11 +13,11 @@ const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
 const iso = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const FIX = {
   now: "27.8.2026, 21:00",
-  people: [{ id: "p-itay", name: "איתי רובין" }, { id: "p-shira", name: "שירה אבן צור" }],
+  people: [{ id: "p-itay", name: "איתי רובין" }, { id: "p-shira", name: "דנה לוי" }],
   arenas: [{ id: "ar1", name: "השדרה / קניון בית שמש", status: "active", goal: "מיצוי" }],
   tasks: [
     { id: "t-mine", title: "ZZFIX משימה שלי קפואה", arena_id: "ar1", owner_id: "p-itay", status: "open", weight: "critical", due_date: iso(-5), date_source: "legacy", last_activity_at: daysAgo(20), waiting_on: null, expected_by: null },
-    { id: "t-cov", title: "ZZFIX מובטחת של שירה", arena_id: "ar1", owner_id: "p-shira", status: "waiting", weight: "major", due_date: iso(-2), date_source: "anchor", last_activity_at: daysAgo(2), waiting_on: "שירה אבן צור", expected_by: iso(3) },
+    { id: "t-cov", title: "ZZFIX מובטחת של דנה", arena_id: "ar1", owner_id: "p-shira", status: "waiting", weight: "major", due_date: iso(-2), date_source: "anchor", last_activity_at: daysAgo(2), waiting_on: "דנה לוי", expected_by: iso(3) },
   ],
   closed_today: [{ id: "c1" }],
   home_brief: null, decisions: [],
@@ -29,7 +29,7 @@ FIX.meetings = [
 ];
 FIX.preps = [{ id: "pr1", event_id: "ev1", body: "ZZFIX נקודת המפתח: לוח הזמנים", depth: "מלא" }];
 FIX.events = [{ arena_id: "ar1", description: "ZZFIX דיון בוררות נקבע", happened_at: daysAgo(1) }];
-FIX.verifications = [{ id: "v-zz", kind: "fact", subject: "ZZFIX אודם", question: "ZZFIX האם שכר הדירה 41,000?" }];
+FIX.verifications = [{ id: "v-zz", kind: "fact", subject: "ZZFIX דוגמה", question: "ZZFIX האם שכר הדירה 41,000?" }];
 FIX.lessons = [{ lesson: "ZZFIX לקח לבדיקה", created_at: daysAgo(3) }];
 const DASHFIX = { assets: [
   { id: "a1", code: "500", name: "ZZFIX חנות הסופר", arena_id: "ar1", is_rented: true, asking_rent: 41000, for_sale: true, asking_price: 9000000, area_gross: 480 },
@@ -80,13 +80,13 @@ await T("התחברות במגירה: הדבקת מפתח ⟶ LIVE בלי reload
   await pg.waitForTimeout(800);
 });
 await T("המשימה הקפואה שלי בחריגים", () => pg.getByText("ZZFIX משימה שלי קפואה").first().waitFor({ timeout: 4000 }));
-await T("המובטחת של שירה מכוסה (לא בחריגים בבית)", async () => {
+await T("המובטחת של דנה מכוסה (לא בחריגים בבית)", async () => {
   const home = pg.locator("main");
-  if (await home.getByText("ZZFIX מובטחת של שירה").count()) throw new Error("מוצגת כחריגה למרות הבטחה חיה");
+  if (await home.getByText("ZZFIX מובטחת של דנה").count()) throw new Error("מוצגת כחריגה למרות הבטחה חיה");
 });
-await T("צ'יפ אצלי + שירה בידיים", async () => {
+await T("צ'יפ אצלי + דנה בידיים", async () => {
   await pg.getByText("אצלי", { exact: false }).first().waitFor({ timeout: 3000 });
-  await pg.getByText("שירה אבן צור").first().waitFor({ timeout: 3000 });
+  await pg.getByText("דנה לוי").first().waitFor({ timeout: 3000 });
 });
 await T("בוצע בחריג ⟶ POST task_done אמיתי", async () => {
   await pg.getByText("ZZFIX משימה שלי קפואה").first().click();
@@ -98,7 +98,7 @@ await T("בוצע בחריג ⟶ POST task_done אמיתי", async () => {
 await T("עמוד המשימות חי — הבטחה מוצגת", async () => {
   await pg.getByText("משימות", { exact: true }).last().click();
   await pg.getByText("אצל אחרים", { exact: false }).first().click();
-  await pg.getByText("ZZFIX מובטחת של שירה").first().waitFor({ timeout: 4000 });
+  await pg.getByText("ZZFIX מובטחת של דנה").first().waitFor({ timeout: 4000 });
   await pg.getByText("🤝 הובטח").first().waitFor({ timeout: 3000 });
 });
 await T("החלטה מה-fixture + הכרעה ⟶ decision_decide", async () => {
@@ -158,7 +158,7 @@ await T("אנשים במגירה — מהנתונים החיים", async () => {
   await pg.getByLabel("עוד").click();
   await pg.getByText("אנשים").first().waitFor({ timeout: 3000 });
   await pg.getByText("אנשים").first().click();
-  await pg.getByText("שירה אבן צור").first().waitFor({ timeout: 4000 });
+  await pg.getByText("דנה לוי").first().waitFor({ timeout: 4000 });
   await pg.keyboard.press("Escape"); await pg.waitForTimeout(600);
 });
 await T("כותרות בולטות — פס מבטא על .sec", async () => {
