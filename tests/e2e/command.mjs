@@ -4,7 +4,7 @@
 // תכונות הן קו אדום, וכל אחת מהן נבדקת על מה שקורה *בפועל*, לא על המראה:
 // 1. שום כתיבה לפני אישור — עד ללחיצה על "בצע" אסור שתצא בקשת command_apply.
 // 2. התצוגה המקדימה מתרגמת מזהים לשמות. אם המודל בחר בעלים שגוי, איתי חייב
-//    לראות "אהרון" ולא uuid — אחרת האישור חסר משמעות.
+//    לראות "רון" ולא uuid — אחרת האישור חסר משמעות.
 // 3. כשל חלקי לא נבלע: אם פעולה אחת נכשלה, הסיבה נשארת על המסך.
 // ובנוסף: שאלה מהשרת (ops ריק) מוצגת ואינה מציעה כפתור ביצוע.
 import { chromium } from "playwright";
@@ -14,7 +14,7 @@ const step = (s) => console.log("· " + s);
 const fail = (s) => { errors.push(s); console.log("  ✗ " + s); };
 
 const ARENAS = [{ id: "a1", name: "השדרה / קניון בית שמש", status: "active" }];
-const PEOPLE = [{ id: "p-ah", name: "אהרון לואיס", role: "מנהל תפעול", reliability_notes: "אמין" }];
+const PEOPLE = [{ id: "p-ah", name: "רון פרץ", role: "מנהל תפעול", reliability_notes: "אמין" }];
 const BRIEF = "**מה צריך לעשות**\nלסגור את תנאי החידוש מול עופר לפני שהשכירות מתגלגלת אוטומטית.\n\n**איך**\n1. להוציא את ההסכם החתום מתיקיית השדרה\n2. להשוות את סעיף החידוש למה שסוכם בפגישה\n\n**מה נדרש**\nההסכם החתום. עופר גל.";
 const TASKS = [{ id: "t1", title: "לבדוק את הסכם השכירות מול עופר", status: "open",
                  urgency: "month", arena_id: "a1", owner_id: null, created_at: "2026-07-01",
@@ -30,7 +30,7 @@ const page = await ctx.newPage();
 page.on("pageerror", e => fail("pageerror: " + e.message));
 
 let posts = [];
-let previewReply = { ok: true, summary: "מעביר לאהרון, דחוף להיום, ומוסיף הערה", ops: OPS, question: null };
+let previewReply = { ok: true, summary: "מעביר לרון, דחוף להיום, ומוסיף הערה", ops: OPS, question: null };
 let applyReply = { ok: true, applied: 1, done: [{ op: "task.update", label: "משימה עודכנה" }], errors: [] };
 
 await page.route("**/functions/v1/nexus-app*", async (r) => {
@@ -81,7 +81,7 @@ step("תיבת הפקודה קיימת ומחוברת לאובייקט הנכו�
 // ── 2. תצוגה מקדימה: מה נשלח, ומה מוצג ────────────────────────────────────
 await openObj("openTask", "t1");
 posts = [];
-await page.fill("#cmdTxt", "תעביר את זה לאהרון, דחוף להיום, ותוסיף הערה שדיברתי איתו בטלפון");
+await page.fill("#cmdTxt", "תעביר את זה לרון, דחוף להיום, ותוסיף הערה שדיברתי איתו בטלפון");
 await page.click("#cmdGo");
 await page.waitForSelector("#cmdOk", { timeout: 4000 });
 
@@ -98,7 +98,7 @@ if (posts.some(p => p.action === "command_apply")) fail("בוצעה כתיבה �
 step("שום כתיבה לא יצאה לפני האישור");
 
 const shown = await page.$eval("#cmdOut", el => el.innerText);
-if (!/אהרון לואיס/.test(shown)) fail("התצוגה המקדימה לא תרגמה את מזהה הבעלים לשם: " + shown);
+if (!/רון פרץ/.test(shown)) fail("התצוגה המקדימה לא תרגמה את מזהה הבעלים לשם: " + shown);
 if (/p-ah|t1/.test(shown)) fail("מזהה גולמי דלף לתצוגה המקדימה: " + shown);
 if (!/היום/.test(shown)) fail("שינוי הדחיפות לא מוצג");
 if (!/דיברתי איתו בטלפון/.test(shown)) fail("ההערה שתיווסף אינה מוצגת");
@@ -154,16 +154,16 @@ step("שאלה מוצגת במקום ניחוש, ואין מה לאשר");
 
 // ── 7. תיקון: מתקן את ההצעה, לא מנסח מאפס ────────────────────────────────
 // כאן קל מאוד לטעות בשקט: אם התיקון נשלח בלי ההצעה הקודמת, השרת מפרש
-// "לא לאהרון, לעופר" כבקשה עצמאית ומאבד את הדחיפות וההערה שכבר סוכמו.
+// "לא לרון, לעופר" כבקשה עצמאית ומאבד את הדחיפות וההערה שכבר סוכמו.
 const FIXED = [{ op: "task.update", id: "t1", owner_id: "p-of", urgency: "today", note: "דיברתי איתו בטלפון" }];
 PEOPLE.push({ id: "p-of", name: "עופר גל", role: "יזם" });
-previewReply = { ok: true, summary: "מעביר לאהרון, דחוף להיום, ומוסיף הערה", ops: OPS, question: null };
+previewReply = { ok: true, summary: "מעביר לרון, דחוף להיום, ומוסיף הערה", ops: OPS, question: null };
 applyReply = { ok: true, applied: 1, done: [], errors: [] };
 await page.reload({ waitUntil: "domcontentloaded" });          // כדי שעופר ייכנס לנתונים
 await page.waitForSelector("nav button", { timeout: 8000 });
 await page.evaluate(() => openTask("t1"));
 await page.waitForSelector("#cmdTxt", { timeout: 4000 });
-await page.fill("#cmdTxt", "תעביר את זה לאהרון, דחוף להיום, ותוסיף הערה שדיברתי איתו בטלפון");
+await page.fill("#cmdTxt", "תעביר את זה לרון, דחוף להיום, ותוסיף הערה שדיברתי איתו בטלפון");
 await page.click("#cmdGo");
 await page.waitForSelector("#cmdFixBtn", { timeout: 4000 });
 
@@ -171,7 +171,7 @@ previewReply = { ok: true, summary: "מעביר לעופר גל, דחוף להי
 await page.click("#cmdFixBtn");
 await page.waitForSelector("#cmdFix", { timeout: 4000 });
 posts = [];
-await page.fill("#cmdFix", "לא לאהרון, לעופר — והשאר אותו דבר");
+await page.fill("#cmdFix", "לא לרון, לעופר — והשאר אותו דבר");
 await page.click("#cmdFixGo");
 await page.waitForTimeout(600);
 
@@ -189,7 +189,7 @@ step("תיקון נשלח עם ההצעה שהוא מתקן — ולא כבקש�
 
 const fixedShown = await page.$eval("#cmdOut", el => el.innerText);
 if (!/עופר גל/.test(fixedShown)) fail("ההצעה המתוקנת לא הוחלפה על המסך: " + fixedShown);
-if (/אהרון/.test(fixedShown)) fail("ההצעה הישנה נשארה על המסך לצד המתוקנת");
+if (/רון/.test(fixedShown)) fail("ההצעה הישנה נשארה על המסך לצד המתוקנת");
 posts = [];
 await page.click("#cmdOk");
 await page.waitForTimeout(400);
@@ -298,7 +298,7 @@ if (!/כמה משימות פתוחות בשדרה/.test(askShown))
   fail("השאלה לא מוצגת ליד התשובה — עם תיבה שמתנקה, איתי מאבד את ההקשר");
 
 previewReply = { ok: true, route: "ask", question_text: "ומי הכי תקוע?",
-                 answer: "אהרון לואיס — שלושה פריטים באיחור.", ops: [] };
+                 answer: "רון פרץ — שלושה פריטים באיחור.", ops: [] };
 await page.fill("#cmdTxt", "ומי הכי תקוע?");
 await page.click("#cmdGo");
 await page.waitForTimeout(600);
@@ -310,9 +310,9 @@ step("דיאלוג: שאלה, תשובה, ושאלה נוספת — בלי מח�
 
 // ב. תצוגה מקדימה של מוטציה — ההצעה על המסך והתיבה פנויה. התיקון אינו
 //    עובר כאן אלא בתיבה משלו (#cmdFix), ולכן אין מה לשמר.
-previewReply = { ok: true, summary: "מעביר לאהרון", ops: OPS, question: null };
+previewReply = { ok: true, summary: "מעביר לרון", ops: OPS, question: null };
 await openObj("openTask", "t1");
-await page.fill("#cmdTxt", "תעביר לאהרון");
+await page.fill("#cmdTxt", "תעביר לרון");
 await page.click("#cmdGo");
 await page.waitForSelector("#cmdOk", { timeout: 4000 });
 box = await page.$eval("#cmdTxt", el => el.value);

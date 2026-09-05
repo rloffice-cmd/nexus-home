@@ -3,7 +3,7 @@
    ‏בלי מפתח או בכשל רשת ⟶ הדגמה, בלי לשקר על זה.
 
    ‏העיקרון של הבית (הכרעת איתי 27.8): לא "הדבר האחד" אלא כיסוי מלא —
-   ‏כל משימה גלויה, לכל אחת מטפל (איתי · צוות · יניב) ואות-חיים
+   ‏כל משימה גלויה, לכל אחת מטפל (איתי · צוות · אלון) ואות-חיים
    ‏(תנועה או הבטחה עתידית). מה שאין לו — הוא החריג, והוא היחיד שאדום.
 
    ‏החיווט החי (27.8, לילה 2): nexus-app v34 מגיש weight · waiting_on ·
@@ -45,14 +45,14 @@ export const DEMO_TASKS: T[] = [
   { id: "m1", title: "עפולה — לסגור את המחיר המבוקש מול אוהד", arena: "עפולה", owner: "איתי", mine: true, weight: "critical", frozen: 39, overdue: true, due: "17.08", dueKind: "פנימי" },
   { id: "m2", title: "לאתר את הסכם המכר הסופי החתום — אלמליח", arena: "רובין לנדסמן", owner: "איתי", mine: true, weight: "critical", frozen: 39 },
   { id: "m3", title: "להחליף את טוקן הוואטסאפ הקבוע (System User)", arena: "תשתית", owner: "איתי", mine: true, weight: "critical", due: "20.09", dueKind: "אמת" },
-  { id: "w1", title: "התחשבנות מול NBS — הסכם השתתפות ברווחים", arena: "מע\"ר בית שמש", owner: "שירה", weight: "critical", frozen: 39, waiting: { who: "שירה", promised: "17.08", broken: true } },
-  { id: "w2", title: "נתוני גבייה — חובות עבר להסכם הפשרה", arena: "השדרה", owner: "שירה", weight: "major", overdue: true, due: "17.08", dueKind: "פנימי", waiting: { who: "שירה" } },
-  { id: "w3", title: "היתר עבודות עפר — להוציא בהקדם", arena: "פסגת שלמה", owner: "אילונה", weight: "major", overdue: true, due: "19.08", dueKind: "אמת", waiting: { who: "אילונה", promised: "28.08" } },
-  { id: "w4", title: "מכרז קבלן עבודות עפר — הריסה ויסודות", arena: "פסגת שלמה", owner: "אילונה", weight: "major", due: "19.08", dueKind: "פנימי", overdue: true, waiting: { who: "אילונה" } },
-  { id: "w5", title: "טבלת ריכוז הלוואות מכל החברות", arena: "פיננסי", owner: "שירה", weight: "normal", frozen: 8, waiting: { who: "שירה", promised: "27.08" } },
-  { id: "w6", title: "מסירה לוועדה המקומית לפני היציאה", arena: "תב\"ע השדרה", owner: "יניב", weight: "major", waiting: { who: "דובי קרן", promised: "01.09" } },
-  { id: "n1", title: "השכרת דוכנים בכניסה לקניון", arena: "השדרה", owner: "אהרון", weight: "normal", frozen: 17, waiting: { who: "אהרון" } },
-  { id: "n2", title: "ג2 — השלמת חוזים על יתרת הנכסים", arena: "ג2", owner: "שייקה", weight: "normal", due: "31.08", dueKind: "אמת", waiting: { who: "שייקה", promised: "31.08" } },
+  { id: "w1", title: "התחשבנות מול NBS — הסכם השתתפות ברווחים", arena: "מע\"ר בית שמש", owner: "דנה", weight: "critical", frozen: 39, waiting: { who: "דנה", promised: "17.08", broken: true } },
+  { id: "w2", title: "נתוני גבייה — חובות עבר להסכם הפשרה", arena: "השדרה", owner: "דנה", weight: "major", overdue: true, due: "17.08", dueKind: "פנימי", waiting: { who: "דנה" } },
+  { id: "w3", title: "היתר עבודות עפר — להוציא בהקדם", arena: "פסגת שלמה", owner: "מיכל", weight: "major", overdue: true, due: "19.08", dueKind: "אמת", waiting: { who: "מיכל", promised: "28.08" } },
+  { id: "w4", title: "מכרז קבלן עבודות עפר — הריסה ויסודות", arena: "פסגת שלמה", owner: "מיכל", weight: "major", due: "19.08", dueKind: "פנימי", overdue: true, waiting: { who: "מיכל" } },
+  { id: "w5", title: "טבלת ריכוז הלוואות מכל החברות", arena: "פיננסי", owner: "דנה", weight: "normal", frozen: 8, waiting: { who: "דנה", promised: "27.08" } },
+  { id: "w6", title: "מסירה לוועדה המקומית לפני היציאה", arena: "תב\"ע השדרה", owner: "אלון", weight: "major", waiting: { who: "דובי קרן", promised: "01.09" } },
+  { id: "n1", title: "השכרת דוכנים בכניסה לקניון", arena: "השדרה", owner: "רון", weight: "normal", frozen: 17, waiting: { who: "רון" } },
+  { id: "n2", title: "ג2 — השלמת חוזים על יתרת הנכסים", arena: "ג2", owner: "גיל", weight: "normal", due: "31.08", dueKind: "אמת", waiting: { who: "גיל", promised: "31.08" } },
 ];
 
 /* ── כיסוי: מי מחזיק מה, ומה נשאר בלי אות-חיים ── */
@@ -150,27 +150,27 @@ export const DEMO: Snapshot = {
   assets: [
     { id: "as1", code: "60", name: "משרדי הנהלה — קומה 2-", arena: "השדרה", rented: true, rent: 12000, forSale: false, valuation: 2400000, area: 114 },
     { id: "as2", code: "500", name: "חנות הסופר — קומה 0", arena: "מע\"ר בית שמש", rented: true, rent: 41000, forSale: true, price: 9000000, area: 480 },
-    { id: "as3", name: "מגרש 227 — אודם", arena: "אודם", rented: false, forSale: false, valuation: 1800000 },
+    { id: "as3", name: "מגרש 12 — דוגמה", arena: "דוגמה", rented: false, forSale: false, valuation: 1800000 },
   ],
   events: [
     { arena: "השדרה", text: "דיון בוררות נקבע", when: "אתמול" },
     { arena: "פסגת שלמה", text: "הצעת מחיר לקבלן הריסות התקבלה", when: "לפני יומיים" },
   ],
   people: [
-    { id: "p1", name: "שירה אבן צור", role: "כספים", organization: "רם ישראל", rel: "good", reliabilityNotes: "אמינה ויסודית — עומדת בהבטחות" },
-    { id: "p2", name: "אילונה קפטש", role: "פרויקטים" },
-    { id: "p3", name: "יניב מידן", role: "שותף" },
+    { id: "p1", name: "דנה לוי", role: "כספים", organization: "רם ישראל", rel: "good", reliabilityNotes: "אמינה ויסודית — עומדת בהבטחות" },
+    { id: "p2", name: "מיכל ברק", role: "פרויקטים" },
+    { id: "p3", name: "אלון שגב", role: "שותף" },
   ],
   lessons: [
     { text: "ג זה ג2 זה דזירוב", when: "29.07" },
     { text: "איכות קודמת לעלות — מוכן לשלם כשזה מוצדק", when: "01.08" },
   ],
   verifications: [
-    { id: "v1", kind: "contradiction", subject: "ODEM-227", question: "אי-התאמה בת.ז — שומת קושניר משייכת 034543678 לאיתי, הפוך מהסכם השכירות" },
+    { id: "v1", kind: "contradiction", subject: "DEMO-12", question: "אי-התאמה בת.ז — השומה משייכת 000000000 לאיתי, הפוך מהסכם השכירות" },
   ],
   loans: [
     { id: "l1", lender: "בנק לאומי", principal: 4200000, interest: "P+1.2%", collateral: "השדרה — קומה 2-" },
-    { id: "l2", lender: "מלווה פרטי", principal: 950000, interest: "7%", collateral: "מגרש 227" },
+    { id: "l2", lender: "מלווה פרטי", principal: 950000, interest: "7%", collateral: "מגרש 12" },
   ],
   alpha: {
     shiftsToday: 1,
@@ -179,7 +179,7 @@ export const DEMO: Snapshot = {
       { id: "am2", title: "הסלמה לאחראי — פריט תקוע מגיע למטפל בזירה", status: "active", expires: "01.10" },
     ],
     actions: [
-      { id: "aa1", body: "• יניב — \"התחשבנות שכ\"ט אלי מור\" · באיחור 7 ימים · 2 תזכורות, אפס תשובות", outcome: "delivered", when: "אתמול" },
+      { id: "aa1", body: "• אלון — \"התחשבנות שכ\"ט אלי מור\" · באיחור 7 ימים · 2 תזכורות, אפס תשובות", outcome: "delivered", when: "אתמול" },
     ],
   },
 };

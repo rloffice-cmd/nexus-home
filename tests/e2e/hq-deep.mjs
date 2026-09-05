@@ -9,8 +9,8 @@ const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString();
 const iso = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 
 // ~90 משימות בצורת v34, מפוזרות על 12 זירות ו-7 בעלים
-const ARENAS = ["השדרה / קניון בית שמש", "פסגת שלמה", "תב\"ע השדרה", "ג2", "אגרו-אנרגיה", "עפולה", "אודם", "מע\"ר בית שמש", "פינוי בינוי", "חמד", "משק 85", "כללי פיננסי"].map((n, i) => ({ id: "ar" + i, name: n, status: "active", goal: "יעד " + n }));
-const PEOPLE = [["p-itay", "איתי רובין"], ["p-shira", "שירה אבן צור"], ["p-ilona", "אילונה קפטש"], ["p-aharon", "אהרון לואיס"], ["p-yaniv", "יניב מידן"], ["p-shayke", "שייקה לוין"], ["p-yoni", "יוני גורפינקל"]].map(([id, name], i) => ({ id, name, role: i ? "צוות" : "בעלים", organization: i % 2 ? "רם ישראל" : "", phone: "05012345" + i, reliability_notes: i === 3 ? "מורח, דורש נדנוד" : i === 1 ? "אמינה ויסודית" : "" }));
+const ARENAS = ["השדרה / קניון בית שמש", "פסגת שלמה", "תב\"ע השדרה", "ג2", "אגרו-אנרגיה", "עפולה", "דוגמה א", "מע\"ר בית שמש", "פינוי בינוי", "דוגמה ב", "דוגמה ג", "כללי פיננסי"].map((n, i) => ({ id: "ar" + i, name: n, status: "active", goal: "יעד " + n }));
+const PEOPLE = [["p-itay", "איתי רובין"], ["p-shira", "דנה לוי"], ["p-ilona", "מיכל ברק"], ["p-aharon", "רון פרץ"], ["p-yaniv", "אלון שגב"], ["p-shayke", "גיל רם"], ["p-yoni", "עומר נחום"]].map(([id, name], i) => ({ id, name, role: i ? "צוות" : "בעלים", organization: i % 2 ? "רם ישראל" : "", phone: "05012345" + i, reliability_notes: i === 3 ? "מורח, דורש נדנוד" : i === 1 ? "אמינה ויסודית" : "" }));
 const W = ["critical", "major", "normal", "minor"];
 const tasks = [];
 for (let i = 0; i < 90; i++) {
@@ -34,7 +34,7 @@ const FIX = {
   preps: [{ id: "pr1", event_id: "ev1", body: "ZZQA נקודת המפתח: לוח הזמנים", depth: "מלא" }],
   events: [{ arena_id: "ar0", description: "ZZQA דיון בוררות נקבע", happened_at: daysAgo(1) }],
   lessons: [{ lesson: "ZZQA לקח ראשון", created_at: daysAgo(3) }],
-  verifications: [{ id: "v-zz", kind: "fact", subject: "ZZQA אודם", question: "ZZQA האם שכר הדירה 41,000?" }],
+  verifications: [{ id: "v-zz", kind: "fact", subject: "ZZQA דוגמה", question: "ZZQA האם שכר הדירה 41,000?" }],
   home_brief: null, decisions: [],
   alpha: {
     shifts_today: 1,
@@ -42,7 +42,7 @@ const FIX = {
       { id: "am-p", title: "ZZQA מנדט מוצע — רדיפת נתיב קריטי", goal: "לרדוף פריטים על הנתיב הקריטי גם בלי איחור", status: "proposed", expires_at: iso(30) },
       { id: "am-a", title: "ZZQA מנדט פעיל — רדיפת איחורים", goal: "", status: "active", expires_at: iso(44) },
     ],
-    recent_actions: [{ id: "aa1", body: "ZZQA • יניב — תזכורת שנייה על התחשבנות", action: "follow_up", outcome: "delivered", sent_at: daysAgo(1) }],
+    recent_actions: [{ id: "aa1", body: "ZZQA • אלון — תזכורת שנייה על התחשבנות", action: "follow_up", outcome: "delivered", sent_at: daysAgo(1) }],
   },
 };
 const DECFIX = { decisions: [{ id: "d-zz", title: "ZZQA האם להתקדם?", arena_id: "ar0", status: "pending", needed_by: iso(2), recommendation: "כן." }] };
@@ -56,8 +56,8 @@ const DASHFIX = {
 const REPFIX = {
   ok: true, mode: "owner", name: "איתי",
   pulse: { pending: 18, stuck: 4, silent: 12 },
-  silent: [{ title: "ZZQA גנרטור שבת", person: "אהרון לואיס", status: "waiting", last_report_at: daysAgo(32) }],
-  reports: [{ at: daysAgo(1), note: "ZZQA מוטי מכין נתוני גבייה", title: "ZZQA להעביר נתוני גבייה", person: "שירה אבן צור", status: "open" }],
+  silent: [{ title: "ZZQA גנרטור שבת", person: "רון פרץ", status: "waiting", last_report_at: daysAgo(32) }],
+  reports: [{ at: daysAgo(1), note: "ZZQA מוטי מכין נתוני גבייה", title: "ZZQA להעביר נתוני גבייה", person: "דנה לוי", status: "open" }],
   team: [],
 };
 
@@ -110,14 +110,14 @@ await T("בית נטען על 90 משימות · LIVE", async () => {
 });
 await T("צ'יפ מחזיק בבית ⟶ משימות מסוננות על האדם", async () => {
   try {
-    await pg.getByLabel("המשימות של אהרון לואיס").click();
-    await pg.getByText("אצל אהרון לואיס").first().waitFor({ timeout: 3000 });
+    await pg.getByLabel("המשימות של רון פרץ").click();
+    await pg.getByText("אצל רון פרץ").first().waitFor({ timeout: 3000 });
     await pg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 3000 });
     await pg.waitForTimeout(1000); /* ‏כרטיסים יוצאים נשארים ב-DOM עד סוף האנימציה */
     if (await pg.getByText("ZZQA משימה 0 ", { exact: false }).count()) throw new Error("משימה של אדם אחר מוצגת בסינון");
-    await pg.getByText("👤 אהרון לואיס").first().click();
+    await pg.getByText("👤 רון פרץ").first().click();
     await pg.waitForTimeout(600);
-    if (await pg.getByText("אצל אהרון לואיס").count()) throw new Error("הסינון לא ירד ב-✕");
+    if (await pg.getByText("אצל רון פרץ").count()) throw new Error("הסינון לא ירד ב-✕");
   } finally {
     await pg.getByText("בית", { exact: true }).last().click();
     await pg.waitForTimeout(800);
@@ -229,9 +229,9 @@ await T("אנשים — צ'יפ מורח/אמין", async () => {
   await shot("11-people");
 });
 await T("כרטיס אדם: לחיצה ⟶ אמינות + משימות פתוחות + חזרה", async () => {
-  /* ‏בתוך הדיאלוג בלבד — "אהרון לואיס" קיים גם בצ'יפ בבית מאחורי המגירה */
+  /* ‏בתוך הדיאלוג בלבד — "רון פרץ" קיים גם בצ'יפ בבית מאחורי המגירה */
   const dlg = pg.getByRole("dialog");
-  await dlg.getByText("אהרון לואיס").first().click();
+  await dlg.getByText("רון פרץ").first().click();
   await dlg.getByText("מורח, דורש נדנוד").first().waitFor({ timeout: 3000 });
   await dlg.getByText("משימות פתוחות ·").first().waitFor({ timeout: 2000 });
   await dlg.getByText("ZZQA משימה 3", { exact: false }).first().waitFor({ timeout: 2000 });
@@ -335,7 +335,7 @@ await T("כרטיס החלטה: מקור · ✓ = / ✖ = · חלופות · מ�
   await p.getByText("⏳ ממתין לתשובה").first().click();
   await p.waitForTimeout(800);
   const w = posts.find((x) => x.action === "task_waiting");
-  if (!w || w.id !== TID || w.owner !== "אילונה קפטש") throw new Error("task_waiting בלי owner נכון: " + JSON.stringify(w));
+  if (!w || w.id !== TID || w.owner !== "מיכל ברק") throw new Error("task_waiting בלי owner נכון: " + JSON.stringify(w));
   await p.close();
 });
 await T("אלפא: שמות פעולות (labels · מפה) · applied=0 ⟶ 'לא בוצע דבר' · כשל עם סיבה · טיוטה", async () => {
@@ -346,7 +346,7 @@ await T("אלפא: שמות פעולות (labels · מפה) · applied=0 ⟶ 'ל
     if (req.method() !== "POST") return r.fulfill({ json: FIX });
     const q = JSON.parse(req.postData() || "{}");
     if (q.action === "command_preview") {
-      if (/טיוטה/.test(q.text)) return r.fulfill({ json: { ok: true, route: "draft", summary: "ZZQA", draft: { id: "dr1", to_name: "שירה", channel: "whatsapp", subject: null, body: "ZZQA היי שירה, מה עם הגבייה?" }, ops: [] } });
+      if (/טיוטה/.test(q.text)) return r.fulfill({ json: { ok: true, route: "draft", summary: "ZZQA", draft: { id: "dr1", to_name: "דנה", channel: "whatsapp", subject: null, body: "ZZQA היי דנה, מה עם הגבייה?" }, ops: [] } });
       if (/מפה/.test(q.text)) return r.fulfill({ json: { ops: [{ op: "person.note", id: "p-shira", note: "ZZQA הערה" }], summary: "ZZQA בלי labels" } });
       return r.fulfill({ json: { ops: [{ op: "task.update", id: "t1" }], labels: [{ title: "ZZQA עדכון משימה מהשרת", detail: "ZZQA יעד לחמישי" }], summary: "ZZQA עם labels" } });
     }
@@ -377,10 +377,10 @@ await T("אלפא: שמות פעולות (labels · מפה) · applied=0 ⟶ 'ל
   await p.getByText("ZZQA אין הרשאה לכתוב על אדם").first().waitFor({ timeout: 4000 });
   txt = await p.evaluate(() => document.body.innerText);
   if (/http 200/.test(txt)) throw new Error("כשל הוצג כ-'http 200'");
-  await input.fill("תכין טיוטה לשירה"); await p.keyboard.press("Enter");
+  await input.fill("תכין טיוטה לדנה"); await p.keyboard.press("Enter");
   await p.getByText("הכנתי טיוטה").first().waitFor({ timeout: 4000 });
   txt = await p.evaluate(() => document.body.innerText);
-  if (!/ZZQA היי שירה/.test(txt)) throw new Error("גוף הטיוטה לא מוצג");
+  if (!/ZZQA היי דנה/.test(txt)) throw new Error("גוף הטיוטה לא מוצג");
   if (/לא זיהיתי פעולה/.test(txt)) throw new Error("טיוטה הוצגה כ'לא זיהיתי פעולה'");
   await p.screenshot({ path: `${OUT}/17-alpha-labels.png` });
   await p.close();

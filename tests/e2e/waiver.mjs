@@ -25,7 +25,7 @@ const base = { all_day: false, arena: null, arena_id: null, source: "google",
 const MEETINGS = [
   { ...base, id: "ser_20260728T051000Z", title: "זעפן", starts_at: iso(-26), ends_at: iso(-25),
     day_offset: -1, is_recurring: true, debrief_waived: false },
-  { ...base, id: "one1", title: "גורפינקל אצלנו", starts_at: iso(-4), ends_at: iso(-3),
+  { ...base, id: "one1", title: "פגישה אצלנו", starts_at: iso(-4), ends_at: iso(-3),
     day_offset: 0, is_recurring: false, debrief_waived: false },
   { ...base, id: "wv1", title: "חדר כושר", starts_at: iso(-28), ends_at: iso(-27),
     day_offset: -1, is_recurring: true, debrief_waived: true, waiver_scope: "series" },
