@@ -122,6 +122,32 @@ const secrets = [/sk-ant-[\w-]{20,}/, /sbp_[0-9a-f]{40}/, /\d{9,10}:AA[\w-]{30,}
 const leaked = secrets.filter(re => re.test(html));
 check("אין סודות בקוד הלקוח", leaked.length === 0, `${leaked.length} תבניות נמצאו`);
 
+
+// ---------------------------------------------------------------------------
+// arena.html — אפליקציית זירה (18.9): דף אחד בלי build. אותן שלוש מלכודות
+// כמו classic: תחביר · מזהה שהקוד מבקש ואינו קיים ב-DOM · פעולה שנשלחת
+// ל-nexus-arena ואינה מוכרת לו.
+// ---------------------------------------------------------------------------
+{
+  const arena = readFileSync(join(root, "arena.html"), "utf8");
+  const ascripts = [...arena.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+  check("arena: סקריפט אחד", ascripts.length === 1, `נמצאו ${ascripts.length}`);
+  const ajs = ascripts.join("\n");
+  try { new vm.Script(ajs); check("arena: תחביר JavaScript תקין", true); }
+  catch (e) { check("arena: תחביר JavaScript תקין", false, e.message); }
+  const ids = new Set([...arena.matchAll(/\bid="([\w-]+)"/g)].map(m => m[1]));
+  const used = [...new Set([...ajs.matchAll(/\$\("([\w-]+)"\)/g)].map(m => m[1]))];
+  const gone = used.filter(u => !ids.has(u));
+  check(`arena: כל ${used.length} המזהים שהקוד מבקש קיימים ב-DOM`, gone.length === 0, "חסרים: " + gone.join(", "));
+  const ARENA_ACTIONS = new Set(["board", "search", "doc", "ask", "note"]);
+  const acts = [...new Set([...ajs.matchAll(/\ba:\s*"([a-z_]+)"/g)].map(m => m[1]))];
+  const unknownActs = acts.filter(a => !ARENA_ACTIONS.has(a));
+  check(`arena: כל ${acts.length} הפעולות מוכרות ל-nexus-arena`, unknownActs.length === 0, "לא מוכרות: " + unknownActs.join(", "));
+  check("arena: הטוקן עובר ב-header ולא בכתובת הבקשה", /"x-nexus-key":\s*TOKEN/.test(ajs) && !/[?&]t=\$\{|[?&]k=/.test(ajs));
+  check("arena: ?t= מנוקה מהכתובת אחרי שמירה (חוק 16)", /history\.replaceState/.test(ajs));
+  check("arena: אין ספריות חיצוניות מלבד גופנים", ![...arena.matchAll(/<script[^>]+src=/g)].length);
+}
+
 console.log(ok.map(s => "  ✓ " + s).join("\n"));
 if (fails.length) { console.error("\nנכשל:\n" + fails.map(s => "  ✗ " + s).join("\n")); process.exit(1); }
 console.log(`\n${ok.length} בדיקות עברו.`);
