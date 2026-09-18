@@ -203,7 +203,9 @@ const params = new URLSearchParams(location.search);
 let TOKEN = "";
 try {
   if (params.get("t")) { localStorage.setItem("nx_arena_token", params.get("t")); }
-  TOKEN = localStorage.getItem("nx_arena_token") || "";
+  /* 18.9: כניסה מ-HQ — המפתח של האפליקציה הראשית (nx_k3, אותו origin) פותח
+     את השער כבעלים (nexus_arena_gate מכיר את nexus_app_key). לא עובר בכתובת. */
+  TOKEN = localStorage.getItem("nx_arena_token") || localStorage.getItem("nx_k3") || "";
 } catch (_) { TOKEN = params.get("t") || ""; }
 let ARENA = params.get("arena") || "";
 try {

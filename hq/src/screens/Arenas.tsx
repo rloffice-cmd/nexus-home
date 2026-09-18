@@ -215,6 +215,12 @@ export default function Arenas({ D, focus, onFocused, onTasks, onChanged, onRetr
                     ▤ כל המשימות של הזירה ‹
                   </motion.button>
                 )}
+                {/* ‏18.9: הדלת לאפליקציית הזירה (arena.html) — יעדים · עסקאות · ידע.
+                    ‏המפתח לא עובר בכתובת (חוק 16): arena.html קורא nx_k3 מאותו origin. */}
+                <a href={`./arena.html?arena=${encodeURIComponent(open.id)}`} data-testid="arena-app-link"
+                  style={{ display: "block", width: "100%", marginTop: 10, borderRadius: 13, padding: "12px 0", fontSize: 13, fontWeight: 800, textAlign: "center", color: "var(--acc-ink)", background: "linear-gradient(150deg,var(--acc-hi),var(--acc) 55%,var(--acc-lo))", textDecoration: "none", WebkitTapHighlightColor: "transparent" }}>
+                  ◈ אפליקציית הזירה — יעדים · עסקאות · ידע ‹
+                </a>
                 <CmdBox kind="arena" id={open.id} onDone={() => { setOpen(null); onChanged(); }}
                   placeholder="למשל: פתח משימה לשירה — לרכז את חובות העבר" />
               </div>

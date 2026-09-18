@@ -193,7 +193,8 @@ export default function Home({ D, onAsk, think, onAct, onArena, onOwner, onChang
       <motion.div {...rise(6)}>
         <div className="sec">מצב הזירות</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {D.arenas.map((a) => (
+          {/* ‏בבית — רק זירות שיש בהן משימה פתוחה; הרשימה המלאה במסך הזירות */}
+          {D.arenas.filter((a) => a.open > 0).map((a) => (
             <motion.button key={a.id} whileTap={{ scale: 0.95 }} onClick={() => onArena(a.name)} className="glass"
               aria-label={`תיק זירה ${a.name}`}
               style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 15px", borderRadius: 22, fontSize: 12.5, fontWeight: 700, color: "var(--ink2)", WebkitTapHighlightColor: "transparent" }}>

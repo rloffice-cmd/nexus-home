@@ -266,12 +266,16 @@ export async function loadSnapshot(): Promise<Snapshot> {
         ...ts.filter(t => t.mine && t.weight === "critical").slice(0, 4)
           .map(t => ({ id: t.id, kind: "קריטי" as const, title: t.title, meta: [t.arena, t.due ? `יעד ${t.due}` : ""].filter(Boolean).join(" · ") })),
       ],
+      /* ‏18.9: כל זירה פעילה מוצגת. עד אז — רק זירות עם משימות פתוחות, ורק 10
+         ‏הראשונות לפי מספרן; זירת האנרגיה (משימה פתוחה אחת, 8 יעדים ואפליקציה
+         ‏משלה) נפלה מהרשימה ואיתי דיווח "נעלמה". רשימת זירות אינה דירוג משימות:
+         ‏המיון לפי פתוחות נשאר, התקרה והסינון לא. */
       arenas: (D.arenas || []).filter((a: any) => a.status === "active").map((a: any) => {
         const nm = arenaName.get(a.id) || a.name;
         const open = ts.filter(t => t.arena === nm).length;
-        return { id: a.id, name: nm, note: a.goal || "", open,
+        return { id: a.id, name: nm, note: a.goal || a.summary || "", open,
           state: (stuckArena.has(nm) ? "crit" : overdueArena.has(nm) ? "warn" : "ok") as Arena["state"] };
-      }).filter((a: Arena) => a.open > 0).sort((a: Arena, b: Arena) => b.open - a.open).slice(0, 10),
+      }).sort((a: Arena, b: Arena) => b.open - a.open || a.name.localeCompare(b.name, "he")),
       decisions: pend,
       tasks: ts,
       meetings: ((D.meetings || []) as any[])
