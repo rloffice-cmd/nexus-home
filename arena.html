@@ -92,6 +92,36 @@ textarea:focus,input:focus{border-color:var(--accent)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (prefers-reduced-motion:reduce){.spinner{animation:none}.toast{transition:none}}
 @media (min-width:700px){.kpis{grid-template-columns:repeat(7,1fr)}}
+/* ---------- v2: plan · deals · sales ---------- */
+.bar{height:8px;background:var(--bg2);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--accent2);width:0}
+.bar.low i{background:var(--amber)}.bar.zero i{background:var(--line2)}
+.tl{position:relative;padding-inline-start:18px;border-inline-start:2px solid var(--line2);margin:6px 4px}
+.tl .item{position:relative;margin-bottom:8px}
+.tl .item::before{content:"";position:absolute;inset-inline-start:-25px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.tl .item.done::before{background:var(--green)}.tl .item.late::before{background:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.field label{font-size:12px;color:var(--mute)}
+.field input,.field select,.field textarea{width:100%;background:var(--bg2);color:var(--ink);border:1px solid var(--line2);border-radius:10px;padding:9px 11px;font:inherit;outline:none}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{min-height:70px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2);cursor:pointer;background:var(--bg2)}
+.chip.on{background:var(--accent);color:#1a1405;border-color:var(--accent)}
+.verdict{display:inline-block;padding:4px 10px;border-radius:8px;font-weight:800;font-size:13px}
+.verdict.green{background:#12291f;color:var(--green)}.verdict.amber{background:#2a2312;color:var(--amber)}
+.verdict.red{background:#2a1515;color:var(--red)}.verdict.incomplete,.verdict.na{background:var(--bg2);color:var(--mute)}
+.num{font-family:var(--serif);font-size:18px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.stat span{display:block;font-size:11px;color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+details{border:1px solid var(--line);border-radius:12px;background:var(--bg2);padding:8px 12px;margin-top:8px}
+summary{cursor:pointer;font-weight:700;list-style:none}
+summary::-webkit-details-marker{display:none}
+details .d{color:var(--ink2);font-size:14px;margin-top:6px;white-space:pre-wrap}
+.sheet .body.form{white-space:normal}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -103,6 +133,9 @@ textarea:focus,input:focus{border-color:var(--accent)}
   </div>
   <nav class="tabs" id="tabs" aria-label="מסכים">
     <button class="tab on" data-tab="board">לוח</button>
+    <button class="tab" data-tab="plan">תוכנית<span class="n" id="nTargets"></span></button>
+    <button class="tab" data-tab="deals">עסקאות<span class="n" id="nDeals"></span></button>
+    <button class="tab" data-tab="sales">משווק</button>
     <button class="tab" data-tab="docs">מסמכים<span class="n" id="nDocs"></span></button>
     <button class="tab" data-tab="know">ידע<span class="n" id="nFacts"></span></button>
     <button class="tab" data-tab="ask">שאל</button>
@@ -112,6 +145,9 @@ textarea:focus,input:focus{border-color:var(--accent)}
 <main>
   <div id="notice"></div>
   <section id="tab-board"></section>
+  <section id="tab-plan" class="hide"></section>
+  <section id="tab-deals" class="hide"></section>
+  <section id="tab-sales" class="hide"></section>
   <section id="tab-docs" class="hide"></section>
   <section id="tab-know" class="hide"></section>
   <section id="tab-ask" class="hide">
@@ -139,6 +175,18 @@ textarea:focus,input:focus{border-color:var(--accent)}
   <div class="sheet">
     <header><h3 id="docTitle">מסמך</h3><button class="iconbtn" id="docClose" aria-label="סגירה">✕</button></header>
     <div class="body" id="docBody"></div>
+  </div>
+</div>
+<div class="modal" id="dealModal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <header><h3 id="dealTitle">עסקה</h3><button class="iconbtn" id="dealClose" aria-label="סגירה">✕</button></header>
+    <div class="body form" id="dealBody"></div>
+  </div>
+</div>
+<div class="modal" id="textModal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <header><h3 id="textTitle">טקסט</h3><button class="iconbtn" id="textCopy" title="העתקה" aria-label="העתקה">⧉</button><button class="iconbtn" id="textClose" aria-label="סגירה">✕</button></header>
+    <div class="body" id="textBody"></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -196,6 +244,9 @@ function explain(e){
 
 /* ---------- state ---------- */
 let B = null;            // הלוח
+let P = null, D = null, PB = null;   // תוכנית · עסקאות · פלייבוק (נטענים בכניסה לטאב)
+let DEAL = null;         // העסקה שבטופס
+let OFFER = null;        // תוצאת מחשבון ההצעה האחרונה
 const HISTORY = [];      // זוגות {q,a} לשאלות
 let DOCFILTER = "";
 
@@ -203,7 +254,10 @@ let DOCFILTER = "";
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
 function showTab(name){
   document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on", b.dataset.tab===name));
-  ["board","docs","know","ask","note"].forEach(t=>$("tab-"+t).classList.toggle("hide", t!==name));
+  ["board","plan","deals","sales","docs","know","ask","note"].forEach(t=>$("tab-"+t).classList.toggle("hide", t!==name));
+  if(name==="plan" && !P) loadPlan();
+  if(name==="deals" && !D) loadDeals();
+  if(name==="sales" && !PB) loadPlaybook();
   try{ sessionStorage.setItem("nx_arena_tab", name); }catch(_){}
 }
 
@@ -225,6 +279,8 @@ function renderBoard(){
   $("who").className = "badge " + (B.me?.role||"");
   $("nDocs").textContent = c.docs!=null ? "·"+c.docs : "";
   $("nFacts").textContent = c.facts!=null ? "·"+c.facts : "";
+  $("nDeals").textContent = c.deals ? "·"+c.deals : "";
+  $("nTargets").textContent = c.targets ? "·"+c.targets : "";
   document.title = "Nexus · " + (a.name||"זירה");
 
   const kp = `<div class="kpis">
@@ -237,6 +293,8 @@ function renderBoard(){
     <div class="kpi"><b>${c.ideas||0}</b><span>רעיונות</span></div>
   </div>`;
 
+  const hm = c.hidden_mentions ? Object.values(c.hidden_mentions).reduce((x,y)=>x+(y||0),0) : 0;
+  const hidden = hm ? `<div class="err">🧹 ${hm} פריטים בזירה מזכירים זירה מוסתרת (${esc(JSON.stringify(c.hidden_mentions))}) — לשותף הם אינם מוגשים; לנקות במקור.</div>` : "";
   const goal = a.goal ? `<div class="card"><h2>היעד</h2><div class="goal">${esc(a.goal)}</div></div>` : "";
   const objs = (B.objectives||[]).length ? `<div class="card"><h2>יעדים <span class="n">${B.objectives.length}</span></h2><div class="list">${
     B.objectives.map(o=>`<div class="item"><div class="t">${esc(o.title)}</div>${o.next_step?`<div class="d">→ ${esc(o.next_step)}${o.next_step_due?` <span class="muted">(עד ${esc(fmtDate(o.next_step_due))})</span>`:""}</div>`:""}</div>`).join("")
@@ -262,7 +320,7 @@ function renderBoard(){
   }</div></div>` : "";
   const summary = a.summary ? `<div class="card"><h2>תמונת מצב</h2><div class="goal small">${esc(a.summary)}</div></div>` : "";
 
-  $("tab-board").innerHTML = kp + goal + objs + tasks + kds + decs + coms + ideas + ppl + summary + evs;
+  $("tab-board").innerHTML = kp + hidden + goal + objs + tasks + kds + decs + coms + ideas + ppl + summary + evs;
 }
 
 /* ---------- render: docs ---------- */
@@ -358,6 +416,235 @@ async function doNote(){
 }
 $("noteBtn").addEventListener("click", doNote);
 
+/* ---------- v2: vocab + formats ---------- */
+const KIND = {pv:"סולארי (PV)", bess:"אגירה (BESS)", pv_bess:"סולארי + אגירה", dc_modular:"דאטה-סנטר מכולתי", bridge_power:"Bridge Power (השכרה)", backup_bess:"אגירה לגיבוי (דמי שירות)", land_partnership:"שותפות קרקע", other:"אחר"};
+const STAGE = {lead:"ליד", screening:"סינון", negotiation:"מו\"מ", licensing:"רישוי", rtb:"מוכן להקמה", construction:"בהקמה", operating:"פועל", dead:"ירד"};
+const EXCL = {none:"בלי בלעדיות", verbal:"בע\"פ", loi:"LOI", option:"אופציה", signed:"חתום"};
+const SEG = {commercial:"מסחרי", industrial:"תעשייה", institution:"מוסד", residential:"מגורים", municipal:"רשות", telecom:"טלקום", hosting:"hosting / ISP", other:"אחר"};
+const KIND_INPUTS = {
+  pv:[["kwp","הספק PV (kWp)"],["tariff_ils_kwh","תעריף/PPA ₪ לקוט\"ש (ברירת מחדל 0.42)"],["capex_per_kwp","עלות הקמה ₪/kWp (3,200)"]],
+  bess:[["energy_mwh","קיבולת (MWh)"],["power_mw","הספק (MW)"],["spread_ils_kwh","פער תעו\"ז ₪/קוט\"ש (0.35)"],["capex_per_kwh","עלות ₪/קוט\"ש (1,100)"],["extra_revenue_year","הכנסה נוספת בשנה ₪ (גיבוי/שירות)"]],
+  pv_bess:[["kwp","הספק PV (kWp)"],["energy_mwh","קיבולת אגירה (MWh)"],["power_mw","הספק אגירה (MW)"],["tariff_ils_kwh","תעריף/PPA ₪ לקוט\"ש (0.42)"],["extra_revenue_year","הכנסה נוספת בשנה ₪"]],
+  dc_modular:[["kw_it","הספק IT (kW)"],["price_per_kw_month","מחיר ₪/kW לחודש (420)"],["capex_per_kw","הקמה ₪/kW (25,000)"],["occupancy","תפוסה 0–1 (0.85)"]],
+  bridge_power:[["units","יחידות"],["rental_per_unit_month","השכרה ₪/יחידה/חודש (25,000)"],["capex_per_unit","עלות יחידה ₪ (900,000)"],["utilization","ניצולת 0–1 (0.7)"]],
+  backup_bess:[["energy_mwh","קיבולת (MWh)"],["power_mw","הספק (MW)"],["service_fee_year","דמי שירות שנתיים ₪"],["capex_per_kwh","עלות ₪/קוט\"ש (1,100)"]],
+  land_partnership:[["capex_ils","השקעה ₪"],["annual_revenue_ils","הכנסה שנתית ₪"],["annual_opex_ils","תפעול שנתי ₪"],["power_mw","MW"]],
+  other:[["capex_ils","השקעה ₪"],["annual_revenue_ils","הכנסה שנתית ₪"],["annual_opex_ils","תפעול שנתי ₪"],["power_mw","MW"]],
+};
+const nf = new Intl.NumberFormat("he-IL",{maximumFractionDigits:0});
+function fmtN(x){ return (x==null||isNaN(Number(x)))?"—":nf.format(Number(x)); }
+function fmtILS(x){ if(x==null||isNaN(Number(x))) return "—"; const v=Number(x); return Math.abs(v)>=1e6 ? (v/1e6).toLocaleString("he-IL",{maximumFractionDigits:2})+" מ׳ ₪" : nf.format(v)+" ₪"; }
+function fmtPct(x){ return (x==null||isNaN(Number(x)))?"—":(Number(x)*100).toFixed(1)+"%"; }
+function sel(id,label,map,val){ return `<div class="field"><label>${esc(label)}</label><select id="${id}">${Object.entries(map).map(([k,v])=>`<option value="${k}" ${k===val?"selected":""}>${esc(v)}</option>`).join("")}</select></div>`; }
+function inp(id,label,val,type="text",ph=""){ return `<div class="field"><label>${esc(label)}</label><input id="${id}" type="${type}" ${type==="number"?'inputmode="decimal" step="any"':""} value="${esc(val==null?"":val)}" placeholder="${esc(ph)}"></div>`; }
+function openText(title, text){ $("textTitle").textContent=title; $("textBody").textContent=text||""; $("textModal").classList.add("on"); }
+$("textClose").addEventListener("click",()=>$("textModal").classList.remove("on"));
+$("textModal").addEventListener("click",e=>{ if(e.target===$("textModal")) $("textModal").classList.remove("on"); });
+$("textCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText($("textBody").textContent); toast("הועתק ✓"); }catch(_){ toast("לא ניתן להעתיק"); } });
+
+/* ---------- v2: plan ---------- */
+async function loadPlan(){
+  $("tab-plan").innerHTML = `<div class="empty"><span class="spinner"></span> טוען תוכנית…</div>`;
+  try{ P = await api("GET", {a:"plan", arena:ARENA}); renderPlan(); }
+  catch(e){ $("tab-plan").innerHTML = `<div class="err">${esc(explain(e))}</div>`; }
+}
+function renderPlan(){
+  const kpis=P.kpis||[], gates=P.gates||[], objs=P.objectives||[];
+  const kp = `<div class="card"><h2>המדדים <span class="n">${kpis.length} · עד 30.9.27</span></h2><div class="list">${
+    kpis.map(k=>{ const pct=k.pct==null?0:Number(k.pct); const cls=pct>=100?"":(pct>0?"low":"zero");
+      return `<div class="item"><div class="row"><div class="grow"><div class="t">${esc(k.title)}</div>${k.detail?`<div class="d small">${esc(k.detail)}</div>`:""}</div>
+        <div class="num">${fmtN(k.current)}<span class="muted small">/${fmtN(k.target)} ${esc(k.unit||"")}</span></div></div>
+        <div class="bar ${cls}"><i style="width:${Math.min(100,pct)}%"></i></div>
+        <div class="small muted" style="margin-top:4px">${k.derived?"נגזר מהעסקאות":"ידני · "+esc(k.current_source||"")}${k.due?` · עד ${esc(fmtDate(k.due))}`:""}</div></div>`; }).join("")
+  }</div></div>`;
+  const gt = `<div class="card"><h2>שערי המעבר <span class="n">חמישה שלבים לחברה גדולה</span></h2><div class="tl">${
+    gates.map(g=>`<div class="item ${g.status==="met"?"done":(g.overdue?"late":"")}"><div class="t">${esc(g.title)}</div><div><span class="pill ${g.overdue?"red":""}">${esc(fmtDate(g.due))}</span>${g.status==="met"?`<span class="pill green">הושג</span>`:""}</div>${g.detail?`<div class="d small">${esc(g.detail)}</div>`:""}${g.source?`<div class="src">${esc(g.source)}</div>`:""}</div>`).join("")
+  }</div></div>`;
+  const ob = `<div class="card"><h2>היעדים <span class="n">${objs.length}</span></h2><div class="list">${
+    objs.map(o=>`<div class="item"><div class="t">${esc(o.title)}</div>${o.next_step?`<div class="d">→ ${esc(o.next_step)}</div>`:""}<div>${o.next_step_due?`<span class="pill ${o.overdue?"red":""}">${o.overdue?"באיחור · ":"עד "}${esc(fmtDate(o.next_step_due))}</span>`:""}${o.priority?`<span class="pill">${esc(o.priority)}</span>`:""}</div>${o.notes?`<div class="src">${esc(o.notes)}</div>`:""}</div>`).join("")
+  }</div></div>`;
+  $("tab-plan").innerHTML = kp + gt + ob + `<div class="muted small" style="padding:4px 6px">המדדים הנגזרים מתעדכנים מטבלת העסקאות; המספרים הידניים נושאים מקור. היעדים נקבעו 18.9 מתוכנית הפעולה (14.9) והמודל הפיננסי v2 — שינוי הוא עדכון שורה.</div>`;
+}
+
+/* ---------- v2: deals ---------- */
+async function loadDeals(){
+  $("tab-deals").innerHTML = `<div class="empty"><span class="spinner"></span> טוען עסקאות…</div>`;
+  try{ D = await api("GET", {a:"deals", arena:ARENA}); renderDeals(); }
+  catch(e){ $("tab-deals").innerHTML = `<div class="err">${esc(explain(e))}</div>`; }
+}
+function dealPills(d){
+  const p=[`<span class="pill">${esc(STAGE[d.stage]||d.stage)}</span>`,`<span class="pill">${esc(KIND[d.kind]||d.kind)}</span>`];
+  if(d.exclusivity && d.exclusivity!=="none") p.push(`<span class="pill green">${esc(EXCL[d.exclusivity]||d.exclusivity)}</span>`);
+  if(d.power_mw) p.push(`<span class="pill">${Number(d.power_mw).toLocaleString("he-IL",{maximumFractionDigits:2})} MW</span>`);
+  if(d.analysis?.verdict && d.analysis.verdict!=="incomplete") p.push(`<span class="pill ${d.analysis.verdict==="green"?"green":d.analysis.verdict==="amber"?"amber":"red"}">IRR ${fmtPct(d.analysis.irr)}</span>`);
+  if(d.next_due) p.push(`<span class="pill ${d.overdue?"red":""}">${d.overdue?"באיחור · ":"צעד עד "}${esc(fmtDate(d.next_due))}</span>`);
+  return p.join("");
+}
+function renderDeals(){
+  const t=D.totals||{}, deals=D.deals||[], pipe=D.pipeline||{};
+  const kp = `<div class="kpis">
+    <div class="kpi"><b>${fmtN(t.mw_pipeline)}</b><span>MW בצבר</span></div>
+    <div class="kpi"><b>${fmtN(t.mw_exclusive)}</b><span>MW בבלעדיות</span></div>
+    <div class="kpi"><b>${deals.filter(d=>d.stage!=="dead").length}</b><span>עסקאות</span></div>
+    <div class="kpi"><b>${t.leads||0}</b><span>לידים</span></div>
+    <div class="kpi ${t.overdue?"warn":""}"><b>${t.overdue||0}</b><span>צעד באיחור</span></div>
+    <div class="kpi"><b>${fmtILS(t.developer_value)}</b><span>שווי-יזם (להמחשה)</span></div>
+    <div class="kpi"><b>${fmtILS(t.capex_pipeline)}</b><span>השקעה בצבר</span></div>
+  </div>`;
+  const chips = `<div class="chips">${Object.keys(STAGE).map(k=>`<span class="chip">${esc(STAGE[k])} <b>${pipe[k]||0}</b></span>`).join("")}</div>`;
+  const list = `<div class="card"><h2>העסקאות <span class="n">${deals.length}</span></h2>
+    <div class="actions" style="margin:0 0 10px"><button class="btn" id="newDeal">＋ עסקה / ליד חדש</button><span class="muted small">בעלים ושותף-לזירה כותבים; הכול נרשם ביומן.</span></div>
+    ${deals.length ? `<div class="list">${deals.map(d=>`<div class="item clickable" data-deal="${esc(d.id)}"><div class="t">${esc(d.name)}${d.site?` <span class="muted small">· ${esc(d.site)}${d.city?", "+esc(d.city):""}</span>`:""}</div><div>${dealPills(d)}</div>${d.next_step?`<div class="d small">→ ${esc(d.next_step)}</div>`:""}${d.counterpart?`<div class="src">מול: ${esc(d.counterpart)}${d.owner_name?` · אצל ${esc(d.owner_name)}`:""}</div>`:""}</div>`).join("")}</div>`
+      : `<div class="empty">עדיין אין עסקאות בזירה. הליד הראשון — מהמשווק או מהכפתור למעלה.</div>`}</div>`;
+  $("tab-deals").innerHTML = kp + chips + list;
+  $("newDeal").addEventListener("click",()=>openDeal(null));
+  document.querySelectorAll("#tab-deals [data-deal]").forEach(el=>el.addEventListener("click",()=>openDeal(deals.find(x=>x.id===el.dataset.deal))));
+}
+function openDeal(d, prefill){
+  DEAL = d ? JSON.parse(JSON.stringify(d)) : Object.assign({kind:"pv", stage:"lead", exclusivity:"none", inputs:{}}, prefill||{});
+  $("dealTitle").textContent = d ? d.name : "עסקה / ליד חדש";
+  renderDealForm(); $("dealModal").classList.add("on");
+}
+function renderDealForm(){
+  const d=DEAL, inputs=d.inputs||{};
+  const ki = (KIND_INPUTS[d.kind]||[]).map(([k,l])=>inp("in_"+k, l, inputs[k]??(k==="energy_mwh"?d.energy_mwh:k==="power_mw"?d.power_mw:k==="kwp"&&d.power_mw?d.power_mw*1000:k==="kw_it"&&d.power_mw?d.power_mw*1000:""), "number")).join("");
+  const an = d.analysis ? renderAnalysis(d.analysis) : `<div class="muted small" style="margin-top:8px">לחץ "חשב" לניתוח כלכלי (SQL, בלי מודל).</div>`;
+  $("dealBody").innerHTML = `
+    ${inp("f_name","שם העסקה", d.name, "text", "למשל: גג מרכז מסחרי — בית שמש")}
+    <div class="grid2">${sel("f_kind","סוג", KIND, d.kind)}${sel("f_stage","שלב", STAGE, d.stage)}</div>
+    <div class="grid2">${sel("f_excl","בלעדיות", EXCL, d.exclusivity||"none")}${sel("f_seg","פלח", Object.assign({"":"—"},SEG), d.segment||"")}</div>
+    <div class="grid2">${inp("f_site","אתר / נכס", d.site)}${inp("f_city","עיר", d.city)}</div>
+    <div class="grid2">${inp("f_counterpart","מול מי (בעל הנכס / לקוח)", d.counterpart)}${inp("f_contact","איש קשר / טלפון", d.contact)}</div>
+    <div class="grid2">${inp("f_kva","חיבור (kVA)", d.connection_kva, "number")}${inp("f_capex","השקעה ₪ (אם ידועה)", d.capex_ils, "number")}</div>
+    <div class="card" style="margin:10px 0"><h2>נתוני הניתוח <span class="n">${esc(KIND[d.kind]||"")}</span></h2><div class="grid2" id="kindInputs">${ki}</div>
+      <div class="actions"><button class="btn ghost" id="dealCalc">חשב</button><span class="muted small">שדה ריק = ברירת מחדל (הערכה), והיא נרשמת.</span></div>
+      <div id="dealAnalysis">${an}</div></div>
+    <div class="grid2">${inp("f_next","הצעד הבא", d.next_step)}${inp("f_due","עד תאריך", d.next_due?String(d.next_due).slice(0,10):"", "date")}</div>
+    <div class="field"><label>הערות</label><textarea id="f_notes">${esc(d.notes||"")}</textarea></div>
+    <div class="actions"><button class="btn" id="dealSave">${d.id?"שמור שינויים":"שמור עסקה"}</button>${d.id?`<button class="btn ghost" id="dealAsk">שאל את המוח על העסקה</button>`:""}<span id="dealMsg" class="muted small"></span></div>`;
+  $("f_kind").addEventListener("change",()=>{ collectDeal(); renderDealForm(); });
+  $("dealCalc").addEventListener("click", calcDeal);
+  $("dealSave").addEventListener("click", saveDeal);
+  if($("dealAsk")) $("dealAsk").addEventListener("click",()=>{ $("dealModal").classList.remove("on"); showTab("ask"); $("askText").value = `על העסקה "${d.name}" (${KIND[d.kind]||d.kind}, שלב ${STAGE[d.stage]||d.stage}${d.site?", "+d.site:""}): מה הסיכונים המרכזיים, מה חסר כדי להתקדם, ומה הצעד הבא הנכון?`; $("askText").focus(); });
+}
+function collectDeal(){
+  const d=DEAL; const v=id=>$(id)?$(id).value.trim():"";
+  d.name=v("f_name"); d.kind=v("f_kind"); d.stage=v("f_stage"); d.exclusivity=v("f_excl"); d.segment=v("f_seg")||null;
+  d.site=v("f_site")||null; d.city=v("f_city")||null; d.counterpart=v("f_counterpart")||null; d.contact=v("f_contact")||null;
+  d.connection_kva=v("f_kva")||null; d.capex_ils=v("f_capex")||null; d.next_step=v("f_next")||null; d.next_due=v("f_due")||null; d.notes=v("f_notes")||null;
+  const inputs={}; (KIND_INPUTS[d.kind]||[]).forEach(([k])=>{ const x=v("in_"+k); if(x!=="") inputs[k]=Number(x); });
+  d.inputs=inputs;
+  d.power_mw = inputs.power_mw ?? (inputs.kwp!=null ? inputs.kwp/1000 : (inputs.kw_it!=null ? inputs.kw_it/1000 : d.power_mw||null));
+  if(d.kind==="pv_bess" && inputs.kwp!=null) d.power_mw = inputs.kwp/1000 + (inputs.power_mw||0);
+  d.energy_mwh = inputs.energy_mwh ?? d.energy_mwh ?? null;
+  return d;
+}
+function renderAnalysis(a){
+  if(!a) return "";
+  return `<div style="margin-top:8px"><span class="verdict ${esc(a.verdict)}">${esc(a.verdict_text||a.verdict)}</span></div>
+    <div class="stats">
+      <div class="stat"><span>IRR</span><b class="num">${fmtPct(a.irr)}</b></div>
+      <div class="stat"><span>החזר (שנים)</span><b class="num">${a.payback_years??"—"}</b></div>
+      <div class="stat"><span>NPV @8%</span><b class="num">${fmtILS(a.npv_ils)}</b></div>
+      <div class="stat"><span>השקעה</span><b class="num">${fmtILS(a.capex_ils)}</b></div>
+      <div class="stat"><span>הכנסה שנתית</span><b class="num">${fmtILS(a.annual_revenue_ils)}</b></div>
+      <div class="stat"><span>EBITDA שנתי</span><b class="num">${fmtILS(a.ebitda_ils)}${a.ebitda_margin!=null?` <span class="muted small">(${fmtPct(a.ebitda_margin)})</span>`:""}</b></div>
+    </div>
+    <div class="small muted" style="margin-top:6px">${esc(a.developer_value_note||"")}${a.developer_value_ils?` ⟶ <b>${fmtILS(a.developer_value_ils)}</b>`:""}</div>
+    ${(a.flags||[]).length?`<div class="err" style="margin:8px 0">${a.flags.map(esc).join(" · ")}</div>`:""}
+    ${(a.assumptions||[]).length?`<details><summary>הנחות שהופעלו (${a.assumptions.length})</summary><div class="d">${a.assumptions.map(esc).join("\n")}</div></details>`:""}`;
+}
+async function calcDeal(){
+  const d=collectDeal();
+  const inputs=Object.assign({kind:d.kind, stage:d.stage}, d.capex_ils?{capex_ils:Number(d.capex_ils)}:{}, d.inputs);
+  $("dealAnalysis").innerHTML = `<div class="empty"><span class="spinner"></span> מחשב…</div>`;
+  try{ const r = await api("POST", {}, {a:"deal_screen", inputs}); DEAL.analysis=r; $("dealAnalysis").innerHTML = renderAnalysis(r); }
+  catch(e){ $("dealAnalysis").innerHTML = `<div class="err">${esc(explain(e))}</div>`; }
+}
+async function saveDeal(){
+  const d=collectDeal();
+  if(!d.name || d.name.length<2){ toast("לעסקה צריך שם"); return; }
+  $("dealSave").disabled=true; $("dealMsg").textContent="שומר…";
+  const payload={name:d.name, kind:d.kind, stage:d.stage, exclusivity:d.exclusivity, segment:d.segment, site:d.site, city:d.city, counterpart:d.counterpart, contact:d.contact,
+    connection_kva:d.connection_kva, capex_ils:d.capex_ils, power_mw:d.power_mw, energy_mwh:d.energy_mwh, inputs:d.inputs, next_step:d.next_step, next_due:d.next_due, notes:d.notes};
+  if(d.id) payload.id=d.id;
+  try{
+    const r = await api("POST", {}, {a:"deal_save", arena:ARENA, deal:payload});
+    toast(r.new?"העסקה נוספה ✓":"נשמר ✓"); $("dealModal").classList.remove("on"); D=null; await loadDeals(); showTab("deals"); P=null;
+  }catch(e){ $("dealMsg").innerHTML = `<span style="color:var(--red)">${esc(explain(e))}</span>`; }
+  $("dealSave").disabled=false;
+}
+$("dealClose").addEventListener("click",()=>$("dealModal").classList.remove("on"));
+$("dealModal").addEventListener("click",e=>{ if(e.target===$("dealModal")) $("dealModal").classList.remove("on"); });
+
+/* ---------- v2: sales (offer calculator + playbook) ---------- */
+const PB_KIND = {pitch:"טיעונים", product:"המוצרים", objection:"התנגדויות", discovery:"שאלות איתור", script:"תסריטים", faq:"שאלות נפוצות"};
+async function loadPlaybook(){
+  renderSales();
+  try{ PB = await api("GET", {a:"playbook", arena:ARENA}); renderSales(); }
+  catch(e){ $("pbList").innerHTML = `<div class="err">${esc(explain(e))}</div>`; }
+}
+function renderSales(){
+  const items=(PB&&PB.items)||[];
+  const groups=Object.keys(PB_KIND).map(k=>({k, items:items.filter(i=>i.kind===k)})).filter(g=>g.items.length);
+  const calc = `<div class="card"><h2>מחשבון הצעה ללקוח <span class="n">SQL, בלי מודל</span></h2>
+    <p class="muted small" style="margin:0 0 4px">מספרי הלקוח ⟶ מה הוא מרוויח, ומה אנחנו. כל הנחה מסומנת (הערכה).</p>
+    <div class="grid2">${sel("o_site","סוג הנכס",{commercial:"מסחרי",industrial:"מפעל / תעשייה",institution:"מוסד",residential:"בניין מגורים",municipal:"רשות"},"commercial")}${inp("o_bill","חשבון חשמל חודשי ₪","","number","למשל 60000")}</div>
+    <div class="grid2">${inp("o_roof","שטח גג פנוי מ\"ר","","number")}${inp("o_kva","גודל חיבור kVA","","number")}</div>
+    <div class="grid2">${inp("o_gen","גנרטור קיים kW","","number")}${inp("o_hours","שעות גיבוי נדרשות","","number")}</div>
+    <div class="actions"><button class="btn" id="offerBtn">חשב הצעה</button><span id="offerMsg" class="muted small"></span></div>
+    <div id="offerOut"></div></div>`;
+  const pb = `<div class="card"><h2>הפלייבוק <span class="n">${items.length}</span></h2><div id="pbList">${
+    PB ? (groups.length ? groups.map(g=>`<h3 style="margin:12px 0 4px;font-size:14px;color:var(--accent)">${esc(PB_KIND[g.k])}</h3>${g.items.map(i=>`<details><summary>${esc(i.title)}</summary><div class="d">${esc(i.body)}</div>${i.source?`<div class="src">${esc(i.source)}</div>`:""}</details>`).join("")}`).join("") : `<div class="empty">הפלייבוק ריק.</div>`)
+      : `<div class="empty"><span class="spinner"></span> טוען…</div>`
+  }</div>
+    <details style="margin-top:12px"><summary>＋ הוסף לפלייבוק</summary>
+      ${sel("pb_kind","סוג",PB_KIND,"pitch")}${inp("pb_title","כותרת","")}<div class="field"><label>תוכן</label><textarea id="pb_body"></textarea></div>
+      <div class="actions"><button class="btn ghost" id="pbAdd">שמור</button><span id="pbMsg" class="muted small"></span></div></details></div>`;
+  $("tab-sales").innerHTML = calc + pb;
+  $("offerBtn").addEventListener("click", doOffer);
+  $("pbAdd").addEventListener("click", addPlaybook);
+}
+async function doOffer(){
+  const v=id=>$(id).value.trim();
+  const inputs={site_kind:v("o_site"), monthly_bill_ils:Number(v("o_bill"))||0, roof_m2:Number(v("o_roof"))||0, connection_kva:Number(v("o_kva"))||0, generator_kw:Number(v("o_gen"))||0, backup_hours:Number(v("o_hours"))||0};
+  $("offerOut").innerHTML = `<div class="empty"><span class="spinner"></span> מחשב…</div>`; $("offerBtn").disabled=true;
+  try{
+    const r = await api("POST", {}, {a:"offer", inputs}); OFFER={inputs, result:r};
+    const c=r.client||{}, ours=r.our_side||{};
+    const oursHtml = Object.entries(ours).map(([k,a])=>`<div class="item"><div class="t small">${esc({pv:"סולארי",bess:"אגירה",dc:"DC מכולתי"}[k]||k)} — הצד שלנו</div><div><span class="verdict ${esc(a.verdict)}">${esc(a.verdict_text)}</span> <span class="small muted">IRR ${fmtPct(a.irr)} · השקעה ${fmtILS(a.capex_ils)} · EBITDA ${fmtILS(a.ebitda_ils)}</span></div></div>`).join("");
+    $("offerOut").innerHTML = `<div class="ok" style="white-space:pre-wrap">${esc(r.pitch||"")}</div>
+      <div class="stats"><div class="stat"><span>צריכה שנתית</span><b class="num">${fmtN(c.annual_kwh)} קוט"ש</b></div><div class="stat"><span>PV מומלץ</span><b class="num">${fmtN(c.pv_kwp)} kWp</b></div><div class="stat"><span>חיסכון ללקוח</span><b class="num">${fmtILS(c.saving_ils_year)}/שנה</b></div>
+        <div class="stat"><span>אגירה</span><b class="num">${fmtN(c.bess_kwh)} kWh</b></div><div class="stat"><span>ערך גילוח שיא</span><b class="num">${fmtILS(c.shave_value_ils_year)}/שנה</b></div><div class="stat"><span>DC אפשרי</span><b class="num">${fmtN(c.dc_kw_it)} kW</b></div></div>
+      <div class="list" style="margin-top:8px">${oursHtml}</div>
+      <details><summary>הנחות (${(r.assumptions||[]).length})</summary><div class="d">${(r.assumptions||[]).map(esc).join("\n")}</div></details>
+      <div class="actions"><button class="btn" id="offerLead">שמור כליד</button><button class="btn ghost" id="offerPitch">נסח מסמך הצעה (המוח)</button><a class="btn ghost" id="offerWa" href="https://wa.me/?text=${encodeURIComponent(r.pitch||"")}" target="_blank" rel="noopener">שלח בוואטסאפ</a></div>`;
+    $("offerLead").addEventListener("click",()=>{
+      const kind = c.pv_kwp>0 && c.bess_kwh>0 ? "pv_bess" : c.pv_kwp>0 ? "pv" : c.bess_kwh>0 ? "bess" : c.dc_kw_it>0 ? "dc_modular" : "other";
+      const inp = kind==="pv"?{kwp:c.pv_kwp}:kind==="bess"?{energy_mwh:c.bess_kwh/1000,power_mw:c.bess_kw/1000}:kind==="pv_bess"?{kwp:c.pv_kwp,energy_mwh:c.bess_kwh/1000,power_mw:c.bess_kw/1000}:kind==="dc_modular"?{kw_it:c.dc_kw_it}:{};
+      openDeal(null, {name:"ליד — "+({commercial:"נכס מסחרי",industrial:"מפעל",institution:"מוסד",residential:"בניין מגורים",municipal:"רשות"}[inputs.site_kind]||"נכס"), kind, stage:"lead", segment:inputs.site_kind, connection_kva:inputs.connection_kva||null, inputs:inp, notes:"ממחשבון ההצעה: חשבון "+fmtN(inputs.monthly_bill_ils)+" ₪/חודש · גג "+fmtN(inputs.roof_m2)+" מ\"ר · גנרטור "+fmtN(inputs.generator_kw)+" kW"});
+    });
+    $("offerPitch").addEventListener("click", doPitch);
+  }catch(e){ $("offerOut").innerHTML = `<div class="err">${esc(explain(e))}</div>`; }
+  $("offerBtn").disabled=false;
+}
+async function doPitch(){
+  if(!OFFER) return;
+  openText("מסמך הצעה — מנסח…", ""); $("textBody").innerHTML = `<span class="spinner"></span> המוח מנסח…`;
+  try{
+    const facts={inputs:OFFER.inputs, client:OFFER.result.client, lines:OFFER.result.lines, assumptions:OFFER.result.assumptions};
+    const r = await api("POST", {}, {a:"pitch", arena:ARENA, audience:({commercial:"בעל נכס מסחרי",industrial:"בעל מפעל",institution:"מנהל מוסד",residential:"ועד בית / חברת ניהול",municipal:"רשות מקומית"}[OFFER.inputs.site_kind]||"בעל נכס"), facts});
+    $("textTitle").textContent="מסמך הצעה (טיוטה)"; $("textBody").textContent = r.answer||"לא התקבל נוסח.";
+  }catch(e){ $("textBody").innerHTML = `<div class="err">${esc(explain(e))}</div>`; }
+}
+async function addPlaybook(){
+  const item={kind:$("pb_kind").value, title:$("pb_title").value.trim(), body:$("pb_body").value.trim()};
+  if(item.title.length<2||item.body.length<5){ toast("כותרת ותוכן"); return; }
+  $("pbAdd").disabled=true; $("pbMsg").textContent="שומר…";
+  try{ await api("POST", {}, {a:"playbook_add", arena:ARENA, item}); toast("נוסף ✓"); PB=null; await loadPlaybook(); }
+  catch(e){ $("pbMsg").innerHTML=`<span style="color:var(--red)">${esc(explain(e))}</span>`; $("pbAdd").disabled=false; }
+}
+
 /* ---------- boot ---------- */
 async function load(){
   if(!TOKEN){ $("notice").innerHTML = `<div class="err">חסר קישור גישה. בקש מאיתי את הקישור האישי שלך (מסתיים ב-?t=…).</div>`; return; }
@@ -373,7 +660,7 @@ async function load(){
   }
   $("refresh").textContent = "↻";
 }
-$("refresh").addEventListener("click", load);
+$("refresh").addEventListener("click", ()=>{ P=null; D=null; PB=null; load().then(()=>{ let t=""; try{ t=sessionStorage.getItem("nx_arena_tab")||""; }catch(_){} if(t==="plan") loadPlan(); if(t==="deals") loadDeals(); if(t==="sales") loadPlaybook(); }); });
 load();
 </script>
 </body>

@@ -135,11 +135,12 @@ check("אין סודות בקוד הלקוח", leaked.length === 0, `${leaked.le
   const ajs = ascripts.join("\n");
   try { new vm.Script(ajs); check("arena: תחביר JavaScript תקין", true); }
   catch (e) { check("arena: תחביר JavaScript תקין", false, e.message); }
-  const ids = new Set([...arena.matchAll(/\bid="([\w-]+)"/g)].map(m => m[1]));
+  // v2 (18.9): שדות טופס נבנים דרך sel()/inp() שמרנדרות id="…" — נספרים גם הם.
+  const ids = new Set([...arena.matchAll(/\bid="([\w-]+)"/g), ...arena.matchAll(/\b(?:sel|inp)\("([\w-]+)"/g)].map(m => m[1]));
   const used = [...new Set([...ajs.matchAll(/\$\("([\w-]+)"\)/g)].map(m => m[1]))];
   const gone = used.filter(u => !ids.has(u));
   check(`arena: כל ${used.length} המזהים שהקוד מבקש קיימים ב-DOM`, gone.length === 0, "חסרים: " + gone.join(", "));
-  const ARENA_ACTIONS = new Set(["board", "search", "doc", "ask", "note"]);
+  const ARENA_ACTIONS = new Set(["board", "search", "doc", "ask", "note", "plan", "deals", "deal_save", "deal_screen", "offer", "playbook", "playbook_add", "pitch"]);
   const acts = [...new Set([...ajs.matchAll(/\ba:\s*"([a-z_]+)"/g)].map(m => m[1]))];
   const unknownActs = acts.filter(a => !ARENA_ACTIONS.has(a));
   check(`arena: כל ${acts.length} הפעולות מוכרות ל-nexus-arena`, unknownActs.length === 0, "לא מוכרות: " + unknownActs.join(", "));
